@@ -10,3 +10,5 @@ Route::get('/templates/{template}', Platform\Hatch\Livewire\Template\Show::class
 
 Route::get('/project-intakes', Platform\Hatch\Livewire\ProjectIntake\Index::class)->name('hatch.project-intakes.index');
 Route::get('/project-intakes/{projectIntake}', Platform\Hatch\Livewire\ProjectIntake\Show::class)->name('hatch.project-intakes.show');
+
+Route::get('/intake-sessions/{intakeSession}', Platform\Hatch\Livewire\IntakeSession\Show::class)->name('hatch.intake-sessions.show');

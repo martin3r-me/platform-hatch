@@ -220,9 +220,14 @@ class Show extends Component
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $sessions = $this->projectIntake->sessions()
+            ->orderByDesc('updated_at')
+            ->get();
+
         return view('hatch::livewire.project-intake.show', [
             'projectIntake' => $this->projectIntake,
             'activities' => $activities,
+            'sessions' => $sessions,
             'currentBlock' => $this->currentBlock,
             'currentBlockIndex' => $this->currentBlockIndex,
             'templateBlocks' => $this->templateBlocks,

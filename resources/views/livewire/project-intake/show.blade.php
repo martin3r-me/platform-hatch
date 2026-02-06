@@ -311,5 +311,75 @@
                 </div>
             </div>
         @endif
+        {{-- Sessions --}}
+        <div class="mt-8">
+            <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Eingegangene Sessions</h3>
+                <x-ui-badge variant="secondary" size="sm">{{ $sessions->count() }}</x-ui-badge>
+            </div>
+
+            @if($sessions->isNotEmpty())
+                @php
+                    $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
+                @endphp
+                <div class="overflow-x-auto border border-[var(--ui-border)]/60 rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-[var(--ui-muted-5)] border-b border-[var(--ui-border)]/40">
+                            <tr>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Token</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Respondent</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Status</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Fortschritt</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Gestartet</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Abgeschlossen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sessions as $session)
+                                <tr class="border-b border-[var(--ui-border)]/20 hover:bg-[var(--ui-muted-5)]/50">
+                                    <td class="p-3">
+                                        <a href="{{ route('hatch.intake-sessions.show', $session) }}" wire:navigate class="font-mono text-[var(--ui-primary)] hover:underline">
+                                            {{ $session->session_token }}
+                                        </a>
+                                    </td>
+                                    <td class="p-3 text-[var(--ui-secondary)]">
+                                        @if($session->respondent_name || $session->respondent_email)
+                                            <div>{{ $session->respondent_name ?? '' }}</div>
+                                            @if($session->respondent_email)
+                                                <div class="text-xs text-[var(--ui-muted)]">{{ $session->respondent_email }}</div>
+                                            @endif
+                                        @else
+                                            <span class="text-[var(--ui-muted)]">Anonym</span>
+                                        @endif
+                                    </td>
+                                    <td class="p-3">
+                                        <x-ui-badge
+                                            :variant="$session->status === 'completed' ? 'success' : 'warning'"
+                                            size="sm"
+                                        >
+                                            {{ $session->status === 'completed' ? 'Abgeschlossen' : 'Gestartet' }}
+                                        </x-ui-badge>
+                                    </td>
+                                    <td class="p-3 text-[var(--ui-secondary)]">
+                                        {{ $session->current_step ?? 0 }} / {{ $totalBlocks }}
+                                    </td>
+                                    <td class="p-3 text-[var(--ui-muted)]">
+                                        {{ $session->started_at?->format('d.m.Y H:i') ?? '–' }}
+                                    </td>
+                                    <td class="p-3 text-[var(--ui-muted)]">
+                                        {{ $session->completed_at?->format('d.m.Y H:i') ?? '–' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-6 text-[var(--ui-muted)] border border-dashed border-[var(--ui-border)]/60 rounded-lg">
+                    <x-heroicon-o-inbox class="w-8 h-8 mx-auto mb-2 text-[var(--ui-muted)]" />
+                    <p class="text-sm">Noch keine Sessions eingegangen</p>
+                </div>
+            @endif
+        </div>
     </x-ui-page-container>
 </x-ui-page>
