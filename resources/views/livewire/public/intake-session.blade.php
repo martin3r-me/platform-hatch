@@ -16,11 +16,30 @@
         <header class="sticky top-0 z-50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
             <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
                 <h1 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ $intakeName }}</h1>
-                @if($totalBlocks > 0)
-                    <span class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 ml-4">
-                        Schritt {{ $currentStep + 1 }} von {{ $totalBlocks }}
-                    </span>
-                @endif
+                <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+                    {{-- Token Badge with Copy --}}
+                    <div
+                        x-data="{ copied: false }"
+                        class="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        x-on:click="navigator.clipboard.writeText('{{ $sessionToken }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                        title="Token kopieren"
+                    >
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Token:</span>
+                        <span class="text-xs font-mono font-semibold text-gray-700 dark:text-gray-200 tracking-wider">{{ $sessionToken }}</span>
+                        <svg x-show="!copied" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                        <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+
+                    @if($totalBlocks > 0)
+                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ $currentStep + 1 }} / {{ $totalBlocks }}
+                        </span>
+                    @endif
+                </div>
             </div>
 
             {{-- Fortschrittsbalken --}}
@@ -34,8 +53,15 @@
             @endif
         </header>
 
+        {{-- Token Hint --}}
+        <div class="max-w-4xl mx-auto px-4 pt-4">
+            <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                Speichern Sie Ihren Token <span class="font-mono font-semibold">{{ $sessionToken }}</span>, um spaeter fortzufahren.
+            </p>
+        </div>
+
         {{-- Content --}}
-        <main class="max-w-4xl mx-auto px-4 py-8">
+        <main class="max-w-4xl mx-auto px-4 py-6">
             {{-- Block-Uebersicht --}}
             @if(count($blocks) > 0)
                 <div class="mb-8">
@@ -68,7 +94,7 @@
                 </div>
             @endif
 
-            {{-- Aktiver Block (Placeholder) --}}
+            {{-- Aktiver Block --}}
             <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden">
                 @if(isset($blocks[$currentStep]))
                     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
@@ -82,15 +108,67 @@
                         @endif
                     </div>
 
-                    <div class="p-8 text-center">
-                        <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                            </svg>
+                    <div class="p-6">
+                        <textarea
+                            wire:model="currentAnswer"
+                            rows="8"
+                            placeholder="Ihre Antwort..."
+                            class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-y"
+                        ></textarea>
+                    </div>
+
+                    {{-- Navigation --}}
+                    <div class="px-6 pb-6 flex items-center justify-between">
+                        <button
+                            wire:click="previousBlock"
+                            wire:loading.attr="disabled"
+                            @if($currentStep === 0) disabled @endif
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                                {{ $currentStep === 0
+                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                }}"
+                        >
+                            <span wire:loading.remove wire:target="previousBlock">&larr; Zurueck</span>
+                            <span wire:loading wire:target="previousBlock">Laden...</span>
+                        </button>
+
+                        <div class="flex items-center gap-2">
+                            <button
+                                wire:click="saveCurrentBlock"
+                                wire:loading.attr="disabled"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <span wire:loading.remove wire:target="saveCurrentBlock">Speichern</span>
+                                <span wire:loading wire:target="saveCurrentBlock">Wird gespeichert...</span>
+                            </button>
+
+                            @if($currentStep < $totalBlocks - 1)
+                                <button
+                                    wire:click="nextBlock"
+                                    wire:loading.attr="disabled"
+                                    class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    <span wire:loading.remove wire:target="nextBlock">Weiter &rarr;</span>
+                                    <span wire:loading wire:target="nextBlock" class="inline-flex items-center gap-2">
+                                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                        Laden...
+                                    </span>
+                                </button>
+                            @else
+                                <button
+                                    wire:click="saveCurrentBlock"
+                                    wire:loading.attr="disabled"
+                                    class="px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    <span wire:loading.remove wire:target="saveCurrentBlock">Abschliessen</span>
+                                    <span wire:loading wire:target="saveCurrentBlock" class="inline-flex items-center gap-2">
+                                        <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                        Wird gespeichert...
+                                    </span>
+                                </button>
+                            @endif
                         </div>
-                        <p class="text-gray-500 dark:text-gray-400">
-                            Der interaktive Erhebungsmodus wird hier integriert.
-                        </p>
                     </div>
                 @else
                     <div class="p-8 text-center">

@@ -25,6 +25,67 @@
                 <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Erhebung nicht verfuegbar</h1>
                 <p class="text-gray-600 dark:text-gray-300">Die Erhebung <strong>{{ $intakeName }}</strong> ist derzeit nicht aktiv.</p>
             </div>
+        @elseif($state === 'ready')
+            {{-- Header --}}
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $intakeName }}</h1>
+                @if($intakeDescription)
+                    <p class="mt-2 text-gray-600 dark:text-gray-300">{{ $intakeDescription }}</p>
+                @endif
+            </div>
+
+            <div class="space-y-4">
+                {{-- Card 1: Neue Erhebung starten --}}
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-2xl rounded-2xl p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Neue Erhebung starten</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Starten Sie eine neue Erhebung. Sie erhalten einen Token, mit dem Sie spaeter fortfahren koennen.
+                    </p>
+                    <button
+                        wire:click="startNew"
+                        wire:loading.attr="disabled"
+                        class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+                    >
+                        <span wire:loading.remove wire:target="startNew">Neue Erhebung starten</span>
+                        <span wire:loading wire:target="startNew" class="inline-flex items-center gap-2">
+                            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            Wird erstellt...
+                        </span>
+                    </button>
+                </div>
+
+                {{-- Card 2: Mit Token fortfahren --}}
+                <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-2xl rounded-2xl p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Mit Token fortfahren</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        Sie haben bereits begonnen? Geben Sie Ihren Token ein, um fortzufahren.
+                    </p>
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            wire:model="resumeToken"
+                            wire:keydown.enter="resumeSession"
+                            placeholder="XXXX-XXXX"
+                            maxlength="9"
+                            class="flex-1 px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-mono uppercase tracking-widest text-center text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        />
+                        <button
+                            wire:click="resumeSession"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+                        >
+                            <span wire:loading.remove wire:target="resumeSession">Fortfahren</span>
+                            <span wire:loading wire:target="resumeSession" class="inline-flex items-center gap-2">
+                                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                Laden...
+                            </span>
+                        </button>
+                    </div>
+                    @if($resumeError)
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $resumeError }}</p>
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
 </div>

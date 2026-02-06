@@ -43,13 +43,30 @@ class HatchIntakeSession extends Model
             }
 
             if (empty($model->session_token)) {
-                $model->session_token = bin2hex(random_bytes(32));
+                $model->session_token = self::generateShortToken();
             }
 
             if (empty($model->started_at)) {
                 $model->started_at = now();
             }
         });
+    }
+
+    public static function generateShortToken(): string
+    {
+        $chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+        do {
+            $part1 = '';
+            $part2 = '';
+            for ($i = 0; $i < 4; $i++) {
+                $part1 .= $chars[random_int(0, 29)];
+                $part2 .= $chars[random_int(0, 29)];
+            }
+            $token = $part1 . '-' . $part2;
+        } while (self::where('session_token', $token)->exists());
+
+        return $token;
     }
 
     public function projectIntake(): BelongsTo
