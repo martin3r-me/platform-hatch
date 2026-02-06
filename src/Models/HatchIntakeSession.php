@@ -4,10 +4,12 @@ namespace Platform\Hatch\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Platform\Core\Traits\Encryptable;
 use Symfony\Component\Uid\UuidV7;
 
 class HatchIntakeSession extends Model
 {
+    use Encryptable;
     protected $table = 'hatch_intake_sessions';
 
     protected $fillable = [
@@ -24,9 +26,14 @@ class HatchIntakeSession extends Model
         'completed_at',
     ];
 
+    protected array $encryptable = [
+        'answers' => 'json',
+        'metadata' => 'json',
+        'respondent_name' => 'string',
+        'respondent_email' => 'string',
+    ];
+
     protected $casts = [
-        'answers' => 'array',
-        'metadata' => 'array',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];

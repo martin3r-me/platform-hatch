@@ -30,7 +30,7 @@ class Show extends Component
                 ->map(function ($templateBlock) use ($answers) {
                     $blockDef = $templateBlock->blockDefinition;
                     $blockId = $blockDef?->id;
-                    $answer = $answers[$blockId] ?? $answers[$templateBlock->id] ?? null;
+                    $answer = $answers["block_{$templateBlock->id}"] ?? null;
 
                     return [
                         'name' => $blockDef?->name ?? 'Unbekannt',
