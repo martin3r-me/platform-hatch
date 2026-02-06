@@ -15,6 +15,9 @@ class Show extends Component
     public $responseFormatInput = [];
     public $conditionalLogicInput = [];
     public $validationRulesInput = [];
+
+    // Typ-spezifische Konfiguration (in logic_config gespeichert)
+    public $typeConfig = [];
     
     protected $rules = [
         'blockDefinition.name' => 'required|string|max:255',
@@ -48,7 +51,8 @@ class Show extends Component
         $this->responseFormatInput = $this->blockDefinition->response_format;
         $this->conditionalLogicInput = $this->blockDefinition->conditional_logic;
         $this->validationRulesInput = $this->blockDefinition->validation_rules;
-        
+        $this->typeConfig = $this->blockDefinition->logic_config ?? $this->getDefaultTypeConfig($this->blockDefinition->block_type);
+
         $this->blockTypeOptions = collect(HatchBlockDefinition::getBlockTypes())->map(function($label, $value) {
             return ['value' => $value, 'label' => $label];
         });
@@ -182,6 +186,102 @@ class Show extends Component
         $this->blockDefinition->response_format = $this->responseFormatInput;
         $this->blockDefinition->conditional_logic = $this->conditionalLogicInput;
         $this->blockDefinition->validation_rules = $this->validationRulesInput;
+    }
+
+    public function updatedTypeConfig()
+    {
+        $this->blockDefinition->logic_config = $this->typeConfig;
+    }
+
+    public function updatedBlockDefinitionBlockType($value)
+    {
+        if (empty($this->typeConfig) || $this->blockDefinition->logic_config === null) {
+            $this->typeConfig = $this->getDefaultTypeConfig($value);
+            $this->blockDefinition->logic_config = $this->typeConfig;
+        }
+    }
+
+    public function getDefaultTypeConfig(string $type): array
+    {
+        return match($type) {
+            'text' => [
+                'placeholder' => '',
+                'min_length' => null,
+                'max_length' => 255,
+            ],
+            'long_text' => [
+                'placeholder' => '',
+                'min_length' => null,
+                'max_length' => 5000,
+                'rows' => 6,
+            ],
+            'email' => [
+                'placeholder' => 'name@beispiel.de',
+            ],
+            'phone' => [
+                'placeholder' => '+49 123 456789',
+                'format' => 'international',
+            ],
+            'url' => [
+                'placeholder' => 'https://beispiel.de',
+            ],
+            'select', 'multi_select' => [
+                'options' => [],
+            ],
+            'number' => [
+                'placeholder' => '',
+                'min' => null,
+                'max' => null,
+                'step' => 1,
+                'unit' => '',
+            ],
+            'scale' => [
+                'min' => 1,
+                'max' => 10,
+                'step' => 1,
+                'labels' => ['min_label' => '', 'max_label' => ''],
+            ],
+            'rating' => [
+                'min' => 1,
+                'max' => 5,
+                'step' => 1,
+            ],
+            'date' => [
+                'format' => 'Y-m-d',
+                'min_date' => '',
+                'max_date' => '',
+            ],
+            'boolean' => [
+                'true_label' => 'Ja',
+                'false_label' => 'Nein',
+                'style' => 'toggle',
+            ],
+            'file' => [
+                'allowed_types' => 'pdf,jpg,png,doc,docx',
+                'max_size_mb' => 10,
+            ],
+            'location' => [
+                'placeholder' => 'Adresse eingeben...',
+                'format' => 'address',
+            ],
+            default => [],
+        };
+    }
+
+    public function addSelectOption()
+    {
+        $options = $this->typeConfig['options'] ?? [];
+        $options[] = ['label' => '', 'value' => ''];
+        $this->typeConfig['options'] = $options;
+        $this->blockDefinition->logic_config = $this->typeConfig;
+    }
+
+    public function removeSelectOption($index)
+    {
+        $options = $this->typeConfig['options'] ?? [];
+        unset($options[$index]);
+        $this->typeConfig['options'] = array_values($options);
+        $this->blockDefinition->logic_config = $this->typeConfig;
     }
 
 

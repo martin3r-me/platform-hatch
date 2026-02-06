@@ -7,12 +7,9 @@ use Platform\ActivityLog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Symfony\Component\Uid\UuidV7;
-use Platform\AiAssistant\Traits\HasAiAssistant;
-
 class HatchProjectIntake extends Model
 {
     use LogsActivity;
-    use HasAiAssistant;
     
     protected $table = 'hatch_project_intakes';
     

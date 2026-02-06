@@ -97,9 +97,14 @@ class HatchBlockDefinition extends Model
     {
         return [
             'text' => 'Text-Eingabe',
+            'long_text' => 'Langer Text / Freitext',
+            'email' => 'E-Mail Adresse',
+            'phone' => 'Telefonnummer',
+            'url' => 'URL / Webadresse',
             'select' => 'Auswahl (Single)',
             'multi_select' => 'Auswahl (Multiple)',
             'number' => 'Zahl',
+            'scale' => 'Skala (1-10, 1-5 etc.)',
             'date' => 'Datum',
             'boolean' => 'Ja/Nein',
             'file' => 'Datei-Upload',

@@ -6,19 +6,21 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchComplexityLevel;
-use Platform\AiAssistant\Models\AiAssistantAssistant;
 
 class Index extends Component
 {
     use WithPagination;
 
+    // Search
+    public $search = '';
+
     // Modal State
     public $modalShow = false;
-    
+
     // Sorting
     public $sortField = 'name';
     public $sortDirection = 'asc';
-    
+
     // Form Data
     public $name = '';
     public $description = '';
@@ -26,7 +28,6 @@ class Index extends Component
     public $industry_context = '';
     public $complexity_level = 'medium';
     public $ai_instructions = [];
-    public $assistant_id = null;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -35,12 +36,23 @@ class Index extends Component
         'industry_context' => 'nullable|string|max:255',
         'complexity_level' => 'required|in:simple,medium,complex',
         'ai_instructions' => 'nullable|array',
-        'assistant_id' => 'nullable|exists:ai_assistant_assistants,id',
     ];
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
         $templates = HatchProjectTemplate::with(['createdByUser'])
+            ->when(!empty($this->search), function ($query) {
+                $query->where(function ($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%')
+                      ->orWhere('industry_context', 'like', '%' . $this->search . '%');
+                });
+            })
             ->when($this->sortField === 'name', function($query) {
                 $query->orderBy('name', $this->sortDirection);
             })
@@ -54,14 +66,13 @@ class Index extends Component
         return view('hatch::livewire.template.index', [
             'templates' => $templates,
             'complexityLevels' => $complexityLevels,
-            'assistants' => $this->availableAssistants(),
         ])->layout('platform::layouts.app');
     }
 
     public function createTemplate()
     {
         $this->validate();
-        
+
         $template = HatchProjectTemplate::create([
             'name' => $this->name,
             'description' => $this->description,
@@ -73,14 +84,9 @@ class Index extends Component
             'created_by_user_id' => auth()->id(),
         ]);
 
-        // Optional: Assistant zuweisen
-        if (!empty($this->assistant_id)) {
-            $template->setAssignedAiAssistant((int) $this->assistant_id);
-        }
-
         $this->resetForm();
         $this->modalShow = false;
-        
+
         session()->flash('message', 'Template erfolgreich erstellt!');
     }
 
@@ -88,25 +94,8 @@ class Index extends Component
     {
         $this->reset([
             'name', 'description', 'ai_personality', 'industry_context',
-            'complexity_level', 'ai_instructions', 'assistant_id'
+            'complexity_level', 'ai_instructions'
         ]);
-    }
-
-    private function availableAssistants()
-    {
-        $user = auth()->user();
-        return AiAssistantAssistant::query()
-            ->where(function ($q) use ($user) {
-                $q->where('ownership_type', 'team')
-                  ->where('team_id', $user->current_team_id)
-                  ->orWhere(function ($q2) use ($user) {
-                      $q2->where('ownership_type', 'user')
-                         ->where('user_id', $user->id);
-                  });
-            })
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
     }
 
     public function openCreateModal()

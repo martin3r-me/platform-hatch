@@ -7,9 +7,15 @@ use Platform\Hatch\Models\HatchBlockDefinition;
 
 class Index extends Component
 {
+    public $search = '';
+
+    public function updatedSearch()
+    {
+        // Reactivity trigger - Livewire re-renders automatically
+    }
+
     public function createBlockDefinition()
     {
-        // Erstelle eine neue BlockDefinition
         $blockDefinition = HatchBlockDefinition::create([
             'name' => 'Neue BlockDefinition',
             'description' => 'Beschreibung eingeben...',
@@ -28,7 +34,6 @@ class Index extends Component
             'noticable_id' => $blockDefinition->getKey(),
         ]);
 
-        // Redirect zur Show-Seite
         return redirect()->route('hatch.block-definitions.show', $blockDefinition);
     }
 
@@ -40,10 +45,10 @@ class Index extends Component
     public function deleteBlockDefinition($id)
     {
         $blockDefinition = HatchBlockDefinition::find($id);
-        
+
         if ($blockDefinition && $blockDefinition->team_id === auth()->user()->current_team_id) {
             $blockDefinition->delete();
-            
+
             $this->dispatch('notifications:store', [
                 'title' => 'BlockDefinition gelöscht',
                 'message' => 'Die BlockDefinition wurde erfolgreich gelöscht.',
@@ -54,11 +59,19 @@ class Index extends Component
 
     public function render()
     {
+        $query = HatchBlockDefinition::query()
+            ->where('team_id', auth()->user()->current_team_id);
+
+        if (!empty($this->search)) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('description', 'like', '%' . $this->search . '%')
+                  ->orWhere('block_type', 'like', '%' . $this->search . '%');
+            });
+        }
+
         return view('hatch::livewire.block-definition.index', [
-            'blockDefinitions' => HatchBlockDefinition::query()
-                ->where('team_id', auth()->user()->current_team_id)
-                ->orderBy('name')
-                ->get()
+            'blockDefinitions' => $query->orderBy('name')->get()
         ])->layout('platform::layouts.app');
     }
 }
