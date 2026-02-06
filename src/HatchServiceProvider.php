@@ -2,6 +2,7 @@
 
 namespace Platform\Hatch;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -51,6 +52,11 @@ class HatchServiceProvider extends ServiceProvider
                 $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
             });
         }
+
+        // Schritt 3b: Public Routes (ohne ModuleRouter, da kein Auth/Team nötig)
+        Route::prefix('hatch')->middleware(['web'])->group(function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/public.php');
+        });
 
         // Schritt 4: Migrationen laden
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');

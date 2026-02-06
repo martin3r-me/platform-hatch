@@ -15,6 +15,7 @@ class HatchProjectIntake extends Model
     
     protected $fillable = [
         'uuid',
+        'public_token',
         'project_template_id',
         'name',
         'description',
@@ -90,7 +91,29 @@ class HatchProjectIntake extends Model
     {
         return $this->belongsTo(\Platform\Core\Models\Team::class, 'team_id');
     }
-    
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(HatchIntakeSession::class, 'project_intake_id');
+    }
+
+    public function generatePublicToken(): string
+    {
+        $this->public_token = bin2hex(random_bytes(16));
+        $this->save();
+
+        return $this->public_token;
+    }
+
+    public function getPublicUrl(): ?string
+    {
+        if (!$this->public_token) {
+            return null;
+        }
+
+        return url('/hatch/p/' . $this->public_token);
+    }
+
     /**
      * Scopes
      */

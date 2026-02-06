@@ -80,6 +80,40 @@
                         <p class="text-sm text-[var(--ui-muted)]">Kein Template zugewiesen.</p>
                     @endif
                 </div>
+
+                {{-- Oeffentlicher Link --}}
+                <div>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Oeffentlicher Link</h3>
+                    @if($projectIntake->public_token)
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 p-2 bg-[var(--ui-muted-5)] rounded">
+                                <input
+                                    type="text"
+                                    value="{{ $projectIntake->getPublicUrl() }}"
+                                    readonly
+                                    class="flex-grow text-xs font-mono bg-transparent border-none outline-none text-[var(--ui-secondary)] truncate"
+                                />
+                                <button
+                                    type="button"
+                                    onclick="navigator.clipboard.writeText('{{ $projectIntake->getPublicUrl() }}').then(() => this.querySelector('span').textContent = 'Kopiert!')"
+                                    class="flex-shrink-0 text-xs text-[var(--ui-primary)] hover:underline"
+                                >
+                                    <span>Kopieren</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-[var(--ui-muted)]">
+                                {{ $projectIntake->sessions()->count() }} Session(s) bisher
+                            </p>
+                        </div>
+                    @else
+                        <x-ui-button variant="secondary" size="sm" wire:click="generatePublicLink" class="w-full">
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-link', 'w-4 h-4')
+                                Link generieren
+                            </span>
+                        </x-ui-button>
+                    @endif
+                </div>
             </div>
         </x-ui-page-sidebar>
     </x-slot>

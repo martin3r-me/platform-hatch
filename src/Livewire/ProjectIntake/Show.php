@@ -194,6 +194,21 @@ class Show extends Component
         ]);
     }
 
+    public function generatePublicLink()
+    {
+        if (!$this->projectIntake->public_token) {
+            $this->projectIntake->generatePublicToken();
+        }
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Link erstellt',
+            'message' => 'Der oeffentliche Link wurde generiert.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
     public function render()
     {
         $this->projectIntake->load([
