@@ -13,7 +13,7 @@
                  alt="" loading="eager">
         @endif
         <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
-        <div class="absolute inset-0 backdrop-blur-[2px]"></div>
+        <div class="absolute inset-0 backdrop-blur-[6px]"></div>
     </div>
 
     @if($state === 'notFound')
