@@ -237,20 +237,7 @@ class Show extends Component
 
         $optionsProvider = app(CrmContactOptionsProviderInterface::class);
 
-        logger()->debug('Hatch Kontaktsuche', [
-            'provider' => get_class($optionsProvider),
-            'query' => $value,
-            'user_id' => auth()->id(),
-            'current_team_id' => auth()->user()?->current_team_id,
-            'root_team_id' => auth()->user()?->currentTeamRelation?->getRootTeam()?->id,
-        ]);
-
         $this->contactOptions = $optionsProvider->options($value);
-
-        logger()->debug('Hatch Kontaktsuche Ergebnis', [
-            'count' => count($this->contactOptions),
-            'options' => $this->contactOptions,
-        ]);
     }
 
     public function createPersonalizedSession()

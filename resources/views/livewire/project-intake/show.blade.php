@@ -481,7 +481,7 @@
                 @if(!empty($contactOptions))
                     <div>
                         <label class="block text-sm font-medium text-[var(--ui-secondary)] mb-1">Kontakt auswählen</label>
-                        <x-ui-input-select wire:model="selectedContactId">
+                        <x-ui-input-select name="selectedContactId" wire:model="selectedContactId">
                             <option value="">-- Kontakt wählen --</option>
                             @foreach($contactOptions as $option)
                                 <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>

@@ -69,6 +69,54 @@ class HatchServiceProvider extends ServiceProvider
         // Schritt 6: Views & Livewire
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'hatch');
         $this->registerLivewireComponents();
+
+        // Schritt 7: Tools registrieren (loose gekoppelt - für AI/Chat)
+        $this->registerTools();
+    }
+
+    /**
+     * Registriert Hatch-Tools für die AI/Chat-Funktionalität.
+     */
+    protected function registerTools(): void
+    {
+        try {
+            $registry = resolve(\Platform\Core\Tools\ToolRegistry::class);
+
+            // Overview
+            $registry->register(new \Platform\Hatch\Tools\HatchOverviewTool());
+
+            // Templates (CRUD)
+            $registry->register(new \Platform\Hatch\Tools\ListTemplatesTool());
+            $registry->register(new \Platform\Hatch\Tools\GetTemplateTool());
+            $registry->register(new \Platform\Hatch\Tools\CreateTemplateTool());
+            $registry->register(new \Platform\Hatch\Tools\UpdateTemplateTool());
+            $registry->register(new \Platform\Hatch\Tools\DeleteTemplateTool());
+
+            // Template ↔ Block-Definition Verknüpfung
+            $registry->register(new \Platform\Hatch\Tools\AddTemplateBlockTool());
+            $registry->register(new \Platform\Hatch\Tools\UpdateTemplateBlockTool());
+            $registry->register(new \Platform\Hatch\Tools\RemoveTemplateBlockTool());
+
+            // Block Definitions (CRUD)
+            $registry->register(new \Platform\Hatch\Tools\ListBlockDefinitionsTool());
+            $registry->register(new \Platform\Hatch\Tools\GetBlockDefinitionTool());
+            $registry->register(new \Platform\Hatch\Tools\CreateBlockDefinitionTool());
+            $registry->register(new \Platform\Hatch\Tools\UpdateBlockDefinitionTool());
+            $registry->register(new \Platform\Hatch\Tools\DeleteBlockDefinitionTool());
+
+            // Intakes (CRUD)
+            $registry->register(new \Platform\Hatch\Tools\ListIntakesTool());
+            $registry->register(new \Platform\Hatch\Tools\GetIntakeTool());
+            $registry->register(new \Platform\Hatch\Tools\CreateIntakeTool());
+            $registry->register(new \Platform\Hatch\Tools\UpdateIntakeTool());
+            $registry->register(new \Platform\Hatch\Tools\DeleteIntakeTool());
+
+            // Sessions (Read-Only)
+            $registry->register(new \Platform\Hatch\Tools\ListIntakeSessionsTool());
+            $registry->register(new \Platform\Hatch\Tools\GetIntakeSessionTool());
+        } catch (\Throwable $e) {
+            \Log::warning('Hatch: Tool-Registrierung fehlgeschlagen', ['error' => $e->getMessage()]);
+        }
     }
 
     protected function registerLivewireComponents(): void
