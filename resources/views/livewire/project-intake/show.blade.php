@@ -483,7 +483,7 @@
                     <x-ui-button variant="secondary" size="sm" wire:click="closePersonalizedSessionModal">
                         Abbrechen
                     </x-ui-button>
-                    <x-ui-button variant="primary" size="sm" wire:click="createPersonalizedSession" @if(!$selectedContactId) disabled @endif>
+                    <x-ui-button variant="primary" size="sm" wire:click="createPersonalizedSession" :disabled="!$selectedContactId">
                         <span class="flex items-center gap-2">
                             @svg('heroicon-o-link', 'w-4 h-4')
                             Session erstellen
