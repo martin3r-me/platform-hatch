@@ -158,6 +158,20 @@ class IntakeSession extends Component
         $this->currentAnswer = $value;
     }
 
+    public function goToBlock(int $index): void
+    {
+        if ($index < 0 || $index >= $this->totalBlocks) {
+            return;
+        }
+
+        if ($this->state !== 'completed') {
+            $this->saveCurrentBlock();
+        }
+
+        $this->currentStep = $index;
+        $this->loadCurrentAnswer();
+    }
+
     public function nextBlock(): void
     {
         if ($this->state !== 'completed') {

@@ -1,25 +1,26 @@
 <div class="intake-wrap min-h-screen relative overflow-hidden">
 
-    {{-- Animated Background --}}
+    {{-- Background Image --}}
     <div class="fixed inset-0 -z-10" aria-hidden="true">
         <div class="intake-bg"></div>
-        <div class="intake-blob intake-blob-1"></div>
-        <div class="intake-blob intake-blob-2"></div>
-        <div class="intake-blob intake-blob-3"></div>
-        <div class="intake-blob intake-blob-4"></div>
-        <div class="intake-noise"></div>
+        <img src="https://picsum.photos/seed/{{ $sessionToken }}/1920/1080"
+             class="absolute inset-0 w-full h-full object-cover"
+             alt="" loading="eager"
+             onerror="this.style.display='none'">
+        <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
+        <div class="absolute inset-0 backdrop-blur-[2px]"></div>
     </div>
 
     @if($state === 'notFound')
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="intake-glass w-full max-w-md p-10 text-center">
-                <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6">
+            <div class="intake-card w-full max-w-md p-10 text-center">
+                <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-white mb-3">Session nicht gefunden</h1>
-                <p class="text-white/60 text-lg">Diese Session ist ungueltig oder existiert nicht mehr.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Session nicht gefunden</h1>
+                <p class="text-gray-500 text-lg">Diese Session ist ungueltig oder existiert nicht mehr.</p>
             </div>
         </div>
 
@@ -110,13 +111,13 @@
                             @endphp
                             <button
                                 type="button"
-                                wire:click="{{ $isReadOnly ? 'nextBlock' : '' }}"
-                                class="flex items-center gap-2 px-3.5 py-2 rounded-full text-sm transition-all
+                                wire:click="goToBlock({{ $index }})"
+                                class="flex items-center gap-2 px-3.5 py-2 rounded-full text-sm transition-all cursor-pointer
                                     {{ $isActive
                                         ? 'bg-white/20 text-white ring-1 ring-white/30'
                                         : ($isPast
-                                            ? 'bg-white/8 text-white/60'
-                                            : 'bg-white/5 text-white/30')
+                                            ? 'bg-white/8 text-white/60 hover:bg-white/15'
+                                            : 'bg-white/5 text-white/30 hover:bg-white/10')
                                     }}"
                             >
                                 <span class="w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold
@@ -140,7 +141,7 @@
             @endif
 
             {{-- Aktiver Block --}}
-            <div class="intake-glass">
+            <div class="intake-card">
                 @if(isset($blocks[$currentStep]))
                     @php
                         $block = $blocks[$currentStep];
@@ -148,20 +149,20 @@
                         $config = $block['logic_config'] ?? [];
                     @endphp
 
-                    <div class="p-8 pb-6 border-b border-white/10">
+                    <div class="p-8 pb-6 border-b border-gray-100">
                         <div class="flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <span class="text-sm font-bold text-white/80">{{ $currentStep + 1 }}</span>
+                            <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-sm font-bold text-gray-600">{{ $currentStep + 1 }}</span>
                             </div>
                             <div>
-                                <h2 class="text-xl font-bold text-white">
+                                <h2 class="text-xl font-bold text-gray-900">
                                     {{ $block['name'] }}
                                     @if($block['is_required'] && !$isReadOnly)
-                                        <span class="text-rose-400 ml-1">*</span>
+                                        <span class="text-rose-500 ml-1">*</span>
                                     @endif
                                 </h2>
                                 @if($block['description'])
-                                    <p class="mt-2 text-white/50 leading-relaxed">
+                                    <p class="mt-2 text-gray-500 leading-relaxed">
                                         {{ $block['description'] }}
                                     </p>
                                 @endif
@@ -242,7 +243,7 @@
                                         class="intake-input {{ $isReadOnly ? 'opacity-60' : '' }}"
                                     >
                                     @if(!empty($config['unit']))
-                                        <span class="text-sm font-medium text-white/40 flex-shrink-0">{{ $config['unit'] }}</span>
+                                        <span class="text-sm font-medium text-gray-400 flex-shrink-0">{{ $config['unit'] }}</span>
                                     @endif
                                 </div>
                                 @break
@@ -275,12 +276,12 @@
                                             class="intake-option-card {{ $isChosen ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                         >
                                             <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
-                                                {{ $isChosen ? 'border-white' : 'border-white/20' }}">
+                                                {{ $isChosen ? 'border-violet-600' : 'border-gray-300' }}">
                                                 @if($isChosen)
-                                                    <span class="w-2 h-2 rounded-full bg-white"></span>
+                                                    <span class="w-2 h-2 rounded-full bg-violet-600"></span>
                                                 @endif
                                             </span>
-                                            <span class="{{ $isChosen ? 'text-white' : 'text-white/70' }}">{{ $optionLabel }}</span>
+                                            <span class="{{ $isChosen ? 'text-gray-900' : 'text-gray-600' }}">{{ $optionLabel }}</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -302,14 +303,14 @@
                                             class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                         >
                                             <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors
-                                                {{ $isSelected ? 'border-white bg-white' : 'border-white/20' }}">
+                                                {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">
                                                 @if($isSelected)
-                                                    <svg class="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
                                                     </svg>
                                                 @endif
                                             </span>
-                                            <span class="{{ $isSelected ? 'text-white' : 'text-white/70' }}">{{ $optionLabel }}</span>
+                                            <span class="{{ $isSelected ? 'text-gray-900' : 'text-gray-600' }}">{{ $optionLabel }}</span>
                                         </button>
                                     @endforeach
                                 </div>
@@ -328,10 +329,10 @@
                                         @if($isReadOnly) disabled @endif
                                         class="intake-bool-card {{ $currentAnswer === 'true' ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                     >
-                                        <svg class="w-10 h-10 {{ $currentAnswer === 'true' ? 'text-emerald-400' : 'text-white/20' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-10 h-10 {{ $currentAnswer === 'true' ? 'text-emerald-500' : 'text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/>
                                         </svg>
-                                        <span class="text-lg font-semibold {{ $currentAnswer === 'true' ? 'text-white' : 'text-white/50' }}">{{ $trueLabel }}</span>
+                                        <span class="text-lg font-semibold {{ $currentAnswer === 'true' ? 'text-gray-900' : 'text-gray-400' }}">{{ $trueLabel }}</span>
                                     </button>
                                     <button
                                         type="button"
@@ -339,10 +340,10 @@
                                         @if($isReadOnly) disabled @endif
                                         class="intake-bool-card {{ $currentAnswer === 'false' ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                     >
-                                        <svg class="w-10 h-10 {{ $currentAnswer === 'false' ? 'text-rose-400' : 'text-white/20' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-10 h-10 {{ $currentAnswer === 'false' ? 'text-rose-500' : 'text-gray-300' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
                                         </svg>
-                                        <span class="text-lg font-semibold {{ $currentAnswer === 'false' ? 'text-white' : 'text-white/50' }}">{{ $falseLabel }}</span>
+                                        <span class="text-lg font-semibold {{ $currentAnswer === 'false' ? 'text-gray-900' : 'text-gray-400' }}">{{ $falseLabel }}</span>
                                     </button>
                                 </div>
                                 @break
@@ -357,7 +358,7 @@
                                 @endphp
                                 <div>
                                     @if($minLabel || $maxLabel)
-                                        <div class="flex justify-between mb-4 text-sm text-white/40">
+                                        <div class="flex justify-between mb-4 text-sm text-gray-400">
                                             <span>{{ $minLabel }}</span>
                                             <span>{{ $maxLabel }}</span>
                                         </div>
@@ -370,10 +371,10 @@
                                                 @if($isReadOnly) disabled @endif
                                                 class="w-12 h-12 rounded-xl font-bold text-lg transition-all
                                                     {{ $currentAnswer === (string)$i
-                                                        ? 'bg-white text-gray-900 shadow-lg shadow-white/20'
-                                                        : 'bg-white/8 text-white/60'
+                                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-200'
+                                                        : 'bg-gray-100 text-gray-500'
                                                     }}
-                                                    {{ $isReadOnly ? 'cursor-default' : 'hover:bg-white/15' }}"
+                                                    {{ $isReadOnly ? 'cursor-default' : 'hover:bg-gray-200' }}"
                                             >
                                                 {{ $i }}
                                             </button>
@@ -396,7 +397,7 @@
                                             @if($isReadOnly) disabled @endif
                                             class="{{ $isReadOnly ? 'cursor-default' : 'transition-transform hover:scale-125' }}"
                                         >
-                                            <svg class="w-12 h-12 transition-colors {{ $i <= $currentRating ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : 'text-white/15' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="0.5">
+                                            <svg class="w-12 h-12 transition-colors {{ $i <= $currentRating ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' : 'text-gray-200' }}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="0.5">
                                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                                             </svg>
                                         </button>
@@ -406,11 +407,11 @@
 
                             {{-- File (Placeholder) --}}
                             @case('file')
-                                <div class="flex flex-col items-center justify-center p-10 border-2 border-dashed border-white/10 rounded-xl">
-                                    <svg class="w-12 h-12 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-200 rounded-xl">
+                                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                     </svg>
-                                    <p class="text-sm text-white/30">Datei-Upload wird in einer spaeteren Version unterstuetzt.</p>
+                                    <p class="text-sm text-gray-400">Datei-Upload wird in einer spaeteren Version unterstuetzt.</p>
                                 </div>
                                 @break
 
@@ -445,8 +446,8 @@
                             @if($currentStep === 0) disabled @endif
                             class="px-5 py-2.5 text-sm font-medium rounded-xl transition-all
                                 {{ $currentStep === 0
-                                    ? 'text-white/15 cursor-not-allowed'
-                                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                 }}"
                         >
                             <span wire:loading.remove wire:target="previousBlock">&larr; Zurueck</span>
@@ -458,7 +459,7 @@
                                 <button
                                     wire:click="saveCurrentBlock"
                                     wire:loading.attr="disabled"
-                                    class="px-5 py-2.5 text-sm font-medium text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                                    class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                                 >
                                     <span wire:loading.remove wire:target="saveCurrentBlock">Speichern</span>
                                     <span wire:loading wire:target="saveCurrentBlock">Wird gespeichert...</span>
@@ -492,7 +493,7 @@
                     </div>
                 @else
                     <div class="p-12 text-center">
-                        <p class="text-white/30">Keine Bloecke in dieser Erhebung konfiguriert.</p>
+                        <p class="text-gray-400">Keine Bloecke in dieser Erhebung konfiguriert.</p>
                     </div>
                 @endif
             </div>
@@ -500,14 +501,14 @@
 
         {{-- Footer --}}
         <footer class="max-w-3xl mx-auto px-6 pb-8 text-center">
-            <p class="text-[11px] text-white/15 tracking-wider uppercase">Powered by Hatch</p>
+            <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Hatch</p>
         </footer>
     @endif
 </div>
 
 <style>
     /* ═══════════════════════════════════════════
-       WeTransfer-inspired Intake Session Styles
+       Intake Session Styles — White Card Design
        ═══════════════════════════════════════════ */
 
     .intake-wrap {
@@ -518,102 +519,21 @@
     .intake-bg {
         position: fixed;
         inset: 0;
-        background: #0f0a1a;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
         z-index: -10;
     }
 
-    .intake-blob {
-        position: fixed;
-        border-radius: 50%;
-        filter: blur(120px);
-        opacity: 0.6;
-        z-index: -5;
-        will-change: transform;
-    }
-
-    .intake-blob-1 {
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, #7c3aed 0%, #6d28d9 40%, transparent 70%);
-        top: -15%;
-        left: -10%;
-        animation: intake-drift-1 20s ease-in-out infinite;
-    }
-
-    .intake-blob-2 {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, #ec4899 0%, #db2777 40%, transparent 70%);
-        bottom: -10%;
-        right: -8%;
-        animation: intake-drift-2 25s ease-in-out infinite;
-    }
-
-    .intake-blob-3 {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, #06b6d4 0%, #0891b2 40%, transparent 70%);
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: intake-drift-3 18s ease-in-out infinite;
-    }
-
-    .intake-blob-4 {
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, #f59e0b 0%, #d97706 40%, transparent 70%);
-        top: 10%;
-        right: 15%;
-        opacity: 0.3;
-        animation: intake-drift-4 22s ease-in-out infinite;
-    }
-
-    .intake-noise {
-        position: fixed;
-        inset: 0;
-        z-index: -4;
-        opacity: 0.03;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        background-repeat: repeat;
-        background-size: 256px 256px;
-    }
-
-    @keyframes intake-drift-1 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(60px, 40px) scale(1.1); }
-        66% { transform: translate(-30px, 70px) scale(0.95); }
-    }
-
-    @keyframes intake-drift-2 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(-50px, -40px) scale(1.15); }
-        66% { transform: translate(40px, -60px) scale(0.9); }
-    }
-
-    @keyframes intake-drift-3 {
-        0%, 100% { transform: translate(-50%, -50%) scale(1); }
-        33% { transform: translate(-40%, -60%) scale(1.2); }
-        66% { transform: translate(-60%, -40%) scale(0.85); }
-    }
-
-    @keyframes intake-drift-4 {
-        0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-        50% { transform: translate(-40px, 50px) scale(1.1) rotate(10deg); }
-    }
-
-    /* ── Glass Effects ── */
-    .intake-glass {
-        background: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(40px);
-        -webkit-backdrop-filter: blur(40px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    /* ── White Content Card ── */
+    .intake-card {
+        background: white;
         border-radius: 24px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
         box-shadow:
-            0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-            0 20px 60px rgba(0, 0, 0, 0.3);
+            0 4px 6px -1px rgba(0, 0, 0, 0.05),
+            0 25px 50px -12px rgba(0, 0, 0, 0.15);
     }
 
+    /* ── Glass Effects (Header, Banner, Pills — stay on image) ── */
     .intake-glass-subtle {
         background: rgba(255, 255, 255, 0.04);
         backdrop-filter: blur(20px);
@@ -640,39 +560,40 @@
         box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
     }
 
-    /* ── Form Inputs ── */
+    /* ── Form Inputs (inside white card) ── */
     .intake-input {
         width: 100%;
         padding: 14px 18px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: white;
+        border: 1px solid #d1d5db;
         border-radius: 14px;
-        color: white;
+        color: #111827;
         font-size: 15px;
         outline: none;
         transition: all 0.2s ease;
     }
 
     .intake-input::placeholder {
-        color: rgba(255, 255, 255, 0.25);
+        color: #9ca3af;
     }
 
     .intake-input:focus {
-        border-color: rgba(124, 58, 237, 0.5);
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15), 0 0 20px rgba(124, 58, 237, 0.1);
-        background: rgba(255, 255, 255, 0.08);
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        background: white;
     }
 
     .intake-input:disabled {
         cursor: not-allowed;
+        background: #f9fafb;
     }
 
-    /* Date input icon color fix */
+    /* Date input icon color fix for white bg */
     .intake-input[type="date"]::-webkit-calendar-picker-indicator {
-        filter: invert(1) opacity(0.4);
+        filter: none;
     }
 
-    /* ── Option Cards ── */
+    /* ── Option Cards (inside white card) ── */
     .intake-option-card {
         width: 100%;
         display: flex;
@@ -680,24 +601,24 @@
         gap: 14px;
         padding: 14px 18px;
         border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid #e5e7eb;
+        background: white;
         text-align: left;
         transition: all 0.2s ease;
     }
 
     .intake-option-card:not(:disabled):hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.15);
+        background: #f9fafb;
+        border-color: #d1d5db;
     }
 
     .intake-option-active {
-        background: rgba(124, 58, 237, 0.15) !important;
+        background: rgba(124, 58, 237, 0.05) !important;
         border-color: rgba(124, 58, 237, 0.4) !important;
-        box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
     }
 
-    /* ── Boolean Cards ── */
+    /* ── Boolean Cards (inside white card) ── */
     .intake-bool-card {
         display: flex;
         flex-direction: column;
@@ -706,31 +627,30 @@
         gap: 10px;
         padding: 32px 24px;
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid #e5e7eb;
+        background: white;
         transition: all 0.2s ease;
     }
 
     .intake-bool-card:not(:disabled):hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.15);
+        background: #f9fafb;
+        border-color: #d1d5db;
     }
 
     /* ── Buttons ── */
     .intake-btn-primary {
         padding: 10px 24px;
-        background: rgba(124, 58, 237, 0.8);
+        background: #7c3aed;
         color: white;
         font-size: 14px;
         font-weight: 600;
         border-radius: 14px;
         transition: all 0.2s ease;
-        backdrop-filter: blur(10px);
     }
 
     .intake-btn-primary:hover {
-        background: rgba(124, 58, 237, 1);
-        box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+        background: #6d28d9;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
     }
 
     .intake-btn-primary:disabled {
@@ -739,29 +659,20 @@
 
     .intake-btn-submit {
         padding: 10px 24px;
-        background: rgba(16, 185, 129, 0.8);
+        background: #10b981;
         color: white;
         font-size: 14px;
         font-weight: 600;
         border-radius: 14px;
         transition: all 0.2s ease;
-        backdrop-filter: blur(10px);
     }
 
     .intake-btn-submit:hover {
-        background: rgba(16, 185, 129, 1);
-        box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        background: #059669;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
     }
 
     .intake-btn-submit:disabled {
         opacity: 0.5;
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 640px) {
-        .intake-blob-1 { width: 350px; height: 350px; }
-        .intake-blob-2 { width: 300px; height: 300px; }
-        .intake-blob-3 { width: 250px; height: 250px; }
-        .intake-blob-4 { display: none; }
     }
 </style>
