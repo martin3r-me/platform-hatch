@@ -48,7 +48,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'model' => 'Platform\\Hatch\\Models\\HatchBlockDefinition',
                         'table' => 'hatch_block_definitions',
                         'key_fields' => ['id', 'uuid', 'name', 'block_type', 'ai_prompt', 'is_active', 'team_id'],
-                        'note' => 'Wiederverwendbare Bausteine (Frage-Typen) für Templates. Block-Typen: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, custom.',
+                        'note' => 'Wiederverwendbare Bausteine (Frage-Typen) für Templates. Block-Typen: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, custom. Scale-Defaults: min=1, max=5. Rating-Default: max=5. Konfiguration via logic_config.',
                     ],
                     'project_intakes' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntake',

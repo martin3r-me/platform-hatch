@@ -67,7 +67,7 @@ class CreateBlockDefinitionTool implements ToolContract, ToolMetadataContract
                 ],
                 'logic_config' => [
                     'type' => 'object',
-                    'description' => 'Optional: Logik-Konfiguration als JSON.',
+                    'description' => 'Optional: Logik-Konfiguration als JSON. Fuer block_type "select"/"multi_select": options-Array setzen. Fuer block_type "scale": min (default 1), max (default 5), min_label, max_label setzen. Fuer block_type "rating": max (default 5). Fuer block_type "boolean": true_label, false_label.',
                 ],
                 'ai_behavior' => [
                     'type' => 'object',
