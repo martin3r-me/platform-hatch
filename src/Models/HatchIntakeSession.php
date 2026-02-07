@@ -5,11 +5,13 @@ namespace Platform\Hatch\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Platform\Core\Traits\Encryptable;
+use Platform\Crm\Traits\HasContactLinksTrait;
 use Symfony\Component\Uid\UuidV7;
 
 class HatchIntakeSession extends Model
 {
     use Encryptable;
+    use HasContactLinksTrait;
     protected $table = 'hatch_intake_sessions';
 
     protected $fillable = [

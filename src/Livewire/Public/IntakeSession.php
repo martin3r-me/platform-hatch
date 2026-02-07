@@ -52,6 +52,8 @@ class IntakeSession extends Component
 
         if ($this->session->status === 'completed') {
             $this->state = 'completed';
+            $this->currentStep = 0;
+            $this->loadCurrentAnswer();
             return;
         }
 
@@ -91,6 +93,10 @@ class IntakeSession extends Component
 
     public function saveCurrentBlock(): void
     {
+        if ($this->state === 'completed') {
+            return;
+        }
+
         if (!isset($this->blocks[$this->currentStep])) {
             return;
         }
@@ -113,6 +119,10 @@ class IntakeSession extends Component
 
     public function submitIntake(): void
     {
+        if ($this->state === 'completed') {
+            return;
+        }
+
         $this->saveCurrentBlock();
 
         $this->session->update([
@@ -125,6 +135,10 @@ class IntakeSession extends Component
 
     public function toggleOption(string $value): void
     {
+        if ($this->state === 'completed') {
+            return;
+        }
+
         if (in_array($value, $this->selectedOptions)) {
             $this->selectedOptions = array_values(array_filter(
                 $this->selectedOptions,
@@ -137,12 +151,18 @@ class IntakeSession extends Component
 
     public function setAnswer(string $value): void
     {
+        if ($this->state === 'completed') {
+            return;
+        }
+
         $this->currentAnswer = $value;
     }
 
     public function nextBlock(): void
     {
-        $this->saveCurrentBlock();
+        if ($this->state !== 'completed') {
+            $this->saveCurrentBlock();
+        }
 
         if ($this->currentStep < $this->totalBlocks - 1) {
             $this->currentStep++;
@@ -152,7 +172,9 @@ class IntakeSession extends Component
 
     public function previousBlock(): void
     {
-        $this->saveCurrentBlock();
+        if ($this->state !== 'completed') {
+            $this->saveCurrentBlock();
+        }
 
         if ($this->currentStep > 0) {
             $this->currentStep--;

@@ -313,9 +313,17 @@
         @endif
         {{-- Sessions --}}
         <div class="mt-8">
-            <div class="flex items-center gap-3 mb-4">
-                <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Eingegangene Sessions</h3>
-                <x-ui-badge variant="secondary" size="sm">{{ $sessions->count() }}</x-ui-badge>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Eingegangene Sessions</h3>
+                    <x-ui-badge variant="secondary" size="sm">{{ $sessions->count() }}</x-ui-badge>
+                </div>
+                <x-ui-button variant="primary" size="sm" wire:click="openPersonalizedSessionModal">
+                    <span class="flex items-center gap-2">
+                        @svg('heroicon-o-user-plus', 'w-4 h-4')
+                        Personalisierte Session
+                    </span>
+                </x-ui-button>
             </div>
 
             @if($sessions->isNotEmpty())
@@ -328,8 +336,10 @@
                             <tr>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Token</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Respondent</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Kontakt</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Status</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Fortschritt</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Link</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Gestartet</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Abgeschlossen</th>
                             </tr>
@@ -352,6 +362,18 @@
                                             <span class="text-[var(--ui-muted)]">Anonym</span>
                                         @endif
                                     </td>
+                                    <td class="p-3 text-[var(--ui-secondary)]">
+                                        @php
+                                            $contact = $session->contacts()->first();
+                                        @endphp
+                                        @if($contact)
+                                            <a href="{{ $contact->url ?? '#' }}" class="text-[var(--ui-primary)] hover:underline text-sm">
+                                                {{ $contact->display_name ?? $contact->name ?? '–' }}
+                                            </a>
+                                        @else
+                                            <span class="text-[var(--ui-muted)]">–</span>
+                                        @endif
+                                    </td>
                                     <td class="p-3">
                                         <x-ui-badge
                                             :variant="$session->status === 'completed' ? 'success' : 'warning'"
@@ -361,7 +383,26 @@
                                         </x-ui-badge>
                                     </td>
                                     <td class="p-3 text-[var(--ui-secondary)]">
-                                        {{ $session->current_step ?? 0 }} / {{ $totalBlocks }}
+                                        @php
+                                            $answeredBlocks = is_array($session->answers) ? count($session->answers) : 0;
+                                        @endphp
+                                        {{ $answeredBlocks }} / {{ $totalBlocks }}
+                                    </td>
+                                    <td class="p-3">
+                                        @php
+                                            $sessionUrl = route('hatch.public.intake-session', ['sessionToken' => $session->session_token]);
+                                        @endphp
+                                        <div class="flex items-center gap-1">
+                                            <span class="text-xs font-mono text-[var(--ui-muted)] truncate max-w-[120px]">{{ $sessionUrl }}</span>
+                                            <button
+                                                type="button"
+                                                onclick="navigator.clipboard.writeText('{{ $sessionUrl }}').then(() => { this.querySelector('svg').classList.add('text-green-500'); setTimeout(() => this.querySelector('svg').classList.remove('text-green-500'), 1500) })"
+                                                class="flex-shrink-0 text-[var(--ui-muted)] hover:text-[var(--ui-primary)]"
+                                                title="Link kopieren"
+                                            >
+                                                @svg('heroicon-o-clipboard-document', 'w-4 h-4 transition-colors')
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="p-3 text-[var(--ui-muted)]">
                                         {{ $session->started_at?->format('d.m.Y H:i') ?? '–' }}
@@ -382,4 +423,74 @@
             @endif
         </div>
     </x-ui-page-container>
+
+    {{-- Modal: Personalisierte Session erstellen --}}
+    <x-ui-modal wire:model="showPersonalizedSessionModal" title="Personalisierte Session erstellen" maxWidth="lg">
+        <div class="space-y-4">
+            @if($createdSessionUrl)
+                {{-- Ergebnis: Link anzeigen --}}
+                <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div class="flex items-center gap-2 mb-2">
+                        @svg('heroicon-o-check-circle', 'w-5 h-5 text-green-500')
+                        <span class="font-medium text-green-700 dark:text-green-400">Session erfolgreich erstellt</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-3">
+                        <input
+                            type="text"
+                            value="{{ $createdSessionUrl }}"
+                            readonly
+                            class="flex-grow text-sm font-mono bg-white dark:bg-[var(--ui-surface)] border border-[var(--ui-border)] rounded px-3 py-2 text-[var(--ui-secondary)]"
+                        />
+                        <button
+                            type="button"
+                            onclick="navigator.clipboard.writeText('{{ $createdSessionUrl }}').then(() => this.querySelector('span').textContent = 'Kopiert!')"
+                            class="flex-shrink-0 px-3 py-2 text-sm text-[var(--ui-primary)] hover:underline"
+                        >
+                            <span>Kopieren</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <x-ui-button variant="secondary" size="sm" wire:click="closePersonalizedSessionModal">
+                        Schliessen
+                    </x-ui-button>
+                </div>
+            @else
+                {{-- Kontakt-Suche --}}
+                <div>
+                    <label class="block text-sm font-medium text-[var(--ui-secondary)] mb-1">CRM-Kontakt suchen</label>
+                    <x-ui-input-text
+                        wire:model.live.debounce.300ms="contactSearch"
+                        placeholder="Name oder E-Mail eingeben..."
+                    />
+                </div>
+
+                @if(!empty($contactOptions))
+                    <div>
+                        <label class="block text-sm font-medium text-[var(--ui-secondary)] mb-1">Kontakt auswählen</label>
+                        <x-ui-input-select wire:model="selectedContactId">
+                            <option value="">-- Kontakt wählen --</option>
+                            @foreach($contactOptions as $option)
+                                <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                            @endforeach
+                        </x-ui-input-select>
+                    </div>
+                @elseif(strlen($contactSearch) >= 2)
+                    <p class="text-sm text-[var(--ui-muted)]">Keine Kontakte gefunden.</p>
+                @endif
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <x-ui-button variant="secondary" size="sm" wire:click="closePersonalizedSessionModal">
+                        Abbrechen
+                    </x-ui-button>
+                    <x-ui-button variant="primary" size="sm" wire:click="createPersonalizedSession" @if(!$selectedContactId) disabled @endif>
+                        <span class="flex items-center gap-2">
+                            @svg('heroicon-o-link', 'w-4 h-4')
+                            Session erstellen
+                        </span>
+                    </x-ui-button>
+                </div>
+            @endif
+        </div>
+    </x-ui-modal>
 </x-ui-page>

@@ -3,6 +3,9 @@
 namespace Platform\Hatch\Livewire\ProjectIntake;
 
 use Livewire\Component;
+use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
+use Platform\Core\Contracts\CrmContactResolverInterface;
+use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectIntakeStep;
 
@@ -19,6 +22,13 @@ class Show extends Component
     ];
 
     public $showActivities = false;
+
+    // Personalisierte Session
+    public bool $showPersonalizedSessionModal = false;
+    public string $contactSearch = '';
+    public ?int $selectedContactId = null;
+    public array $contactOptions = [];
+    public ?string $createdSessionUrl = null;
 
     // Aktueller Kontext (UI)
     public $currentBlockIndex = 0;
@@ -207,6 +217,67 @@ class Show extends Component
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
+    }
+
+    public function openPersonalizedSessionModal()
+    {
+        $this->showPersonalizedSessionModal = true;
+        $this->contactSearch = '';
+        $this->selectedContactId = null;
+        $this->contactOptions = [];
+        $this->createdSessionUrl = null;
+    }
+
+    public function updatedContactSearch($value)
+    {
+        if (strlen($value) < 2) {
+            $this->contactOptions = [];
+            return;
+        }
+
+        $optionsProvider = app(CrmContactOptionsProviderInterface::class);
+        $this->contactOptions = $optionsProvider->options($value);
+    }
+
+    public function createPersonalizedSession()
+    {
+        if (!$this->selectedContactId) {
+            return;
+        }
+
+        $resolver = app(CrmContactResolverInterface::class);
+        $contactName = $resolver->displayName($this->selectedContactId);
+        $contactEmail = $resolver->email($this->selectedContactId);
+
+        $session = HatchIntakeSession::create([
+            'project_intake_id' => $this->projectIntake->id,
+            'status' => 'not_started',
+            'respondent_name' => $contactName,
+            'respondent_email' => $contactEmail,
+            'answers' => [],
+            'current_step' => 0,
+        ]);
+
+        $contact = \Platform\Crm\Models\CrmContact::find($this->selectedContactId);
+        if ($contact) {
+            $session->attachContact($contact);
+        }
+
+        $this->createdSessionUrl = route('hatch.public.intake-session', ['sessionToken' => $session->session_token]);
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Personalisierte Session erstellt',
+            'message' => "Session für {$contactName} wurde erstellt.",
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
+    public function closePersonalizedSessionModal()
+    {
+        $this->showPersonalizedSessionModal = false;
+        $this->createdSessionUrl = null;
     }
 
     public function render()
