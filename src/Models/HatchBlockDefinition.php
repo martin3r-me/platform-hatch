@@ -110,6 +110,7 @@ class HatchBlockDefinition extends Model
             'file' => 'Datei-Upload',
             'rating' => 'Bewertung',
             'location' => 'Standort',
+            'info' => 'Info / Hinweis (ohne Eingabe)',
             'custom' => 'Benutzerdefiniert'
         ];
     }

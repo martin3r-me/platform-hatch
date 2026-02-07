@@ -264,6 +264,9 @@ class Show extends Component
                 'placeholder' => 'Adresse eingeben...',
                 'format' => 'address',
             ],
+            'info' => [
+                'content' => '',
+            ],
             default => [],
         };
     }

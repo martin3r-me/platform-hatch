@@ -499,6 +499,18 @@
                                         </div>
                                         @break
 
+                                    {{-- Info (read-only) --}}
+                                    @case('info')
+                                        @if(!empty($config['content']))
+                                            <div class="flex gap-3 p-5 bg-blue-50 border border-blue-100 rounded-xl">
+                                                <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                <div class="text-sm text-blue-900 leading-relaxed whitespace-pre-line">{{ $config['content'] }}</div>
+                                            </div>
+                                        @endif
+                                        @break
+
                                     {{-- File (Placeholder) --}}
                                     @case('file')
                                         <div class="flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-200 rounded-xl">

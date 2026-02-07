@@ -150,6 +150,12 @@
                                     <span>{{ $typeConfig['placeholder'] ?? 'Adresse eingeben...' }}</span>
                                 </div>
                                 @break
+                            @case('info')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-blue-50/50 flex items-center gap-2">
+                                    @svg('heroicon-o-information-circle', 'w-4 h-4')
+                                    <span>Info-Block (nur Anzeige)</span>
+                                </div>
+                                @break
                             @default
                                 <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)]">Eingabe...</div>
                         @endswitch
@@ -357,6 +363,13 @@
                 <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
                     <x-ui-input-text name="typeConfig.placeholder" label="Placeholder" hint="Wird im leeren Feld angezeigt" wire:model.live.debounce.500ms="typeConfig.placeholder" placeholder="Adresse eingeben..." size="sm" />
                     <x-ui-input-select name="typeConfig.format" label="Eingabe-Art" hint="Was soll erfasst werden?" wire:model.live.debounce.500ms="typeConfig.format" :options="collect([['value' => 'address', 'label' => 'Vollständige Adresse'],['value' => 'city', 'label' => 'Nur Stadt'],['value' => 'country', 'label' => 'Nur Land'],['value' => 'postal_code', 'label' => 'Nur Postleitzahl']])" optionValue="value" optionLabel="label" size="sm" />
+                </div>
+            @endif
+
+            @if($blockDefinition->block_type === 'info')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Dieser Block zeigt nur Informationen an — der Respondent kann keine Eingabe machen.</p>
+                    <x-ui-input-textarea name="typeConfig.content" label="Angezeigter Inhalt" hint="Text, der dem Respondenten angezeigt wird" wire:model.live.debounce.500ms="typeConfig.content" placeholder="z.B. Bitte lesen Sie die folgenden Hinweise sorgfältig durch..." rows="4" size="sm" />
                 </div>
             @endif
 

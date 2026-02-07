@@ -39,7 +39,7 @@ class CreateBlockDefinitionTool implements ToolContract, ToolMetadataContract
                 ],
                 'block_type' => [
                     'type' => 'string',
-                    'description' => 'Block-Typ (ERFORDERLICH). Erlaubt: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, custom.',
+                    'description' => 'Block-Typ (ERFORDERLICH). Erlaubt: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom.',
                 ],
                 'description' => [
                     'type' => 'string',

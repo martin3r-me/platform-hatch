@@ -117,6 +117,10 @@ class IntakeSession extends Component
         $missing = [];
 
         foreach ($this->blocks as $index => $block) {
+            if ($block['type'] === 'info') {
+                continue;
+            }
+
             if (!$block['is_required']) {
                 continue;
             }
@@ -156,6 +160,11 @@ class IntakeSession extends Component
 
         $blockId = $this->blocks[$this->currentStep]['id'];
         $type = $this->blocks[$this->currentStep]['type'];
+
+        if ($type === 'info') {
+            return;
+        }
+
         $answers = $this->session->answers ?? [];
 
         if ($type === 'multi_select') {
