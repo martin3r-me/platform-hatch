@@ -149,6 +149,19 @@ class Show extends Component
         ]);
     }
 
+    public function resumeIntake()
+    {
+        $this->projectIntake->update(['status' => 'in_progress']);
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung fortgesetzt',
+            'message' => 'Die Erhebung wird fortgesetzt.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
     public function generatePdfReport()
     {
         $this->dispatch('notifications:store', [

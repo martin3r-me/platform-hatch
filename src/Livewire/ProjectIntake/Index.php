@@ -114,11 +114,29 @@ class Index extends Component
         ]);
     }
 
+    public function setStatusFilter(string $status)
+    {
+        $this->statusFilter = $this->statusFilter === $status ? '' : $status;
+        $this->resetPage();
+    }
+
     public function render()
     {
+        $teamId = auth()->user()->current_team_id;
+
+        // Stat-Zahlen (unabhaengig von Filtern)
+        $statsQuery = HatchProjectIntake::where('team_id', $teamId);
+        $stats = [
+            'total' => (clone $statsQuery)->count(),
+            'draft' => (clone $statsQuery)->where('status', 'draft')->count(),
+            'in_progress' => (clone $statsQuery)->where('status', 'in_progress')->count(),
+            'completed' => (clone $statsQuery)->where('status', 'completed')->count(),
+        ];
+
         $query = HatchProjectIntake::query()
             ->with(['projectTemplate', 'createdByUser'])
-            ->where('team_id', auth()->user()->current_team_id);
+            ->withCount('sessions')
+            ->where('team_id', $teamId);
 
         // Suchfilter
         if ($this->search) {
@@ -144,6 +162,7 @@ class Index extends Component
             'projectIntakes' => $projectIntakes,
             'templates' => $this->templates,
             'statuses' => $this->statuses,
+            'stats' => $stats,
         ])->layout('platform::layouts.app');
     }
 }

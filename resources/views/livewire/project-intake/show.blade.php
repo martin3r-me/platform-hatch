@@ -195,16 +195,47 @@
                 </div>
             </div>
         @elseif(in_array($projectIntake->status, ['in_progress', 'paused']))
-            <div class="text-center py-8 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
-                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">
-                    {{ $projectIntake->status === 'paused' ? 'Erhebung pausiert' : 'Erhebung läuft...' }}
-                </h3>
-                <p class="text-[var(--ui-muted)] mb-4">
-                    {{ $projectIntake->status === 'paused' ? 'Sie können jederzeit fortfahren' : 'Die Erhebung wird durchgeführt' }}
-                </p>
-                <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg inline-block">
-                    @svg('heroicon-o-wrench', 'w-8 h-8 mx-auto mb-2 text-[var(--ui-muted)]')
-                    <p class="text-sm text-[var(--ui-muted)]">Der interaktive Erhebungsmodus wird in einer späteren Version verfügbar sein.</p>
+            @php
+                $totalSessions = $projectIntake->sessions()->count();
+                $completedSessions = $projectIntake->sessions()->where('status', 'completed')->count();
+                $totalSteps = $projectIntake->intakeSteps->count();
+                $completedSteps = $projectIntake->intakeSteps->where('is_completed', true)->count();
+            @endphp
+            <div class="flex items-center justify-between p-5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+                <div class="flex items-center gap-4">
+                    @if($projectIntake->status === 'in_progress')
+                        <div class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </div>
+                    @else
+                        @svg('heroicon-s-pause-circle', 'w-6 h-6 text-amber-500 flex-shrink-0')
+                    @endif
+                    <div>
+                        <h3 class="text-base font-semibold text-[var(--ui-secondary)]">
+                            {{ $projectIntake->status === 'paused' ? 'Erhebung pausiert' : 'Erhebung läuft' }}
+                        </h3>
+                        <p class="text-sm text-[var(--ui-muted)]">
+                            {{ $completedSessions }} von {{ $totalSessions }} Sessions abgeschlossen · {{ $completedSteps }} Blöcke beantwortet
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    @if($projectIntake->status === 'in_progress')
+                        <x-ui-button variant="secondary" size="sm" wire:click="pauseIntake">
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-pause', 'w-4 h-4')
+                                Pausieren
+                            </span>
+                        </x-ui-button>
+                    @else
+                        <x-ui-button variant="primary" size="sm" wire:click="resumeIntake">
+                            <span class="flex items-center gap-2">
+                                @svg('heroicon-o-play', 'w-4 h-4')
+                                Fortsetzen
+                            </span>
+                        </x-ui-button>
+                    @endif
                 </div>
             </div>
         @elseif($projectIntake->status === 'completed')

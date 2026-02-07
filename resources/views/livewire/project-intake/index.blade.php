@@ -66,15 +66,41 @@
     </x-slot>
 
     <x-ui-page-container>
-        <div class="mb-6">
-            <p class="text-sm text-[color:var(--ui-muted)]">Erhebungen führen Nutzer durch die Blöcke eines Templates und sammeln strukturiert Informationen. Jede Erhebung basiert auf einem Template und durchläuft dessen Blöcke der Reihe nach. Filtere nach Status oder Template, um bestehende Erhebungen zu finden.</p>
+        {{-- Stat-Karten --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <button wire:click="setStatusFilter('')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === '' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Gesamt</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['total'] }}</div>
+            </button>
+            <button wire:click="setStatusFilter('draft')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'draft' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Entwurf</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['draft'] }}</div>
+            </button>
+            <button wire:click="setStatusFilter('in_progress')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'in_progress' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Aktiv</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['in_progress'] }}</div>
+            </button>
+            <button wire:click="setStatusFilter('completed')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'completed' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Fertig</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['completed'] }}</div>
+            </button>
         </div>
 
         @if($projectIntakes->count() === 0)
-            <div class="rounded-lg border border-dashed border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] p-8 text-center">
-                @svg('heroicon-o-rocket-launch', 'w-12 h-12 mx-auto mb-3 text-[color:var(--ui-muted)]')
-                <h3 class="text-lg font-medium text-[color:var(--ui-secondary)] mb-1">Keine Erhebungen vorhanden</h3>
-                <p class="text-sm text-[color:var(--ui-muted)] max-w-md mx-auto">Erhebungen sammeln Informationen basierend auf einem Template. Wähle ein Template und starte die erste Erhebung.</p>
+            <div class="rounded-lg border border-dashed border-[var(--ui-border)] bg-[var(--ui-surface)] p-12 text-center">
+                @svg('heroicon-o-rocket-launch', 'w-16 h-16 mx-auto mb-4 text-[var(--ui-muted)]/60')
+                <h3 class="text-lg font-semibold text-[var(--ui-secondary)] mb-2">Keine Erhebungen vorhanden</h3>
+                <p class="text-sm text-[var(--ui-muted)] max-w-md mx-auto mb-5">Erhebungen sammeln Informationen basierend auf einem Template. Wähle ein Template und starte die erste Erhebung.</p>
+                <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
+                    <span class="flex items-center gap-2">
+                        @svg('heroicon-o-plus', 'w-4 h-4')
+                        Neue Erhebung anlegen
+                    </span>
+                </x-ui-button>
             </div>
         @else
             <x-ui-table compact="true">
@@ -82,13 +108,30 @@
                     <x-ui-table-header-cell compact="true">Name</x-ui-table-header-cell>
                     <x-ui-table-header-cell compact="true">Template</x-ui-table-header-cell>
                     <x-ui-table-header-cell compact="true">Status</x-ui-table-header-cell>
+                    <x-ui-table-header-cell compact="true">Sessions</x-ui-table-header-cell>
                     <x-ui-table-header-cell compact="true">Erstellt von</x-ui-table-header-cell>
                     <x-ui-table-header-cell compact="true">Erstellt am</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true" align="right">Aktionen</x-ui-table-header-cell>
+                    <x-ui-table-header-cell compact="true" align="right"></x-ui-table-header-cell>
                 </x-ui-table-header>
 
                 <x-ui-table-body>
                     @foreach($projectIntakes as $projectIntake)
+                        @php
+                            $statusVariants = [
+                                'draft' => 'secondary',
+                                'in_progress' => 'primary',
+                                'completed' => 'success',
+                                'paused' => 'warning',
+                                'cancelled' => 'danger',
+                            ];
+                            $statusColors = [
+                                'draft' => 'bg-gray-400',
+                                'in_progress' => 'bg-blue-500',
+                                'completed' => 'bg-green-500',
+                                'paused' => 'bg-amber-500',
+                                'cancelled' => 'bg-red-500',
+                            ];
+                        @endphp
                         <x-ui-table-row
                             compact="true"
                             clickable="true"
@@ -96,47 +139,46 @@
                             wire:key="project-intake-{{ $projectIntake->id }}"
                         >
                             <x-ui-table-cell compact="true">
-                                <div class="font-medium">{{ $projectIntake->name }}</div>
-                                @if($projectIntake->description)
-                                    <div class="text-xs text-[color:var(--ui-muted)]">{{ Str::limit($projectIntake->description, 100) }}</div>
-                                @endif
+                                <div class="flex items-center gap-3">
+                                    <div class="w-1 h-8 rounded-full {{ $statusColors[$projectIntake->status] ?? 'bg-gray-400' }} flex-shrink-0"></div>
+                                    <div>
+                                        <div class="font-medium text-[var(--ui-secondary)]">{{ $projectIntake->name }}</div>
+                                        @if($projectIntake->description)
+                                            <div class="text-xs text-[var(--ui-muted)]">{{ Str::limit($projectIntake->description, 80) }}</div>
+                                        @endif
+                                    </div>
+                                </div>
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true">
                                 @if($projectIntake->projectTemplate)
                                     <x-ui-badge variant="secondary" size="sm">{{ $projectIntake->projectTemplate->name }}</x-ui-badge>
                                 @else
-                                    <span class="text-[color:var(--ui-muted)]">–</span>
+                                    <span class="text-[var(--ui-muted)]">–</span>
                                 @endif
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true">
-                                @php
-                                    $statusVariants = [
-                                        'draft' => 'secondary',
-                                        'in_progress' => 'primary',
-                                        'completed' => 'success',
-                                        'paused' => 'warning',
-                                        'cancelled' => 'danger',
-                                    ];
-                                @endphp
                                 <x-ui-badge variant="{{ $statusVariants[$projectIntake->status] ?? 'secondary' }}" size="sm">
                                     {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
                                 </x-ui-badge>
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true">
+                                <x-ui-badge variant="secondary" size="sm">{{ $projectIntake->sessions_count }}</x-ui-badge>
+                            </x-ui-table-cell>
+                            <x-ui-table-cell compact="true">
                                 <span class="text-sm">{{ $projectIntake->createdByUser->name ?? 'Unbekannt' }}</span>
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true">
-                                <span class="text-sm text-[color:var(--ui-muted)]">{{ $projectIntake->created_at->format('d.m.Y H:i') }}</span>
+                                <span class="text-sm text-[var(--ui-muted)]">{{ $projectIntake->created_at->format('d.m.Y H:i') }}</span>
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true" align="right">
-                                <x-ui-button
-                                    size="sm"
-                                    variant="secondary"
-                                    :href="route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id])"
+                                <a
+                                    href="{{ route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id]) }}"
                                     wire:navigate
+                                    class="text-[var(--ui-muted)] hover:text-[var(--ui-primary)] transition-colors"
+                                    title="Anzeigen"
                                 >
-                                    Anzeigen
-                                </x-ui-button>
+                                    @svg('heroicon-o-chevron-right', 'w-5 h-5')
+                                </a>
                             </x-ui-table-cell>
                         </x-ui-table-row>
                     @endforeach
