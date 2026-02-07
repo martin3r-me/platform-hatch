@@ -32,6 +32,12 @@ class IntakeStart extends Component
             return;
         }
 
+        if ($intake->status !== 'in_progress') {
+            $this->state = 'paused';
+            $this->intakeName = $intake->name;
+            return;
+        }
+
         $this->intakeName = $intake->name;
         $this->intakeDescription = $intake->description;
         $this->state = 'ready';
@@ -41,8 +47,9 @@ class IntakeStart extends Component
     {
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
 
-        if (!$intake || !$intake->is_active) {
-            $this->state = 'notActive';
+        if (!$intake || !$intake->is_active || $intake->status !== 'in_progress') {
+            $this->state = !$intake || !$intake->is_active ? 'notActive' : 'paused';
+            $this->intakeName = $intake?->name ?? $this->intakeName;
             return;
         }
 
@@ -83,6 +90,12 @@ class IntakeStart extends Component
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
         if (!$intake || $session->project_intake_id !== $intake->id) {
             $this->resumeError = 'Dieser Token gehoert nicht zu dieser Erhebung.';
+            return;
+        }
+
+        if (!$intake->is_active || $intake->status !== 'in_progress') {
+            $this->state = 'paused';
+            $this->intakeName = $intake->name ?? $this->intakeName;
             return;
         }
 

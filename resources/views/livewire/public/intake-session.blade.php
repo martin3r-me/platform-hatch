@@ -36,6 +36,20 @@
             </div>
         </div>
 
+    @elseif($state === 'paused')
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="intake-card w-full max-w-md p-10 text-center">
+                <div class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung pausiert</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Erhebung ist derzeit pausiert. Bitte versuchen Sie es spaeter erneut.</p>
+                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+            </div>
+        </div>
+
     @elseif(in_array($state, ['ready', 'completed']))
         @php $isReadOnly = ($state === 'completed'); @endphp
 
@@ -124,6 +138,16 @@
                 <p class="text-xs text-white/30 text-center tracking-wide">
                     Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
                 </p>
+                @if($validationError)
+                    <div class="mt-3 intake-card flex items-center gap-3 px-5 py-4">
+                        <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm text-rose-700">{{ $validationError }}</p>
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -157,6 +181,7 @@
                                     @php
                                         $isActive = $index === $currentStep;
                                         $isPast = $isReadOnly ? true : ($index < $currentStep);
+                                        $isMissing = !$isReadOnly && in_array($index, $missingRequiredBlocks);
                                     @endphp
                                     <button
                                         type="button"
@@ -164,19 +189,25 @@
                                         class="intake-pill transition-all cursor-pointer
                                             {{ $isActive
                                                 ? 'bg-white/20 text-white ring-1 ring-white/30'
-                                                : ($isPast
-                                                    ? 'bg-white/8 text-white/60 hover:bg-white/15'
-                                                    : 'bg-white/5 text-white/30 hover:bg-white/10')
+                                                : ($isMissing
+                                                    ? 'bg-white/8 text-white/60 hover:bg-white/15 ring-1 ring-rose-400/60'
+                                                    : ($isPast
+                                                        ? 'bg-white/8 text-white/60 hover:bg-white/15'
+                                                        : 'bg-white/5 text-white/30 hover:bg-white/10'))
                                             }}"
                                     >
                                         <span class="w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold flex-shrink-0
-                                            {{ $isActive
-                                                ? 'bg-white text-gray-900'
-                                                : ($isPast
-                                                    ? 'bg-white/20 text-white/80'
-                                                    : 'bg-white/10 text-white/30')
+                                            {{ $isMissing && !$isActive
+                                                ? 'bg-rose-500 text-white'
+                                                : ($isActive
+                                                    ? 'bg-white text-gray-900'
+                                                    : ($isPast
+                                                        ? 'bg-white/20 text-white/80'
+                                                        : 'bg-white/10 text-white/30'))
                                             }}">
-                                            @if($isPast && !$isActive)
+                                            @if($isMissing && !$isActive)
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01"/></svg>
+                                            @elseif($isPast && !$isActive)
                                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                             @else
                                                 {{ $index + 1 }}

@@ -114,6 +114,23 @@ class Index extends Component
         ]);
     }
 
+    public function deleteProjectIntake(string $id)
+    {
+        $intake = HatchProjectIntake::find($id);
+
+        if (!$intake || $intake->team_id !== auth()->user()->current_team_id) {
+            return;
+        }
+
+        $intake->delete();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung gelöscht',
+            'message' => 'Die Erhebung und alle zugehörigen Sessions wurden gelöscht.',
+            'notice_type' => 'success',
+        ]);
+    }
+
     public function setStatusFilter(string $status)
     {
         $this->statusFilter = $this->statusFilter === $status ? '' : $status;

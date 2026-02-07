@@ -17,6 +17,8 @@ class IntakeSession extends Component
     public string $currentAnswer = '';
     public array $selectedOptions = [];
     public ?string $respondentName = null;
+    public array $missingRequiredBlocks = [];
+    public ?string $validationError = null;
 
     public function mount(string $sessionToken)
     {
@@ -50,6 +52,15 @@ class IntakeSession extends Component
                 ->toArray();
 
             $this->totalBlocks = count($this->blocks);
+        }
+
+        if ($intake->status !== 'in_progress' || !$intake->is_active) {
+            if ($this->session->status === 'completed') {
+                // Completed sessions remain viewable in read-only mode
+            } else {
+                $this->state = 'paused';
+                return;
+            }
         }
 
         if ($this->session->status === 'completed') {
@@ -93,9 +104,49 @@ class IntakeSession extends Component
         }
     }
 
+    private function isIntakeAccessible(): bool
+    {
+        $intake = $this->session?->projectIntake;
+
+        return $intake && $intake->is_active && $intake->status === 'in_progress';
+    }
+
+    private function getUnansweredRequiredBlocks(): array
+    {
+        $answers = $this->session->answers ?? [];
+        $missing = [];
+
+        foreach ($this->blocks as $index => $block) {
+            if (!$block['is_required']) {
+                continue;
+            }
+
+            $key = "block_{$block['id']}";
+            $raw = $answers[$key] ?? '';
+
+            if ($block['type'] === 'multi_select') {
+                $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+                $isEmpty = !is_array($decoded) || empty($decoded) || $raw === '' || $raw === '[]';
+            } else {
+                $isEmpty = ($raw === '' || $raw === null);
+            }
+
+            if ($isEmpty) {
+                $missing[] = $index;
+            }
+        }
+
+        return $missing;
+    }
+
     public function saveCurrentBlock(): void
     {
         if ($this->state === 'completed') {
+            return;
+        }
+
+        if (!$this->isIntakeAccessible()) {
+            $this->state = 'paused';
             return;
         }
 
@@ -117,6 +168,8 @@ class IntakeSession extends Component
             'answers' => $answers,
             'current_step' => $this->currentStep,
         ]);
+
+        $this->missingRequiredBlocks = array_values(array_diff($this->missingRequiredBlocks, [$this->currentStep]));
     }
 
     public function submitIntake(): void
@@ -126,6 +179,24 @@ class IntakeSession extends Component
         }
 
         $this->saveCurrentBlock();
+
+        if ($this->state === 'paused') {
+            return;
+        }
+
+        $this->session->refresh();
+
+        $missing = $this->getUnansweredRequiredBlocks();
+        if (!empty($missing)) {
+            $this->missingRequiredBlocks = $missing;
+            $this->validationError = 'Bitte beantworten Sie alle Pflichtfragen bevor Sie abschliessen.';
+            $this->currentStep = $missing[0];
+            $this->loadCurrentAnswer();
+            return;
+        }
+
+        $this->missingRequiredBlocks = [];
+        $this->validationError = null;
 
         $this->session->update([
             'status' => 'completed',
@@ -170,6 +241,7 @@ class IntakeSession extends Component
             $this->saveCurrentBlock();
         }
 
+        $this->validationError = null;
         $this->currentStep = $index;
         $this->loadCurrentAnswer();
     }
@@ -179,6 +251,8 @@ class IntakeSession extends Component
         if ($this->state !== 'completed') {
             $this->saveCurrentBlock();
         }
+
+        $this->validationError = null;
 
         if ($this->currentStep < $this->totalBlocks - 1) {
             $this->currentStep++;
@@ -191,6 +265,8 @@ class IntakeSession extends Component
         if ($this->state !== 'completed') {
             $this->saveCurrentBlock();
         }
+
+        $this->validationError = null;
 
         if ($this->currentStep > 0) {
             $this->currentStep--;

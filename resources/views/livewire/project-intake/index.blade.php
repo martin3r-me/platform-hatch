@@ -171,14 +171,25 @@
                                 <span class="text-sm text-[var(--ui-muted)]">{{ $projectIntake->created_at->format('d.m.Y H:i') }}</span>
                             </x-ui-table-cell>
                             <x-ui-table-cell compact="true" align="right">
-                                <a
-                                    href="{{ route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id]) }}"
-                                    wire:navigate
-                                    class="text-[var(--ui-muted)] hover:text-[var(--ui-primary)] transition-colors"
-                                    title="Anzeigen"
-                                >
-                                    @svg('heroicon-o-chevron-right', 'w-5 h-5')
-                                </a>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <button
+                                        type="button"
+                                        wire:click.stop="deleteProjectIntake('{{ $projectIntake->id }}')"
+                                        wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+                                        class="text-[var(--ui-muted)] hover:text-red-500 transition-colors"
+                                        title="Erhebung löschen"
+                                    >
+                                        @svg('heroicon-o-trash', 'w-4 h-4')
+                                    </button>
+                                    <a
+                                        href="{{ route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id]) }}"
+                                        wire:navigate
+                                        class="text-[var(--ui-muted)] hover:text-[var(--ui-primary)] transition-colors"
+                                        title="Anzeigen"
+                                    >
+                                        @svg('heroicon-o-chevron-right', 'w-5 h-5')
+                                    </a>
+                                </div>
                             </x-ui-table-cell>
                         </x-ui-table-row>
                     @endforeach

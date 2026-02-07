@@ -16,11 +16,23 @@
         <x-ui-page-sidebar title="Erhebungs-Details" width="w-80" :defaultOpen="true" side="left">
             <div class="p-6 space-y-6">
                 {{-- Navigation --}}
-                <div>
+                <div class="space-y-2">
                     <x-ui-button variant="secondary" size="sm" :href="route('hatch.project-intakes.index')" wire:navigate class="w-full">
                         <span class="flex items-center gap-2">
                             @svg('heroicon-o-arrow-left', 'w-4 h-4')
                             Zurück zu Erhebungen
+                        </span>
+                    </x-ui-button>
+                    <x-ui-button
+                        variant="danger"
+                        size="sm"
+                        wire:click="deleteProjectIntake"
+                        wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+                        class="w-full"
+                    >
+                        <span class="flex items-center gap-2">
+                            @svg('heroicon-o-trash', 'w-4 h-4')
+                            Erhebung löschen
                         </span>
                     </x-ui-button>
                 </div>

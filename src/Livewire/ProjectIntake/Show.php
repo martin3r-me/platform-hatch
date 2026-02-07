@@ -288,6 +288,23 @@ class Show extends Component
         ]);
     }
 
+    public function deleteProjectIntake()
+    {
+        if ($this->projectIntake->team_id !== auth()->user()->current_team_id) {
+            return;
+        }
+
+        $this->projectIntake->delete();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung gelöscht',
+            'message' => 'Die Erhebung und alle zugehörigen Sessions wurden gelöscht.',
+            'notice_type' => 'success',
+        ]);
+
+        return redirect()->route('hatch.project-intakes.index');
+    }
+
     public function deleteSession(string $sessionId)
     {
         $session = HatchIntakeSession::findOrFail($sessionId);
