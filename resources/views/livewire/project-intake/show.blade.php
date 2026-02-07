@@ -460,6 +460,7 @@
                 <div>
                     <label class="block text-sm font-medium text-[var(--ui-secondary)] mb-1">CRM-Kontakt suchen</label>
                     <x-ui-input-text
+                        name="contactSearch"
                         wire:model.live.debounce.300ms="contactSearch"
                         placeholder="Name oder E-Mail eingeben..."
                     />
