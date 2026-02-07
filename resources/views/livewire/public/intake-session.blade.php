@@ -20,7 +20,14 @@
                     </svg>
                 </div>
                 <h1 class="text-2xl font-bold text-gray-900 mb-3">Session nicht gefunden</h1>
-                <p class="text-gray-500 text-lg">Diese Session ist ungueltig oder existiert nicht mehr.</p>
+                <p class="text-gray-500 text-lg mb-6">Diese Session ist ungueltig oder existiert nicht mehr.</p>
+                <a href="/"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/>
+                    </svg>
+                    Zur Startseite
+                </a>
             </div>
         </div>
 
@@ -76,22 +83,39 @@
             </div>
         </header>
 
-        {{-- Completed Banner --}}
+        {{-- Status Banner --}}
         @if($isReadOnly)
             <div class="max-w-3xl mx-auto px-6 pt-6">
-                <div class="intake-glass-subtle flex items-center gap-3 px-5 py-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="intake-card flex items-center gap-3 px-5 py-4">
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
-                    <p class="text-sm text-white/70">
-                        Diese Erhebung wurde abgeschlossen. Ihre Antworten werden unten angezeigt.
-                    </p>
+                    <div class="text-sm text-gray-600">
+                        @if($respondentName)
+                            <p class="font-medium text-gray-800">Hallo {{ $respondentName }}!</p>
+                            <p>Vielen Dank fuer Ihre Teilnahme. Diese Erhebung wurde abgeschlossen &ndash; Ihre Antworten werden unten angezeigt.</p>
+                        @else
+                            <p>Diese Erhebung wurde abgeschlossen. Ihre Antworten werden unten angezeigt.</p>
+                        @endif
+                    </div>
                 </div>
             </div>
         @else
             <div class="max-w-3xl mx-auto px-6 pt-5">
+                @if($respondentName)
+                    <div class="intake-card flex items-center gap-3 px-5 py-4 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schoen, dass Sie da sind!
+                        </p>
+                    </div>
+                @endif
                 <p class="text-xs text-white/30 text-center tracking-wide">
                     Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
                 </p>

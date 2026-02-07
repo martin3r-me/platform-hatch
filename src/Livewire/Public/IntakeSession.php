@@ -16,6 +16,7 @@ class IntakeSession extends Component
     public int $currentStep = 0;
     public string $currentAnswer = '';
     public array $selectedOptions = [];
+    public ?string $respondentName = null;
 
     public function mount(string $sessionToken)
     {
@@ -32,6 +33,7 @@ class IntakeSession extends Component
         $this->intakeName = $intake->name;
         $this->sessionToken = $this->session->session_token;
         $this->currentStep = $this->session->current_step;
+        $this->respondentName = $this->session->respondent_name;
 
         if ($intake->projectTemplate) {
             $this->blocks = $intake->projectTemplate->templateBlocks
