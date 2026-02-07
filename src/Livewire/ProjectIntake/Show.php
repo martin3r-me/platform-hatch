@@ -236,7 +236,21 @@ class Show extends Component
         }
 
         $optionsProvider = app(CrmContactOptionsProviderInterface::class);
+
+        logger()->debug('Hatch Kontaktsuche', [
+            'provider' => get_class($optionsProvider),
+            'query' => $value,
+            'user_id' => auth()->id(),
+            'current_team_id' => auth()->user()?->current_team_id,
+            'root_team_id' => auth()->user()?->currentTeamRelation?->getRootTeam()?->id,
+        ]);
+
         $this->contactOptions = $optionsProvider->options($value);
+
+        logger()->debug('Hatch Kontaktsuche Ergebnis', [
+            'count' => count($this->contactOptions),
+            'options' => $this->contactOptions,
+        ]);
     }
 
     public function createPersonalizedSession()
@@ -268,6 +282,25 @@ class Show extends Component
         $this->dispatch('notifications:store', [
             'title' => 'Personalisierte Session erstellt',
             'message' => "Session für {$contactName} wurde erstellt.",
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
+    public function deleteSession(string $sessionId)
+    {
+        $session = HatchIntakeSession::findOrFail($sessionId);
+
+        if ($session->project_intake_id !== $this->projectIntake->id) {
+            return;
+        }
+
+        $session->delete();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Session gelöscht',
+            'message' => 'Die Session wurde erfolgreich gelöscht.',
             'notice_type' => 'success',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,

@@ -342,6 +342,7 @@
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Link</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Gestartet</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Abgeschlossen</th>
+                                <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -409,6 +410,17 @@
                                     </td>
                                     <td class="p-3 text-[var(--ui-muted)]">
                                         {{ $session->completed_at?->format('d.m.Y H:i') ?? '–' }}
+                                    </td>
+                                    <td class="p-3">
+                                        <button
+                                            type="button"
+                                            wire:click="deleteSession('{{ $session->id }}')"
+                                            wire:confirm="Session wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+                                            class="text-red-500 hover:text-red-700"
+                                            title="Session löschen"
+                                        >
+                                            @svg('heroicon-o-trash', 'w-4 h-4')
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach

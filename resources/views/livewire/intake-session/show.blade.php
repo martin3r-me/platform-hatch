@@ -83,6 +83,29 @@
                     </div>
                 </div>
 
+                {{-- Oeffentlicher Link --}}
+                <div>
+                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Oeffentlicher Link</h3>
+                    @php
+                        $publicSessionUrl = route('hatch.public.intake-session', ['sessionToken' => $intakeSession->session_token]);
+                    @endphp
+                    <div class="flex items-center gap-2 p-2 bg-[var(--ui-muted-5)] rounded">
+                        <input
+                            type="text"
+                            value="{{ $publicSessionUrl }}"
+                            readonly
+                            class="flex-grow text-xs font-mono bg-transparent border-none outline-none text-[var(--ui-secondary)] truncate"
+                        />
+                        <button
+                            type="button"
+                            onclick="navigator.clipboard.writeText('{{ $publicSessionUrl }}').then(() => this.querySelector('span').textContent = 'Kopiert!')"
+                            class="flex-shrink-0 text-xs text-[var(--ui-primary)] hover:underline"
+                        >
+                            <span>Kopieren</span>
+                        </button>
+                    </div>
+                </div>
+
                 {{-- Metadata --}}
                 @if($intakeSession->metadata)
                     <div>
