@@ -46,6 +46,7 @@ class Index extends Component
     public function render()
     {
         $templates = HatchProjectTemplate::with(['createdByUser'])
+            ->where('team_id', auth()->user()->current_team_id)
             ->when(!empty($this->search), function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')

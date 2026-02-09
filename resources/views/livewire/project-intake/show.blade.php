@@ -59,12 +59,43 @@
                 {{-- Status --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Status</h3>
-                    <x-ui-badge
-                        :variant="$projectIntake->status === 'draft' ? 'secondary' : ($projectIntake->status === 'completed' ? 'success' : 'primary')"
-                        size="sm"
-                    >
-                        {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
-                    </x-ui-badge>
+                    <div class="space-y-3">
+                        <x-ui-badge
+                            :variant="$projectIntake->status === 'draft' ? 'secondary' : ($projectIntake->status === 'completed' ? 'success' : 'primary')"
+                            size="sm"
+                        >
+                            {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
+                        </x-ui-badge>
+
+                        {{-- is_active Toggle --}}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <x-ui-badge :variant="$projectIntake->is_active ? 'success' : 'secondary'" size="sm">
+                                    {{ $projectIntake->is_active ? 'Aktiv' : 'Inaktiv' }}
+                                </x-ui-badge>
+                            </div>
+                            <x-ui-button variant="secondary" size="xs" wire:click="toggleActive">
+                                {{ $projectIntake->is_active ? 'Deaktivieren' : 'Aktivieren' }}
+                            </x-ui-button>
+                        </div>
+
+                        {{-- Pause/Resume Buttons --}}
+                        @if($projectIntake->status === 'in_progress')
+                            <x-ui-button variant="secondary" size="sm" wire:click="pauseIntake" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-pause', 'w-4 h-4')
+                                    Pausieren
+                                </span>
+                            </x-ui-button>
+                        @elseif($projectIntake->status === 'paused')
+                            <x-ui-button variant="primary" size="sm" wire:click="resumeIntake" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-play', 'w-4 h-4')
+                                    Fortsetzen
+                                </span>
+                            </x-ui-button>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Zeitstempel --}}

@@ -37,12 +37,19 @@ class Show extends Component
         $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
             ->find($template->id);
 
+        if ($this->template->team_id !== auth()->user()->current_team_id) {
+            abort(403);
+        }
+
         $this->complexityLevels = HatchComplexityLevel::all();
+
+        $teamId = auth()->user()->current_team_id;
 
         $this->blockDefinitionOptions = collect([
             ['id' => '', 'name' => 'Jetzt auswählen...']
         ])->merge(
             HatchBlockDefinition::where('is_active', true)
+                ->where('team_id', $teamId)
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->map(function($item) {
@@ -54,6 +61,7 @@ class Show extends Component
     public function getAvailableBlockDefinitionOptions()
     {
         $allBlockDefinitions = HatchBlockDefinition::where('is_active', true)
+            ->where('team_id', auth()->user()->current_team_id)
             ->orderBy('name')
             ->get(['id', 'name']);
 

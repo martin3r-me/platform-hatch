@@ -136,6 +136,19 @@ class Show extends Component
         }
     }
 
+    public function toggleActive()
+    {
+        $this->projectIntake->update(['is_active' => !$this->projectIntake->is_active]);
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Status geändert',
+            'message' => 'Erhebung wurde ' . ($this->projectIntake->is_active ? 'aktiviert' : 'deaktiviert') . '.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
     public function pauseIntake()
     {
         $this->projectIntake->update(['status' => 'paused']);
