@@ -54,10 +54,18 @@ class IntakeSession extends Component
             $this->totalBlocks = count($this->blocks);
         }
 
-        if ($intake->status !== 'in_progress' || !$intake->is_active) {
-            if ($this->session->status === 'completed') {
-                // Completed sessions remain viewable in read-only mode
-            } else {
+        if (!$intake->is_active) {
+            if ($this->session->status !== 'completed') {
+                $this->state = 'notActive';
+                return;
+            }
+        } elseif ($intake->status === 'draft') {
+            if ($this->session->status !== 'completed') {
+                $this->state = 'notStarted';
+                return;
+            }
+        } elseif ($intake->status !== 'in_progress') {
+            if ($this->session->status !== 'completed') {
                 $this->state = 'paused';
                 return;
             }
@@ -150,7 +158,14 @@ class IntakeSession extends Component
         }
 
         if (!$this->isIntakeAccessible()) {
-            $this->state = 'paused';
+            $intake = $this->session?->projectIntake;
+            if ($intake && !$intake->is_active) {
+                $this->state = 'notActive';
+            } elseif ($intake && $intake->status === 'draft') {
+                $this->state = 'notStarted';
+            } else {
+                $this->state = 'paused';
+            }
             return;
         }
 

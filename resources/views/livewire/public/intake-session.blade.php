@@ -36,6 +36,34 @@
             </div>
         </div>
 
+    @elseif($state === 'notActive')
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="intake-card w-full max-w-md p-10 text-center">
+                <div class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung nicht verfuegbar</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Erhebung ist derzeit nicht verfuegbar. Bitte versuchen Sie es spaeter erneut.</p>
+                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+            </div>
+        </div>
+
+    @elseif($state === 'notStarted')
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="intake-card w-full max-w-md p-10 text-center">
+                <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung noch nicht gestartet</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Erhebung wurde noch nicht gestartet. Bitte versuchen Sie es spaeter erneut.</p>
+                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+            </div>
+        </div>
+
     @elseif($state === 'paused')
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="intake-card w-full max-w-md p-10 text-center">
