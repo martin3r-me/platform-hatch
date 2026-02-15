@@ -97,6 +97,11 @@ class HatchServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Hatch\Tools\UpdateTemplateBlockTool());
             $registry->register(new \Platform\Hatch\Tools\RemoveTemplateBlockTool());
 
+            // Template ↔ Block-Definition Verknüpfung (Bulk)
+            $registry->register(new \Platform\Hatch\Tools\BulkAddTemplateBlocksTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkUpdateTemplateBlocksTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkRemoveTemplateBlocksTool());
+
             // Block Definitions (CRUD)
             $registry->register(new \Platform\Hatch\Tools\ListBlockDefinitionsTool());
             $registry->register(new \Platform\Hatch\Tools\GetBlockDefinitionTool());
@@ -104,12 +109,22 @@ class HatchServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Hatch\Tools\UpdateBlockDefinitionTool());
             $registry->register(new \Platform\Hatch\Tools\DeleteBlockDefinitionTool());
 
+            // Block Definitions (Bulk)
+            $registry->register(new \Platform\Hatch\Tools\BulkCreateBlockDefinitionsTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkUpdateBlockDefinitionsTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkDeleteBlockDefinitionsTool());
+
             // Intakes (CRUD)
             $registry->register(new \Platform\Hatch\Tools\ListIntakesTool());
             $registry->register(new \Platform\Hatch\Tools\GetIntakeTool());
             $registry->register(new \Platform\Hatch\Tools\CreateIntakeTool());
             $registry->register(new \Platform\Hatch\Tools\UpdateIntakeTool());
             $registry->register(new \Platform\Hatch\Tools\DeleteIntakeTool());
+
+            // Intakes (Bulk)
+            $registry->register(new \Platform\Hatch\Tools\BulkCreateIntakesTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkUpdateIntakesTool());
+            $registry->register(new \Platform\Hatch\Tools\BulkDeleteIntakesTool());
 
             // Sessions (Read-Only)
             $registry->register(new \Platform\Hatch\Tools\ListIntakeSessionsTool());
