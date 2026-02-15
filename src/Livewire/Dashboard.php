@@ -26,7 +26,7 @@ class Dashboard extends Component
             ->toArray();
 
         $totalIntakes = array_sum($intakesByStatus);
-        $completedIntakes = $intakesByStatus['completed'] ?? 0;
+        $completedIntakes = $intakesByStatus['closed'] ?? 0;
         $completionRate = $totalIntakes > 0 ? round(($completedIntakes / $totalIntakes) * 100, 1) : 0;
 
         $recentIntakes = HatchProjectIntake::where('team_id', $teamId)

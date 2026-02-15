@@ -52,7 +52,7 @@ class BulkIntakeToolsTest extends TestCase
             'items' => [
                 ['project_template_id' => $this->template->id, 'name' => 'Intake A'],
                 ['project_template_id' => $this->template->id, 'name' => 'Intake B', 'description' => 'Test'],
-                ['project_template_id' => $this->template->id, 'name' => 'Intake C', 'status' => 'draft'],
+                ['project_template_id' => $this->template->id, 'name' => 'Intake C'],
             ],
         ], $this->context);
 
@@ -210,7 +210,7 @@ class BulkIntakeToolsTest extends TestCase
         $this->assertEquals('Updated', $intake2->description);
     }
 
-    public function test_bulk_update_intakes_auto_started_at(): void
+    public function test_bulk_update_intakes_publish_sets_started_at(): void
     {
         $intake = HatchProjectIntake::factory()->create([
             'team_id' => $this->team->id,
@@ -223,7 +223,7 @@ class BulkIntakeToolsTest extends TestCase
 
         $result = $tool->execute([
             'items' => [
-                ['intake_id' => $intake->id, 'status' => 'in_progress'],
+                ['intake_id' => $intake->id, 'status' => 'published'],
             ],
         ], $this->context);
 
@@ -231,7 +231,57 @@ class BulkIntakeToolsTest extends TestCase
 
         $this->assertTrue($result->isSuccess());
         $intake->refresh();
+        $this->assertEquals('published', $intake->status);
+        $this->assertTrue((bool)$intake->is_active);
         $this->assertNotNull($intake->started_at);
+    }
+
+    public function test_bulk_update_intakes_close_sets_completed_at(): void
+    {
+        $intake = HatchProjectIntake::factory()->create([
+            'team_id' => $this->team->id,
+            'project_template_id' => $this->template->id,
+            'status' => 'published',
+            'is_active' => true,
+            'started_at' => now(),
+            'completed_at' => null,
+        ]);
+
+        $tool = new BulkUpdateIntakesTool();
+
+        $result = $tool->execute([
+            'items' => [
+                ['intake_id' => $intake->id, 'status' => 'closed'],
+            ],
+        ], $this->context);
+
+        $this->assertTrue($result->isSuccess());
+        $intake->refresh();
+        $this->assertEquals('closed', $intake->status);
+        $this->assertFalse((bool)$intake->is_active);
+        $this->assertNotNull($intake->completed_at);
+    }
+
+    public function test_bulk_update_intakes_invalid_status_rejected(): void
+    {
+        $intake = HatchProjectIntake::factory()->create([
+            'team_id' => $this->team->id,
+            'project_template_id' => $this->template->id,
+            'status' => 'draft',
+        ]);
+
+        $tool = new BulkUpdateIntakesTool();
+
+        $result = $tool->execute([
+            'items' => [
+                ['intake_id' => $intake->id, 'status' => 'in_progress'],
+            ],
+        ], $this->context);
+
+        $data = $result->getData();
+
+        $this->assertEquals(0, $data['updated_count']);
+        $this->assertEquals(1, $data['error_count']);
     }
 
     public function test_bulk_update_intakes_not_found(): void
@@ -295,11 +345,13 @@ class BulkIntakeToolsTest extends TestCase
         $intake1 = HatchProjectIntake::factory()->create([
             'team_id' => $this->team->id,
             'project_template_id' => $this->template->id,
+            'status' => 'published',
             'is_active' => true,
         ]);
         $intake2 = HatchProjectIntake::factory()->create([
             'team_id' => $this->team->id,
             'project_template_id' => $this->template->id,
+            'status' => 'published',
             'is_active' => true,
         ]);
 

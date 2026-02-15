@@ -22,7 +22,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/intakes/{id} - Aktualisiert einen Project Intake. Parameter: intake_id (required). Alle anderen Felder optional.';
+        return 'PUT /hatch/intakes/{id} - Aktualisiert einen Project Intake. Parameter: intake_id (required). Status-Modell: draft → published → closed. Beim Wechsel auf "published" wird started_at automatisch gesetzt, beim Wechsel auf "closed" wird completed_at gesetzt.';
     }
 
     public function getSchema(): array
@@ -47,15 +47,8 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 ],
                 'status' => [
                     'type' => 'string',
-                    'description' => 'Optional: Neuer Status.',
-                ],
-                'is_active' => [
-                    'type' => 'boolean',
-                    'description' => 'Optional: Aktiv-Status.',
-                ],
-                'started_at' => [
-                    'type' => 'string',
-                    'description' => 'Optional: Startzeitpunkt (ISO 8601). Wird automatisch gesetzt beim Status-Wechsel auf "in_progress", falls leer.',
+                    'enum' => ['draft', 'published', 'closed'],
+                    'description' => 'Optional: Neuer Status (draft, published, closed). "published" = Erhebung live, "closed" = Erhebung beendet.',
                 ],
             ],
             'required' => ['intake_id'],
@@ -89,27 +82,37 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('ACCESS_DENIED', 'Du hast keinen Zugriff auf diesen Intake.');
             }
 
-            $fields = [
-                'name',
-                'description',
-                'status',
-                'is_active',
-                'started_at',
-            ];
-
-            foreach ($fields as $field) {
+            // Einfache Felder aktualisieren
+            foreach (['name', 'description'] as $field) {
                 if (array_key_exists($field, $arguments)) {
                     $intake->{$field} = $arguments[$field] === '' ? null : $arguments[$field];
                 }
             }
 
-            // Auto-set started_at when status changes to 'in_progress' and started_at is still null
-            if (
-                $intake->isDirty('status')
-                && $intake->status === 'in_progress'
-                && empty($intake->started_at)
-            ) {
-                $intake->started_at = now();
+            // Status-Wechsel mit automatischer Logik
+            if (array_key_exists('status', $arguments) && $arguments['status'] !== $intake->status) {
+                $newStatus = $arguments['status'];
+
+                if (!in_array($newStatus, ['draft', 'published', 'closed'])) {
+                    return ToolResult::error('VALIDATION_ERROR', 'Ungültiger Status. Erlaubt: draft, published, closed.');
+                }
+
+                if ($newStatus === 'published') {
+                    $intake->status = 'published';
+                    $intake->is_active = true;
+                    if (empty($intake->started_at)) {
+                        $intake->started_at = now();
+                    }
+                } elseif ($newStatus === 'closed') {
+                    $intake->status = 'closed';
+                    $intake->is_active = false;
+                    if (empty($intake->completed_at)) {
+                        $intake->completed_at = now();
+                    }
+                } elseif ($newStatus === 'draft') {
+                    $intake->status = 'draft';
+                    $intake->is_active = false;
+                }
             }
 
             $intake->save();
@@ -119,8 +122,8 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 'uuid' => $intake->uuid,
                 'name' => $intake->name,
                 'status' => $intake->status,
-                'is_active' => (bool)$intake->is_active,
                 'started_at' => $intake->started_at?->toISOString(),
+                'completed_at' => $intake->completed_at?->toISOString(),
                 'team_id' => $intake->team_id,
                 'message' => 'Intake erfolgreich aktualisiert.',
             ]);

@@ -78,15 +78,15 @@
                 <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Entwurf</div>
                 <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['draft'] }}</div>
             </button>
-            <button wire:click="setStatusFilter('in_progress')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'in_progress' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Aktiv</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['in_progress'] }}</div>
+            <button wire:click="setStatusFilter('published')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'published' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Veröffentlicht</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['published'] }}</div>
             </button>
-            <button wire:click="setStatusFilter('completed')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'completed' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Fertig</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['completed'] }}</div>
+            <button wire:click="setStatusFilter('closed')"
+                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'closed' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
+                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Geschlossen</div>
+                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['closed'] }}</div>
             </button>
         </div>
 
@@ -119,17 +119,13 @@
                         @php
                             $statusVariants = [
                                 'draft' => 'secondary',
-                                'in_progress' => 'primary',
-                                'completed' => 'success',
-                                'paused' => 'warning',
-                                'cancelled' => 'danger',
+                                'published' => 'success',
+                                'closed' => 'warning',
                             ];
                             $statusColors = [
                                 'draft' => 'bg-gray-400',
-                                'in_progress' => 'bg-blue-500',
-                                'completed' => 'bg-green-500',
-                                'paused' => 'bg-amber-500',
-                                'cancelled' => 'bg-red-500',
+                                'published' => 'bg-green-500',
+                                'closed' => 'bg-amber-500',
                             ];
                         @endphp
                         <x-ui-table-row
@@ -229,19 +225,6 @@
                     wire:model.live="project_template_id"
                     required
                     placeholder="Template auswählen"
-                />
-
-                <x-ui-input-select
-                    name="status"
-                    label="Status"
-                    hint="Meist 'Entwurf'"
-                    :options="collect($statuses)->map(function($label, $value) {
-                        return ['value' => $value, 'label' => $label];
-                    })->values()"
-                    optionValue="value"
-                    optionLabel="label"
-                    wire:model.live="status"
-                    required
                 />
 
                 <x-ui-input-textarea

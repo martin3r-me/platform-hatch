@@ -72,10 +72,8 @@
                 @php
                     $statusLabels = [
                         'draft' => ['label' => 'Entwurf', 'variant' => 'secondary'],
-                        'in_progress' => ['label' => 'In Bearbeitung', 'variant' => 'primary'],
-                        'completed' => ['label' => 'Abgeschlossen', 'variant' => 'success'],
-                        'paused' => ['label' => 'Pausiert', 'variant' => 'warning'],
-                        'cancelled' => ['label' => 'Abgebrochen', 'variant' => 'danger'],
+                        'published' => ['label' => 'Veröffentlicht', 'variant' => 'success'],
+                        'closed' => ['label' => 'Geschlossen', 'variant' => 'warning'],
                     ];
                 @endphp
                 @if($totalIntakes > 0)

@@ -15,10 +15,8 @@ class Show extends Component
 
     public $statuses = [
         'draft' => 'Entwurf',
-        'in_progress' => 'In Bearbeitung',
-        'completed' => 'Abgeschlossen',
-        'paused' => 'Pausiert',
-        'cancelled' => 'Abgebrochen'
+        'published' => 'Veröffentlicht',
+        'closed' => 'Geschlossen',
     ];
 
     public $showActivities = false;
@@ -95,20 +93,17 @@ class Show extends Component
         }
     }
 
-    public function startProjectIntake()
+    public function publishIntake()
     {
         $this->loadTemplateBlocks();
         $this->createStepsForAllBlocks();
         $this->determineCurrentBlock();
 
-        $this->projectIntake->update([
-            'status' => 'in_progress',
-            'started_at' => now(),
-        ]);
+        $this->projectIntake->publish();
 
         $this->dispatch('notifications:store', [
-            'title' => 'Erhebung gestartet',
-            'message' => 'Die Erhebung wurde erfolgreich gestartet.',
+            'title' => 'Erhebung veröffentlicht',
+            'message' => 'Die Erhebung ist jetzt live und nimmt Antworten entgegen.',
             'notice_type' => 'success',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
@@ -136,39 +131,39 @@ class Show extends Component
         }
     }
 
-    public function toggleActive()
+    public function closeIntake()
     {
-        $this->projectIntake->update(['is_active' => !$this->projectIntake->is_active]);
+        $this->projectIntake->close();
 
         $this->dispatch('notifications:store', [
-            'title' => 'Status geändert',
-            'message' => 'Erhebung wurde ' . ($this->projectIntake->is_active ? 'aktiviert' : 'deaktiviert') . '.',
-            'notice_type' => 'success',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function pauseIntake()
-    {
-        $this->projectIntake->update(['status' => 'paused']);
-
-        $this->dispatch('notifications:store', [
-            'title' => 'Erhebung pausiert',
-            'message' => 'Sie können später fortfahren.',
+            'title' => 'Erhebung geschlossen',
+            'message' => 'Die Erhebung nimmt keine neuen Antworten mehr entgegen.',
             'notice_type' => 'info',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
     }
 
-    public function resumeIntake()
+    public function unpublishIntake()
     {
-        $this->projectIntake->update(['status' => 'in_progress']);
+        $this->projectIntake->unpublish();
 
         $this->dispatch('notifications:store', [
-            'title' => 'Erhebung fortgesetzt',
-            'message' => 'Die Erhebung wird fortgesetzt.',
+            'title' => 'Erhebung zurückgezogen',
+            'message' => 'Die Erhebung ist wieder im Entwurf-Modus.',
+            'notice_type' => 'info',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $this->projectIntake->id,
+        ]);
+    }
+
+    public function reopenIntake()
+    {
+        $this->projectIntake->publish();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung erneut veröffentlicht',
+            'message' => 'Die Erhebung ist wieder live.',
             'notice_type' => 'success',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,

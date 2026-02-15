@@ -26,20 +26,14 @@ class IntakeStart extends Component
             return;
         }
 
-        if (!$intake->is_active) {
-            $this->state = 'notActive';
-            $this->intakeName = $intake->name;
-            return;
-        }
-
         if ($intake->status === 'draft') {
             $this->state = 'notStarted';
             $this->intakeName = $intake->name;
             return;
         }
 
-        if ($intake->status !== 'in_progress') {
-            $this->state = 'paused';
+        if ($intake->status === 'closed') {
+            $this->state = 'notActive';
             $this->intakeName = $intake->name;
             return;
         }
@@ -53,13 +47,13 @@ class IntakeStart extends Component
     {
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
 
-        if (!$intake || !$intake->is_active || $intake->status !== 'in_progress') {
-            if (!$intake || !$intake->is_active) {
+        if (!$intake || $intake->status !== 'published') {
+            if (!$intake) {
                 $this->state = 'notActive';
             } elseif ($intake->status === 'draft') {
                 $this->state = 'notStarted';
             } else {
-                $this->state = 'paused';
+                $this->state = 'notActive';
             }
             $this->intakeName = $intake?->name ?? $this->intakeName;
             return;
@@ -105,13 +99,11 @@ class IntakeStart extends Component
             return;
         }
 
-        if (!$intake->is_active || $intake->status !== 'in_progress') {
-            if (!$intake->is_active) {
-                $this->state = 'notActive';
-            } elseif ($intake->status === 'draft') {
+        if ($intake->status !== 'published') {
+            if ($intake->status === 'draft') {
                 $this->state = 'notStarted';
             } else {
-                $this->state = 'paused';
+                $this->state = 'notActive';
             }
             $this->intakeName = $intake->name ?? $this->intakeName;
             return;

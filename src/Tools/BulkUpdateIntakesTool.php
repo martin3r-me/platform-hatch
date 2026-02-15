@@ -22,7 +22,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/intakes/bulk - Aktualisiert mehrere Project Intakes in einem Aufruf. ERFORDERLICH: items (Array mit je intake_id). Maximal 50 Items pro Aufruf.';
+        return 'PUT /hatch/intakes/bulk - Aktualisiert mehrere Project Intakes in einem Aufruf. ERFORDERLICH: items (Array mit je intake_id). Status-Modell: draft → published → closed. Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -35,7 +35,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: intake_id. Optional: name, description, status, is_active, started_at.',
+                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: intake_id. Optional: name, description, status (draft/published/closed).',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
@@ -53,15 +53,8 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                             ],
                             'status' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Neuer Status.',
-                            ],
-                            'is_active' => [
-                                'type' => 'boolean',
-                                'description' => 'Optional: Aktiv-Status.',
-                            ],
-                            'started_at' => [
-                                'type' => 'string',
-                                'description' => 'Optional: Startzeitpunkt (ISO 8601). Wird automatisch gesetzt beim Status-Wechsel auf "in_progress", falls leer.',
+                                'enum' => ['draft', 'published', 'closed'],
+                                'description' => 'Optional: Neuer Status (draft, published, closed). "published" = live, "closed" = beendet.',
                             ],
                         ],
                         'required' => ['intake_id'],
@@ -90,7 +83,6 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'Maximal 50 Items pro Bulk-Aufruf erlaubt.');
             }
 
-            $fields = ['name', 'description', 'status', 'is_active', 'started_at'];
             $updated = [];
             $errors = [];
 
@@ -111,19 +103,38 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                         continue;
                     }
 
-                    foreach ($fields as $field) {
+                    // Einfache Felder aktualisieren
+                    foreach (['name', 'description'] as $field) {
                         if (array_key_exists($field, $item)) {
                             $intake->{$field} = $item[$field] === '' ? null : $item[$field];
                         }
                     }
 
-                    // Auto-set started_at when status changes to 'in_progress' and started_at is still null
-                    if (
-                        $intake->isDirty('status')
-                        && $intake->status === 'in_progress'
-                        && empty($intake->started_at)
-                    ) {
-                        $intake->started_at = now();
+                    // Status-Wechsel mit automatischer Logik
+                    if (array_key_exists('status', $item) && $item['status'] !== $intake->status) {
+                        $newStatus = $item['status'];
+
+                        if (!in_array($newStatus, ['draft', 'published', 'closed'])) {
+                            $errors[] = ['index' => $index, 'intake_id' => $intakeId, 'error' => 'Ungültiger Status. Erlaubt: draft, published, closed.'];
+                            continue;
+                        }
+
+                        if ($newStatus === 'published') {
+                            $intake->status = 'published';
+                            $intake->is_active = true;
+                            if (empty($intake->started_at)) {
+                                $intake->started_at = now();
+                            }
+                        } elseif ($newStatus === 'closed') {
+                            $intake->status = 'closed';
+                            $intake->is_active = false;
+                            if (empty($intake->completed_at)) {
+                                $intake->completed_at = now();
+                            }
+                        } elseif ($newStatus === 'draft') {
+                            $intake->status = 'draft';
+                            $intake->is_active = false;
+                        }
                     }
 
                     $intake->save();
@@ -134,7 +145,6 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                         'uuid' => $intake->uuid,
                         'name' => $intake->name,
                         'status' => $intake->status,
-                        'is_active' => (bool)$intake->is_active,
                         'started_at' => $intake->started_at?->toISOString(),
                     ];
                 } catch (\Throwable $e) {

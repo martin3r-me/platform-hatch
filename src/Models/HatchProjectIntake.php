@@ -115,28 +115,108 @@ class HatchProjectIntake extends Model
     }
 
     /**
+     * Vereinfachtes Status-Modell: draft → published → closed
+     *
+     * - draft: Erhebung wird vorbereitet, nicht öffentlich zugänglich
+     * - published: Erhebung ist live und nimmt Antworten entgegen
+     * - closed: Erhebung ist beendet/archiviert
+     */
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_CLOSED = 'closed';
+
+    public const STATUSES = [
+        self::STATUS_DRAFT => 'Entwurf',
+        self::STATUS_PUBLISHED => 'Veröffentlicht',
+        self::STATUS_CLOSED => 'Geschlossen',
+    ];
+
+    /**
+     * Veröffentlicht die Erhebung (ein Klick = live).
+     * Setzt status, is_active und started_at automatisch.
+     */
+    public function publish(): self
+    {
+        $this->status = self::STATUS_PUBLISHED;
+        $this->is_active = true;
+
+        if (empty($this->started_at)) {
+            $this->started_at = now();
+        }
+
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Schließt die Erhebung.
+     * Setzt status, is_active und completed_at automatisch.
+     */
+    public function close(): self
+    {
+        $this->status = self::STATUS_CLOSED;
+        $this->is_active = false;
+
+        if (empty($this->completed_at)) {
+            $this->completed_at = now();
+        }
+
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Setzt die Erhebung zurück auf Entwurf.
+     */
+    public function unpublish(): self
+    {
+        $this->status = self::STATUS_DRAFT;
+        $this->is_active = false;
+        $this->save();
+
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_DRAFT;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->status === self::STATUS_CLOSED;
+    }
+
+    /**
      * Scopes
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('status', self::STATUS_PUBLISHED);
     }
-    
+
     public function scopeForTeam($query, $teamId)
     {
         return $query->where('team_id', $teamId);
     }
-    
+
     public function scopeForUser($query, $userId)
     {
         return $query->where('owned_by_user_id', $userId);
     }
-    
+
     public function scopeByStatus($query, $status)
     {
         return $query->where('status', $status);
     }
-    
+
     public function scopeByConfidence($query, $minScore)
     {
         return $query->where('ai_confidence_score', '>=', $minScore);

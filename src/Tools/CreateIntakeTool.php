@@ -23,7 +23,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake. ERFORDERLICH: project_template_id, name. Optional: description, status.';
+        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake im Status "draft". ERFORDERLICH: project_template_id, name. Optional: description. Nutze hatch.intakes.PUT mit status="published" um zu veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -45,14 +45,6 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'description' => [
                     'type' => 'string',
                     'description' => 'Optional: Beschreibung.',
-                ],
-                'status' => [
-                    'type' => 'string',
-                    'description' => 'Optional: Status. Default: draft.',
-                ],
-                'is_active' => [
-                    'type' => 'boolean',
-                    'description' => 'Optional: Status. Default: true.',
                 ],
             ],
             'required' => ['project_template_id', 'name'],
@@ -93,8 +85,8 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'project_template_id' => $template->id,
                 'name' => $name,
                 'description' => $arguments['description'] ?? null,
-                'status' => $arguments['status'] ?? 'draft',
-                'is_active' => (bool)($arguments['is_active'] ?? true),
+                'status' => 'draft',
+                'is_active' => false,
                 'created_by_user_id' => $context->user->id,
                 'owned_by_user_id' => $context->user->id,
                 'team_id' => $teamId,
@@ -106,9 +98,8 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'name' => $intake->name,
                 'status' => $intake->status,
                 'project_template_id' => $intake->project_template_id,
-                'is_active' => (bool)$intake->is_active,
                 'team_id' => $intake->team_id,
-                'message' => 'Intake erfolgreich erstellt.',
+                'message' => 'Intake im Status "draft" erstellt. Nutze hatch.intakes.PUT mit status="published" zum Veröffentlichen.',
             ]);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler beim Erstellen des Intakes: ' . $e->getMessage());

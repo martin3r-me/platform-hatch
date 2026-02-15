@@ -23,7 +23,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes in einem Aufruf. ERFORDERLICH: items (Array mit je project_template_id, name). Maximal 50 Items pro Aufruf.';
+        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -36,7 +36,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Intakes. Jedes Item benötigt: project_template_id, name. Optional: description, status, is_active.',
+                    'description' => 'ERFORDERLICH: Array von Intakes. Jedes Item benötigt: project_template_id, name. Optional: description.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
@@ -51,14 +51,6 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                             'description' => [
                                 'type' => 'string',
                                 'description' => 'Optional: Beschreibung.',
-                            ],
-                            'status' => [
-                                'type' => 'string',
-                                'description' => 'Optional: Status. Default: draft.',
-                            ],
-                            'is_active' => [
-                                'type' => 'boolean',
-                                'description' => 'Optional: Status. Default: true.',
                             ],
                         ],
                         'required' => ['project_template_id', 'name'],
@@ -129,8 +121,8 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'project_template_id' => $template->id,
                         'name' => $name,
                         'description' => $item['description'] ?? null,
-                        'status' => $item['status'] ?? 'draft',
-                        'is_active' => (bool)($item['is_active'] ?? true),
+                        'status' => 'draft',
+                        'is_active' => false,
                         'created_by_user_id' => $context->user->id,
                         'owned_by_user_id' => $context->user->id,
                         'team_id' => $teamId,

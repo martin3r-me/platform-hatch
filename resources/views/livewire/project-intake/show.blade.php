@@ -2,10 +2,10 @@
     <x-slot name="navbar">
         <x-ui-page-navbar title="{{ $projectIntake->name ?? 'Erhebung' }}">
             @if($projectIntake->status === 'draft')
-                <x-ui-button variant="primary" size="sm" wire:click="startProjectIntake">
+                <x-ui-button variant="primary" size="sm" wire:click="publishIntake">
                     <span class="flex items-center gap-2">
-                        <x-heroicon-o-play class="w-4 h-4" />
-                        Starten
+                        <x-heroicon-o-rocket-launch class="w-4 h-4" />
+                        Veröffentlichen
                     </span>
                 </x-ui-button>
             @endif
@@ -61,37 +61,38 @@
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Status</h3>
                     <div class="space-y-3">
                         <x-ui-badge
-                            :variant="$projectIntake->status === 'draft' ? 'secondary' : ($projectIntake->status === 'completed' ? 'success' : 'primary')"
+                            :variant="$projectIntake->status === 'draft' ? 'secondary' : ($projectIntake->status === 'published' ? 'success' : 'warning')"
                             size="sm"
                         >
                             {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
                         </x-ui-badge>
 
-                        {{-- is_active Toggle --}}
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <x-ui-badge :variant="$projectIntake->is_active ? 'success' : 'secondary'" size="sm">
-                                    {{ $projectIntake->is_active ? 'Aktiv' : 'Inaktiv' }}
-                                </x-ui-badge>
-                            </div>
-                            <x-ui-button variant="secondary" size="xs" wire:click="toggleActive">
-                                {{ $projectIntake->is_active ? 'Deaktivieren' : 'Aktivieren' }}
-                            </x-ui-button>
-                        </div>
-
-                        {{-- Pause/Resume Buttons --}}
-                        @if($projectIntake->status === 'in_progress')
-                            <x-ui-button variant="secondary" size="sm" wire:click="pauseIntake" class="w-full">
+                        {{-- Status-Aktionen --}}
+                        @if($projectIntake->status === 'draft')
+                            <x-ui-button variant="primary" size="sm" wire:click="publishIntake" class="w-full">
                                 <span class="flex items-center gap-2">
-                                    @svg('heroicon-o-pause', 'w-4 h-4')
-                                    Pausieren
+                                    @svg('heroicon-o-rocket-launch', 'w-4 h-4')
+                                    Veröffentlichen
                                 </span>
                             </x-ui-button>
-                        @elseif($projectIntake->status === 'paused')
-                            <x-ui-button variant="primary" size="sm" wire:click="resumeIntake" class="w-full">
+                        @elseif($projectIntake->status === 'published')
+                            <x-ui-button variant="secondary" size="sm" wire:click="closeIntake" class="w-full">
                                 <span class="flex items-center gap-2">
-                                    @svg('heroicon-o-play', 'w-4 h-4')
-                                    Fortsetzen
+                                    @svg('heroicon-o-lock-closed', 'w-4 h-4')
+                                    Schliessen
+                                </span>
+                            </x-ui-button>
+                        @elseif($projectIntake->status === 'closed')
+                            <x-ui-button variant="primary" size="sm" wire:click="reopenIntake" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-arrow-path', 'w-4 h-4')
+                                    Erneut veröffentlichen
+                                </span>
+                            </x-ui-button>
+                            <x-ui-button variant="secondary" size="sm" wire:click="unpublishIntake" class="w-full">
+                                <span class="flex items-center gap-2">
+                                    @svg('heroicon-o-pencil', 'w-4 h-4')
+                                    Zurück zu Entwurf
                                 </span>
                             </x-ui-button>
                         @endif
@@ -223,21 +224,21 @@
             </div>
         @endif
 
-        {{-- Game Actions --}}
+        {{-- Status-Aktionen --}}
         @if($projectIntake->status === 'draft')
             <div class="text-center py-8 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
-                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Bereit für den Start?</h3>
+                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Bereit zum Veröffentlichen?</h3>
                 <p class="text-[var(--ui-muted)]">Diese Erhebung verwendet das Template "{{ $projectIntake->projectTemplate->name ?? 'Unbekannt' }}"</p>
                 <div class="mt-4">
-                    <x-ui-button variant="primary" size="lg" wire:click="startProjectIntake">
+                    <x-ui-button variant="primary" size="lg" wire:click="publishIntake">
                         <span class="flex items-center gap-2">
-                            <x-heroicon-o-play class="w-5 h-5" />
-                            Erhebung starten
+                            <x-heroicon-o-rocket-launch class="w-5 h-5" />
+                            Erhebung veröffentlichen
                         </span>
                     </x-ui-button>
                 </div>
             </div>
-        @elseif(in_array($projectIntake->status, ['in_progress', 'paused']))
+        @elseif($projectIntake->status === 'published')
             @php
                 $totalSessions = $projectIntake->sessions()->count();
                 $completedSessions = $projectIntake->sessions()->where('status', 'completed')->count();
@@ -246,48 +247,33 @@
             @endphp
             <div class="flex items-center justify-between p-5 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
                 <div class="flex items-center gap-4">
-                    @if($projectIntake->status === 'in_progress')
-                        <div class="relative flex h-3 w-3">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                        </div>
-                    @else
-                        @svg('heroicon-s-pause-circle', 'w-6 h-6 text-amber-500 flex-shrink-0')
-                    @endif
+                    <div class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </div>
                     <div>
-                        <h3 class="text-base font-semibold text-[var(--ui-secondary)]">
-                            {{ $projectIntake->status === 'paused' ? 'Erhebung pausiert' : 'Erhebung läuft' }}
-                        </h3>
+                        <h3 class="text-base font-semibold text-[var(--ui-secondary)]">Erhebung ist live</h3>
                         <p class="text-sm text-[var(--ui-muted)]">
                             {{ $completedSessions }} von {{ $totalSessions }} Sessions abgeschlossen · {{ $completedSteps }} Blöcke beantwortet
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    @if($projectIntake->status === 'in_progress')
-                        <x-ui-button variant="secondary" size="sm" wire:click="pauseIntake">
-                            <span class="flex items-center gap-2">
-                                @svg('heroicon-o-pause', 'w-4 h-4')
-                                Pausieren
-                            </span>
-                        </x-ui-button>
-                    @else
-                        <x-ui-button variant="primary" size="sm" wire:click="resumeIntake">
-                            <span class="flex items-center gap-2">
-                                @svg('heroicon-o-play', 'w-4 h-4')
-                                Fortsetzen
-                            </span>
-                        </x-ui-button>
-                    @endif
+                    <x-ui-button variant="secondary" size="sm" wire:click="closeIntake">
+                        <span class="flex items-center gap-2">
+                            @svg('heroicon-o-lock-closed', 'w-4 h-4')
+                            Schliessen
+                        </span>
+                    </x-ui-button>
                 </div>
             </div>
-        @elseif($projectIntake->status === 'completed')
+        @elseif($projectIntake->status === 'closed')
             <div class="text-center py-8 mb-6">
-                <div class="text-green-500 mb-2">
-                    <x-heroicon-o-check-circle class="w-16 h-16 mx-auto" />
+                <div class="text-amber-500 mb-2">
+                    <x-heroicon-o-lock-closed class="w-16 h-16 mx-auto" />
                 </div>
-                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Erhebung abgeschlossen!</h3>
-                <p class="text-[var(--ui-muted)]">Alle Schritte wurden erfolgreich durchlaufen</p>
+                <h3 class="text-lg font-medium text-[var(--ui-secondary)] mb-2">Erhebung geschlossen</h3>
+                <p class="text-[var(--ui-muted)]">Diese Erhebung nimmt keine neuen Antworten mehr entgegen.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

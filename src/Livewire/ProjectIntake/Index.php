@@ -16,10 +16,8 @@ class Index extends Component
     public $templates;
     public $statuses = [
         'draft' => 'Entwurf',
-        'in_progress' => 'In Bearbeitung',
-        'completed' => 'Abgeschlossen',
-        'paused' => 'Pausiert',
-        'cancelled' => 'Abgebrochen'
+        'published' => 'Veröffentlicht',
+        'closed' => 'Geschlossen',
     ];
 
     // Create Modal Properties
@@ -91,14 +89,14 @@ class Index extends Component
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'project_template_id' => 'required|exists:hatch_project_templates,id',
-            'status' => 'required|in:' . implode(',', array_keys($this->statuses)),
         ]);
 
         $projectIntake = HatchProjectIntake::create([
             'name' => $this->name,
             'description' => $this->description,
             'project_template_id' => $this->project_template_id,
-            'status' => $this->status,
+            'status' => 'draft',
+            'is_active' => false,
             'team_id' => auth()->user()->current_team_id,
             'created_by_user_id' => auth()->id(),
         ]);
@@ -146,8 +144,8 @@ class Index extends Component
         $stats = [
             'total' => (clone $statsQuery)->count(),
             'draft' => (clone $statsQuery)->where('status', 'draft')->count(),
-            'in_progress' => (clone $statsQuery)->where('status', 'in_progress')->count(),
-            'completed' => (clone $statsQuery)->where('status', 'completed')->count(),
+            'published' => (clone $statsQuery)->where('status', 'published')->count(),
+            'closed' => (clone $statsQuery)->where('status', 'closed')->count(),
         ];
 
         $query = HatchProjectIntake::query()

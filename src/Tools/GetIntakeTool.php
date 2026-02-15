@@ -84,7 +84,6 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                 'workflow_status' => $intake->workflow_status,
                 'current_step' => $intake->current_step,
                 'ai_confidence_score' => (float)$intake->ai_confidence_score,
-                'is_active' => (bool)$intake->is_active,
                 'sessions_count' => $intake->sessions_count,
                 'steps' => $intake->intakeSteps->map(fn ($s) => [
                     'id' => $s->id,

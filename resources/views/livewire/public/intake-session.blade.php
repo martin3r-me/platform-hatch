@@ -64,20 +64,6 @@
             </div>
         </div>
 
-    @elseif($state === 'paused')
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="intake-card w-full max-w-md p-10 text-center">
-                <div class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung pausiert</h1>
-                <p class="text-gray-500 text-lg mb-4">Diese Erhebung ist derzeit pausiert. Bitte versuchen Sie es spaeter erneut.</p>
-                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
-            </div>
-        </div>
-
     @elseif(in_array($state, ['ready', 'completed']))
         @php $isReadOnly = ($state === 'completed'); @endphp
 

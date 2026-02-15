@@ -54,19 +54,15 @@ class IntakeSession extends Component
             $this->totalBlocks = count($this->blocks);
         }
 
-        if (!$intake->is_active) {
-            if ($this->session->status !== 'completed') {
-                $this->state = 'notActive';
-                return;
-            }
-        } elseif ($intake->status === 'draft') {
+        // Vereinfachte Zugriffsprüfung basierend auf dem neuen Status-Modell
+        if ($intake->status === 'draft') {
             if ($this->session->status !== 'completed') {
                 $this->state = 'notStarted';
                 return;
             }
-        } elseif ($intake->status !== 'in_progress') {
+        } elseif ($intake->status === 'closed') {
             if ($this->session->status !== 'completed') {
-                $this->state = 'paused';
+                $this->state = 'notActive';
                 return;
             }
         }
@@ -116,7 +112,7 @@ class IntakeSession extends Component
     {
         $intake = $this->session?->projectIntake;
 
-        return $intake && $intake->is_active && $intake->status === 'in_progress';
+        return $intake && $intake->status === 'published';
     }
 
     private function getUnansweredRequiredBlocks(): array
@@ -159,12 +155,10 @@ class IntakeSession extends Component
 
         if (!$this->isIntakeAccessible()) {
             $intake = $this->session?->projectIntake;
-            if ($intake && !$intake->is_active) {
-                $this->state = 'notActive';
-            } elseif ($intake && $intake->status === 'draft') {
+            if ($intake && $intake->status === 'draft') {
                 $this->state = 'notStarted';
             } else {
-                $this->state = 'paused';
+                $this->state = 'notActive';
             }
             return;
         }
@@ -204,7 +198,7 @@ class IntakeSession extends Component
 
         $this->saveCurrentBlock();
 
-        if ($this->state === 'paused') {
+        if ($this->state === 'notActive') {
             return;
         }
 

@@ -37,15 +37,12 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                     ],
                     'status' => [
                         'type' => 'string',
-                        'description' => 'Optional: Filter nach Status (z.B. draft, active, completed).',
+                        'enum' => ['draft', 'published', 'closed'],
+                        'description' => 'Optional: Filter nach Status (draft, published, closed).',
                     ],
                     'template_id' => [
                         'type' => 'integer',
                         'description' => 'Optional: Filter nach Projekt-Template.',
-                    ],
-                    'is_active' => [
-                        'type' => 'boolean',
-                        'description' => 'Optional: nur aktive/inaktive Intakes.',
                     ],
                 ],
             ]
@@ -72,14 +69,10 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
             if (isset($arguments['template_id'])) {
                 $query->where('project_template_id', (int)$arguments['template_id']);
             }
-            if (isset($arguments['is_active'])) {
-                $query->where('is_active', (bool)$arguments['is_active']);
-            }
 
             $this->applyStandardFilters($query, $arguments, [
                 'name',
                 'status',
-                'is_active',
                 'project_template_id',
                 'created_at',
             ]);
@@ -104,7 +97,6 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                     'project_template_name' => $i->projectTemplate?->name,
                     'public_token' => $i->public_token,
                     'public_url' => $i->getPublicUrl(),
-                    'is_active' => (bool)$i->is_active,
                     'intake_steps_count' => $i->intake_steps_count,
                     'sessions_count' => $i->sessions_count,
                     'ai_confidence_score' => (float)$i->ai_confidence_score,
