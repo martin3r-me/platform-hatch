@@ -53,6 +53,10 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'boolean',
                     'description' => 'Optional: Aktiv-Status.',
                 ],
+                'started_at' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Startzeitpunkt (ISO 8601). Wird automatisch gesetzt beim Status-Wechsel auf "in_progress", falls leer.',
+                ],
             ],
             'required' => ['intake_id'],
         ]);
@@ -90,12 +94,22 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 'description',
                 'status',
                 'is_active',
+                'started_at',
             ];
 
             foreach ($fields as $field) {
                 if (array_key_exists($field, $arguments)) {
                     $intake->{$field} = $arguments[$field] === '' ? null : $arguments[$field];
                 }
+            }
+
+            // Auto-set started_at when status changes to 'in_progress' and started_at is still null
+            if (
+                $intake->isDirty('status')
+                && $intake->status === 'in_progress'
+                && empty($intake->started_at)
+            ) {
+                $intake->started_at = now();
             }
 
             $intake->save();
@@ -106,6 +120,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 'name' => $intake->name,
                 'status' => $intake->status,
                 'is_active' => (bool)$intake->is_active,
+                'started_at' => $intake->started_at?->toISOString(),
                 'team_id' => $intake->team_id,
                 'message' => 'Intake erfolgreich aktualisiert.',
             ]);
