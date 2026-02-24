@@ -1,4 +1,4 @@
-<div class="intake-wrap min-h-screen relative overflow-hidden">
+<div class="intake-wrap relative overflow-hidden">
 
     {{-- Background Image --}}
     @php
@@ -17,7 +17,7 @@
     </div>
 
     @if($state === 'notFound')
-        <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="flex items-center justify-center intake-fullscreen p-4">
             <div class="intake-card w-full max-w-md p-10 text-center">
                 <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
         </div>
 
     @elseif($state === 'notActive')
-        <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="flex items-center justify-center intake-fullscreen p-4">
             <div class="intake-card w-full max-w-md p-10 text-center">
                 <div class="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
         </div>
 
     @elseif($state === 'notStarted')
-        <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="flex items-center justify-center intake-fullscreen p-4">
             <div class="intake-card w-full max-w-md p-10 text-center">
                 <div class="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,8 +67,9 @@
     @elseif(in_array($state, ['ready', 'completed']))
         @php $isReadOnly = ($state === 'completed'); @endphp
 
-        {{-- Floating Header --}}
-        <header class="sticky top-0 z-50">
+        <div class="intake-shell">
+        {{-- Header --}}
+        <header class="intake-shell-header z-50">
             <div class="intake-header-glass">
                 <div class="max-w-3xl lg:max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-3 min-w-0">
@@ -116,57 +117,57 @@
             </div>
         </header>
 
-        {{-- Status Banner --}}
-        @if($isReadOnly)
-            <div class="max-w-3xl lg:max-w-6xl mx-auto px-6 pt-6">
-                <div class="intake-card flex items-center gap-3 px-5 py-4">
-                    <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <div class="text-sm text-gray-600">
-                        @if($respondentName)
-                            <p class="font-medium text-gray-800">Hallo {{ $respondentName }}!</p>
-                            <p>Vielen Dank fuer Ihre Teilnahme. Diese Erhebung wurde abgeschlossen &ndash; Ihre Antworten werden unten angezeigt.</p>
-                        @else
-                            <p>Diese Erhebung wurde abgeschlossen. Ihre Antworten werden unten angezeigt.</p>
-                        @endif
+        {{-- Content --}}
+        <main class="intake-shell-main">
+
+            {{-- Status Banner --}}
+            @if($isReadOnly)
+                <div class="mb-6">
+                    <div class="intake-card flex items-center gap-3 px-5 py-4">
+                        <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            @if($respondentName)
+                                <p class="font-medium text-gray-800">Hallo {{ $respondentName }}!</p>
+                                <p>Vielen Dank fuer Ihre Teilnahme. Diese Erhebung wurde abgeschlossen &ndash; Ihre Antworten werden unten angezeigt.</p>
+                            @else
+                                <p>Diese Erhebung wurde abgeschlossen. Ihre Antworten werden unten angezeigt.</p>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
-        @else
-            <div class="max-w-3xl lg:max-w-6xl mx-auto px-6 pt-5">
-                @if($respondentName)
-                    <div class="intake-card flex items-center gap-3 px-5 py-4 mb-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
+            @else
+                <div class="mb-6">
+                    @if($respondentName)
+                        <div class="intake-card flex items-center gap-3 px-5 py-4 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schoen, dass Sie da sind!
+                            </p>
                         </div>
-                        <p class="text-sm text-gray-600">
-                            <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schoen, dass Sie da sind!
-                        </p>
-                    </div>
-                @endif
-                <p class="text-xs text-white/30 text-center tracking-wide">
-                    Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
-                </p>
-                @if($validationError)
-                    <div class="mt-3 intake-card flex items-center gap-3 px-5 py-4">
-                        <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                            </svg>
+                    @endif
+                    <p class="text-xs text-white/30 text-center tracking-wide">
+                        Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
+                    </p>
+                    @if($validationError)
+                        <div class="mt-3 intake-card flex items-center gap-3 px-5 py-4">
+                            <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                            </div>
+                            <p class="text-sm text-rose-700">{{ $validationError }}</p>
                         </div>
-                        <p class="text-sm text-rose-700">{{ $validationError }}</p>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        {{-- Content --}}
-        <main class="max-w-3xl lg:max-w-6xl mx-auto px-6 py-8">
+                    @endif
+                </div>
+            @endif
             @php
                 // Determine answer status for each block
                 $answers = $session->answers ?? [];
@@ -1396,9 +1397,10 @@
         </main>
 
         {{-- Footer --}}
-        <footer class="max-w-3xl lg:max-w-6xl mx-auto px-6 pb-8 text-center">
+        <footer class="intake-shell-footer">
             <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Hatch</p>
         </footer>
+        </div>{{-- /.intake-shell --}}
     @endif
 </div>
 
@@ -1409,6 +1411,75 @@
 
     .intake-wrap {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* Fullscreen centering for error/status screens */
+    .intake-fullscreen {
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ── Shell: Header + Main + Footer = exactly viewport ── */
+    .intake-shell {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .intake-shell-header {
+        flex-shrink: 0;
+    }
+
+    .intake-shell-main {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 2rem 1.5rem;
+    }
+
+    .intake-shell-main > * {
+        max-width: 48rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    @media (min-width: 1024px) {
+        .intake-shell-main > * {
+            max-width: 72rem;
+        }
+    }
+
+    .intake-shell-footer {
+        flex-shrink: 0;
+        padding: 0.75rem 1.5rem;
+        text-align: center;
+    }
+
+    /* Smooth scrollbar for main area */
+    .intake-shell-main {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+
+    .intake-shell-main::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .intake-shell-main::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .intake-shell-main::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 6px;
+    }
+
+    .intake-shell-main::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.2);
     }
 
     /* ── Background ── */
@@ -1598,8 +1669,8 @@
 
         .intake-sidebar-inner {
             position: sticky;
-            top: 5.5rem;
-            max-height: calc(100vh - 7rem);
+            top: 0;
+            max-height: calc(100vh - 12rem);
             display: flex;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.04);
