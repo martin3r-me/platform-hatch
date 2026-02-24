@@ -3,12 +3,15 @@
 namespace Platform\Hatch\Livewire\ProjectIntake;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
 
 class Index extends Component
 {
+    use WithPagination;
+
     public $search = '';
     public $statusFilter = '';
     public $templateFilter = '';
