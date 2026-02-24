@@ -49,7 +49,7 @@ class BulkUpdateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                             ],
                             'block_type' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Neuer Block-Typ.',
+                                'description' => 'Optional: Neuer Block-Typ. Erlaubt: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom, matrix, ranking, nps, dropdown, datetime, time, slider, image_choice, consent, section, hidden, address, color, lookup, signature, date_range, calculated, repeater.',
                             ],
                             'description' => [
                                 'type' => 'string',
@@ -77,7 +77,7 @@ class BulkUpdateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                             ],
                             'logic_config' => [
                                 'type' => 'object',
-                                'description' => 'Optional: Neue Logik-Konfiguration.',
+                                'description' => 'Optional: Neue Logik-Konfiguration als JSON. Struktur abhaengig von block_type — siehe hatch.overview.GET fuer Details. Beispiele: select: {options: [{label, value}]}, repeater: {fields: [{key, label, type}], min_entries, max_entries, add_label}, lookup: {lookup_id, multiple}.',
                             ],
                             'ai_behavior' => [
                                 'type' => 'object',

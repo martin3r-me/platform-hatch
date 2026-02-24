@@ -73,7 +73,24 @@ class BulkCreateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                             ],
                             'logic_config' => [
                                 'type' => 'object',
-                                'description' => 'Optional: Logik-Konfiguration als JSON.',
+                                'description' => 'Optional: Logik-Konfiguration als JSON. Je nach block_type: '
+                                    . 'select/multi_select/dropdown: {options: [{label, value}]}. '
+                                    . 'scale: {min, max, labels: {min_label, max_label}}. '
+                                    . 'rating: {max}. boolean: {true_label, false_label}. '
+                                    . 'matrix: {items: [{label, value}], scale_min, scale_max}. '
+                                    . 'ranking: {options: [{label, value}]}. '
+                                    . 'slider: {min, max, step, unit}. '
+                                    . 'consent: {text, link_url, must_accept}. '
+                                    . 'section: {title, subtitle, content}. '
+                                    . 'hidden: {default_value, source: static|url_param|referrer}. '
+                                    . 'address: {fields: [street, house_number, zip, city, country]}. '
+                                    . 'lookup: {lookup_id, multiple, searchable}. '
+                                    . 'signature: {width, height, pen_color}. '
+                                    . 'date_range: {min_date, max_date}. '
+                                    . 'calculated: {formula, display_format, operation}. '
+                                    . 'image_choice: {options: [{label, value, file_id}], columns}. '
+                                    . 'repeater: {fields: [{key, label, type (text|email|url|phone|number|date|time|select|color|long_text), options?}], min_entries, max_entries, add_label}. '
+                                    . 'Siehe hatch.overview.GET fuer Details.',
                             ],
                             'ai_behavior' => [
                                 'type' => 'object',

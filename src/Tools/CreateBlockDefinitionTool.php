@@ -67,7 +67,28 @@ class CreateBlockDefinitionTool implements ToolContract, ToolMetadataContract
                 ],
                 'logic_config' => [
                     'type' => 'object',
-                    'description' => 'Optional: Logik-Konfiguration als JSON. Fuer block_type "select"/"multi_select": options-Array setzen. Fuer block_type "scale": min (default 1), max (default 5), min_label, max_label setzen. Fuer block_type "rating": max (default 5). Fuer block_type "boolean": true_label, false_label.',
+                    'description' => 'Optional: Logik-Konfiguration als JSON. Je nach block_type: '
+                        . 'select/multi_select/dropdown: {options: [{label, value}], placeholder?, searchable?}. '
+                        . 'scale: {min (1), max (10), step, labels: {min_label, max_label}}. '
+                        . 'rating: {min (1), max (5), step}. '
+                        . 'boolean: {true_label, false_label, style}. '
+                        . 'matrix: {items: [{label, value}], scale_min (1), scale_max (5), scale_labels: {min_label, max_label}}. '
+                        . 'ranking: {options: [{label, value}]}. '
+                        . 'slider: {min (0), max (100), step (1), unit, show_value}. '
+                        . 'consent: {text, link_url, link_label, must_accept}. '
+                        . 'section: {title, subtitle, content}. '
+                        . 'hidden: {default_value, source: static|url_param|referrer}. '
+                        . 'address: {fields: [street, house_number, zip, city, country], country_lookup_id?}. '
+                        . 'color: {format: hex, presets: []}. '
+                        . 'lookup: {lookup_id (required), multiple, searchable, placeholder}. '
+                        . 'signature: {width (400), height (200), pen_color}. '
+                        . 'date_range: {min_date, max_date, format}. '
+                        . 'calculated: {formula: "{block_ID} + {block_ID}", source_blocks, display_format, operation: custom|sum|avg|min|max}. '
+                        . 'image_choice: {options: [{label, value, file_id}], columns (3)}. '
+                        . 'repeater: {fields: [{key, label, type (text|long_text|email|url|phone|number|date|time|select|color), options?}], min_entries (0), max_entries (10), add_label}. '
+                        . 'datetime: {min_datetime, max_datetime}. '
+                        . 'time: {min_time, max_time, step_minutes (15)}. '
+                        . 'nps: {} (fix 0-10).',
                 ],
                 'ai_behavior' => [
                     'type' => 'object',
