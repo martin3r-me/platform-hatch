@@ -1411,22 +1411,21 @@
 
     .intake-wrap {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        min-height: 100vh;
-        min-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
     }
 
     /* Fullscreen centering for error/status screens */
     .intake-fullscreen {
-        min-height: 100vh;
-        min-height: 100dvh;
+        height: 100%;
     }
 
     /* ── Shell: Header + Main + Footer = exactly viewport ── */
     .intake-shell {
         display: flex;
         flex-direction: column;
-        height: 100vh;
-        height: 100dvh;
+        height: 100%;
         overflow: hidden;
     }
 
