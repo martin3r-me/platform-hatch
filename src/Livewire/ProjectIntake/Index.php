@@ -29,10 +29,13 @@ class Index extends Component
 
     public function mount()
     {
+        $teamId = auth()->user()->current_team_id;
+
         $this->templates = HatchProjectTemplate::where('is_active', true)
+            ->where('team_id', $teamId)
             ->orderBy('name')
             ->get(['id', 'name']);
-            
+
         // Setze das erste Template als Preset, falls vorhanden
         if ($this->templates->isNotEmpty()) {
             $this->project_template_id = $this->templates->first()->id;
@@ -85,10 +88,24 @@ class Index extends Component
 
     public function createProjectIntake()
     {
+        $teamId = auth()->user()->current_team_id;
+
         $this->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'project_template_id' => 'required|exists:hatch_project_templates,id',
+            'project_template_id' => [
+                'required',
+                'exists:hatch_project_templates,id',
+                function ($attribute, $value, $fail) use ($teamId) {
+                    $template = HatchProjectTemplate::where('id', $value)
+                        ->where('team_id', $teamId)
+                        ->where('is_active', true)
+                        ->first();
+                    if (!$template) {
+                        $fail('Das ausgewählte Template gehört nicht zu deinem Team oder ist nicht aktiv.');
+                    }
+                },
+            ],
         ]);
 
         $projectIntake = HatchProjectIntake::create([
