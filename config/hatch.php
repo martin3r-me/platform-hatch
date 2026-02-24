@@ -32,6 +32,11 @@ return [
                     'route' => 'hatch.dashboard',
                     'icon' => 'heroicon-o-home',
                 ],
+                'lookups' => [
+                    'title' => 'Lookups',
+                    'route' => 'hatch.lookups.index',
+                    'icon' => 'heroicon-o-list-bullet',
+                ],
             ],
         ],
     ],

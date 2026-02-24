@@ -48,7 +48,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'model' => 'Platform\\Hatch\\Models\\HatchBlockDefinition',
                         'table' => 'hatch_block_definitions',
                         'key_fields' => ['id', 'uuid', 'name', 'block_type', 'ai_prompt', 'is_active', 'team_id'],
-                        'note' => 'Wiederverwendbare Bausteine (Frage-Typen) für Templates. Block-Typen: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, custom. Scale-Defaults: min=1, max=5. Rating-Default: max=5. Konfiguration via logic_config.',
+                        'note' => 'Wiederverwendbare Bausteine (Frage-Typen) für Templates. Block-Typen: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom, matrix, ranking, nps, dropdown, datetime, time, slider, image_choice, consent, section, hidden, address, color, lookup, signature, date_range, calculated, repeater. Scale-Defaults: min=1, max=5. Rating-Default: max=5. Konfiguration via logic_config.',
                     ],
                     'project_intakes' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntake',
@@ -67,6 +67,18 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'table' => 'hatch_project_intake_steps',
                         'key_fields' => ['id', 'uuid', 'project_intake_id', 'block_definition_id', 'answers', 'ai_confidence', 'is_completed'],
                         'note' => 'Einzelne Steps innerhalb eines Intakes (pro Block Definition).',
+                    ],
+                    'lookups' => [
+                        'model' => 'Platform\\Hatch\\Models\\HatchLookup',
+                        'table' => 'hatch_lookups',
+                        'key_fields' => ['id', 'team_id', 'name', 'label', 'description', 'is_system'],
+                        'note' => 'Vordefinierte Auswahllisten (z.B. Länder, Sprachen). Verwendet im Block-Typ "lookup". Verwaltung über Admin-UI unter /lookups.',
+                    ],
+                    'lookup_values' => [
+                        'model' => 'Platform\\Hatch\\Models\\HatchLookupValue',
+                        'table' => 'hatch_lookup_values',
+                        'key_fields' => ['id', 'lookup_id', 'value', 'label', 'order', 'is_active', 'meta'],
+                        'note' => 'Einzelne Werte einer Lookup-Liste. Sortierbar, aktivierbar, mit optionalen Metadaten.',
                     ],
                 ],
                 'relationships' => [

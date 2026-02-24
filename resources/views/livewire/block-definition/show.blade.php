@@ -156,6 +156,154 @@
                                     <span>Info-Block (nur Anzeige)</span>
                                 </div>
                                 @break
+                            @case('matrix')
+                                <div class="text-xs text-[var(--ui-muted)]">
+                                    <div class="flex gap-1 items-center">@svg('heroicon-o-table-cells', 'w-4 h-4') Matrix / Likert-Raster</div>
+                                    @if(!empty($typeConfig['items']))
+                                        <div class="mt-1">{{ count($typeConfig['items']) }} Item(s), Skala {{ $typeConfig['scale_min'] ?? 1 }}–{{ $typeConfig['scale_max'] ?? 5 }}</div>
+                                    @endif
+                                </div>
+                                @break
+                            @case('ranking')
+                                <div class="text-xs text-[var(--ui-muted)]">
+                                    <div class="flex gap-1 items-center">@svg('heroicon-o-bars-arrow-up', 'w-4 h-4') Sortierung / Ranking</div>
+                                    @if(!empty($typeConfig['options']))
+                                        <div class="mt-1">{{ count($typeConfig['options']) }} Option(en)</div>
+                                    @endif
+                                </div>
+                                @break
+                            @case('nps')
+                                <div class="flex gap-0.5 mt-1">
+                                    @for($i = 0; $i <= 10; $i++)
+                                        <div class="w-4 h-4 rounded text-[8px] flex items-center justify-center {{ $i <= 6 ? 'bg-rose-100 text-rose-500' : ($i <= 8 ? 'bg-amber-100 text-amber-500' : 'bg-emerald-100 text-emerald-500') }}">{{ $i }}</div>
+                                    @endfor
+                                </div>
+                                @break
+                            @case('dropdown')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex items-center justify-between">
+                                    <span>{{ $typeConfig['placeholder'] ?? 'Bitte wählen...' }}</span>
+                                    @svg('heroicon-o-chevron-down', 'w-4 h-4')
+                                </div>
+                                @if(!empty($typeConfig['options']))
+                                    <div class="mt-1 text-xs text-[var(--ui-muted)]">{{ count($typeConfig['options']) }} Option(en)</div>
+                                @endif
+                                @break
+                            @case('datetime')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex items-center justify-between">
+                                    <span>2025-01-15 14:30</span>
+                                    @svg('heroicon-o-calendar', 'w-4 h-4')
+                                </div>
+                                @break
+                            @case('time')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex items-center justify-between">
+                                    <span>14:30</span>
+                                    @svg('heroicon-o-clock', 'w-4 h-4')
+                                </div>
+                                @break
+                            @case('slider')
+                                <div class="mt-1">
+                                    <div class="bg-[var(--ui-muted-5)] rounded-full h-2"><div class="bg-[var(--ui-primary)] h-2 rounded-full" style="width: 50%"></div></div>
+                                    <div class="flex justify-between text-xs text-[var(--ui-muted)] mt-1">
+                                        <span>{{ $typeConfig['min'] ?? 0 }}</span>
+                                        <span>{{ $typeConfig['max'] ?? 100 }}{{ !empty($typeConfig['unit']) ? ' ' . $typeConfig['unit'] : '' }}</span>
+                                    </div>
+                                </div>
+                                @break
+                            @case('image_choice')
+                                <div class="text-xs text-[var(--ui-muted)]">
+                                    <div class="flex gap-1 items-center">@svg('heroicon-o-photo', 'w-4 h-4') Bildauswahl</div>
+                                    @if(!empty($typeConfig['options']))
+                                        <div class="mt-1">{{ count($typeConfig['options']) }} Bild(er), {{ $typeConfig['columns'] ?? 3 }} Spalten</div>
+                                    @endif
+                                </div>
+                                @break
+                            @case('consent')
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="w-4 h-4 border border-[var(--ui-border)]/60 rounded bg-[var(--ui-muted-5)]"></div>
+                                    <span class="text-xs text-[var(--ui-muted)]">Ich stimme zu</span>
+                                </div>
+                                @break
+                            @case('section')
+                                <div class="border-t border-[var(--ui-border)]/60 mt-2 pt-2">
+                                    <span class="text-xs text-[var(--ui-muted)]">Abschnittstrenner</span>
+                                    @if(!empty($typeConfig['content']))
+                                        <p class="text-[10px] text-[var(--ui-muted)] mt-1 truncate">{{ Str::limit($typeConfig['content'], 50) }}</p>
+                                    @endif
+                                </div>
+                                @break
+                            @case('hidden')
+                                <div class="border border-dashed border-[var(--ui-border)]/60 rounded px-3 py-2 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex items-center gap-2">
+                                    @svg('heroicon-o-eye-slash', 'w-4 h-4')
+                                    <span>Versteckt: {{ $typeConfig['source'] ?? 'static' }}</span>
+                                </div>
+                                @break
+                            @case('address')
+                                <div class="space-y-1 mt-1">
+                                    <div class="border border-[var(--ui-border)]/60 rounded px-2 py-1 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)]">Strasse, Nr.</div>
+                                    <div class="flex gap-1">
+                                        <div class="border border-[var(--ui-border)]/60 rounded px-2 py-1 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)] w-1/3">PLZ</div>
+                                        <div class="border border-[var(--ui-border)]/60 rounded px-2 py-1 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)] w-2/3">Ort</div>
+                                    </div>
+                                </div>
+                                @break
+                            @case('color')
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div class="w-8 h-8 rounded border border-[var(--ui-border)]/60 bg-blue-500"></div>
+                                    <span class="text-xs font-mono text-[var(--ui-muted)]">#3b82f6</span>
+                                </div>
+                                @break
+                            @case('lookup')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex items-center justify-between">
+                                    <span>{{ $typeConfig['placeholder'] ?? 'Bitte wählen...' }}</span>
+                                    @svg('heroicon-o-chevron-down', 'w-4 h-4')
+                                </div>
+                                <div class="mt-1 text-xs text-[var(--ui-muted)]">
+                                    Lookup{{ ($typeConfig['multiple'] ?? false) ? ' (Mehrfach)' : '' }}
+                                </div>
+                                @break
+                            @case('signature')
+                                <div class="border-2 border-dashed border-[var(--ui-border)]/60 rounded-lg p-4 text-center">
+                                    @svg('heroicon-o-pencil', 'w-6 h-6 text-[var(--ui-muted)] mx-auto')
+                                    <p class="text-xs text-[var(--ui-muted)] mt-1">{{ $typeConfig['width'] ?? 400 }} x {{ $typeConfig['height'] ?? 200 }}px</p>
+                                </div>
+                                @break
+                            @case('date_range')
+                                <div class="flex gap-2 mt-1">
+                                    <div class="border border-[var(--ui-border)]/60 rounded px-2 py-1 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex-1 flex items-center gap-1">@svg('heroicon-o-calendar', 'w-3 h-3') Von</div>
+                                    <div class="border border-[var(--ui-border)]/60 rounded px-2 py-1 text-xs text-[var(--ui-muted)] bg-[var(--ui-muted-5)] flex-1 flex items-center gap-1">@svg('heroicon-o-calendar', 'w-3 h-3') Bis</div>
+                                </div>
+                                @break
+                            @case('calculated')
+                                <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-amber-50/50 flex items-center gap-2">
+                                    @svg('heroicon-o-calculator', 'w-4 h-4')
+                                    <span>Berechnet (read-only)</span>
+                                </div>
+                                @break
+                            @case('repeater')
+                                <div class="space-y-1.5">
+                                    @php $rFields = $typeConfig['fields'] ?? []; @endphp
+                                    <div class="border border-[var(--ui-border)]/60 rounded p-2 bg-[var(--ui-muted-5)]">
+                                        @if(count($rFields) > 0)
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach(array_slice($rFields, 0, 4) as $rf)
+                                                    <span class="inline-block px-1.5 py-0.5 text-[10px] bg-violet-100 text-violet-700 rounded">{{ $rf['label'] ?: $rf['key'] }}</span>
+                                                @endforeach
+                                                @if(count($rFields) > 4)
+                                                    <span class="inline-block px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-500 rounded">+{{ count($rFields) - 4 }}</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-[var(--ui-muted)]">Keine Felder</span>
+                                        @endif
+                                    </div>
+                                    <div class="border-2 border-dashed border-[var(--ui-border)]/40 rounded px-2 py-1 text-center text-[10px] text-[var(--ui-muted)]">
+                                        + {{ $typeConfig['add_label'] ?? 'Eintrag hinzufügen' }}
+                                    </div>
+                                    <div class="text-[10px] text-[var(--ui-muted)] text-right">
+                                        {{ $typeConfig['min_entries'] ?? 0 }}–{{ $typeConfig['max_entries'] ?? 10 }} Einträge
+                                    </div>
+                                </div>
+                                @break
                             @default
                                 <div class="border border-[var(--ui-border)]/60 rounded px-3 py-2 text-sm text-[var(--ui-muted)] bg-[var(--ui-muted-5)]">Eingabe...</div>
                         @endswitch
@@ -376,6 +524,359 @@
             @if($blockDefinition->block_type === 'custom')
                 <div class="text-center text-[var(--ui-muted)] p-4 border border-dashed border-[var(--ui-border)]/60 rounded-lg text-sm">
                     Benutzerdefinierter Typ — die Konfiguration erfolgt vollständig über den KI-Prompt und das Antwort-Format weiter unten.
+                </div>
+            @endif
+
+            {{-- Matrix --}}
+            @if($blockDefinition->block_type === 'matrix')
+                <div class="space-y-3">
+                    <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 space-y-3">
+                        <p class="text-xs text-[var(--ui-muted)]">Definiere Items (Zeilen) und die Bewertungsskala. Respondenten bewerten jedes Item auf der Skala.</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <x-ui-input-text name="typeConfig.scale_min" label="Skala-Minimum" hint="z.B. 1" wire:model.live.debounce.500ms="typeConfig.scale_min" type="number" size="sm" />
+                            <x-ui-input-text name="typeConfig.scale_max" label="Skala-Maximum" hint="z.B. 5" wire:model.live.debounce.500ms="typeConfig.scale_max" type="number" size="sm" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <x-ui-input-text name="typeConfig.scale_labels.min_label" label="Beschriftung links" wire:model.live.debounce.500ms="typeConfig.scale_labels.min_label" placeholder="z.B. Trifft nicht zu" size="sm" />
+                            <x-ui-input-text name="typeConfig.scale_labels.max_label" label="Beschriftung rechts" wire:model.live.debounce.500ms="typeConfig.scale_labels.max_label" placeholder="z.B. Trifft voll zu" size="sm" />
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-sm font-medium text-[var(--ui-secondary)]">Matrix-Items (Zeilen)</span>
+                            <p class="text-xs text-[var(--ui-muted)]">Jedes Item wird als Zeile in der Matrix angezeigt.</p>
+                        </div>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addMatrixItem">
+                            <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Item hinzufügen</span>
+                        </x-ui-button>
+                    </div>
+                    @if(!empty($typeConfig['items']))
+                        @foreach($typeConfig['items'] as $itemIndex => $item)
+                            <div class="flex items-center gap-2 p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.label" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.label" placeholder="Angezeigter Text" size="sm" class="flex-grow" />
+                                <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.value" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.value" placeholder="Wert (Schlüssel)" size="sm" class="flex-grow" />
+                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeMatrixItem({{ $itemIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Noch keine Items definiert.</div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Ranking --}}
+            @if($blockDefinition->block_type === 'ranking')
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-sm font-medium text-[var(--ui-secondary)]">Ranking-Optionen</span>
+                            <p class="text-xs text-[var(--ui-muted)]">Respondenten sortieren diese Optionen per Drag&Drop.</p>
+                        </div>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addRankingOption">
+                            <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Option hinzufügen</span>
+                        </x-ui-button>
+                    </div>
+                    @if(!empty($typeConfig['options']))
+                        @foreach($typeConfig['options'] as $optIndex => $option)
+                            <div class="flex items-center gap-2 p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.label" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.label" placeholder="Angezeigter Text" size="sm" class="flex-grow" />
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.value" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.value" placeholder="Wert" size="sm" class="flex-grow" />
+                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeRankingOption({{ $optIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Noch keine Optionen definiert.</div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- NPS --}}
+            @if($blockDefinition->block_type === 'nps')
+                <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Net Promoter Score — fix 0 bis 10. Keine zusätzliche Konfiguration nötig.</p>
+                    <div class="flex gap-0.5 mt-2">
+                        @for($i = 0; $i <= 10; $i++)
+                            <div class="w-6 h-6 rounded text-[10px] flex items-center justify-center font-bold {{ $i <= 6 ? 'bg-rose-100 text-rose-600' : ($i <= 8 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600') }}">{{ $i }}</div>
+                        @endfor
+                    </div>
+                </div>
+            @endif
+
+            {{-- Dropdown --}}
+            @if($blockDefinition->block_type === 'dropdown')
+                <div class="space-y-3">
+                    <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 space-y-3">
+                        <x-ui-input-text name="typeConfig.placeholder" label="Placeholder" wire:model.live.debounce.500ms="typeConfig.placeholder" placeholder="Bitte wählen..." size="sm" />
+                        <x-ui-input-select name="typeConfig.searchable" label="Durchsuchbar" hint="Suchfeld im Dropdown" wire:model.live="typeConfig.searchable" :options="collect([['value' => '1', 'label' => 'Ja'],['value' => '', 'label' => 'Nein']])" optionValue="value" optionLabel="label" size="sm" />
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-[var(--ui-secondary)]">Optionen</span>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addSelectOption">
+                            <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Option hinzufügen</span>
+                        </x-ui-button>
+                    </div>
+                    @if(!empty($typeConfig['options']))
+                        @foreach($typeConfig['options'] as $optIndex => $option)
+                            <div class="flex items-center gap-2 p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.label" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.label" placeholder="Angezeigter Text" size="sm" class="flex-grow" />
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.value" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.value" placeholder="Wert" size="sm" class="flex-grow" />
+                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeSelectOption({{ $optIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Noch keine Optionen definiert.</div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- DateTime --}}
+            @if($blockDefinition->block_type === 'datetime')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Datum und Uhrzeit in einem Feld.</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui-input-text name="typeConfig.min_datetime" label="Frühester Zeitpunkt" hint="Optional" wire:model.live.debounce.500ms="typeConfig.min_datetime" type="datetime-local" size="sm" />
+                        <x-ui-input-text name="typeConfig.max_datetime" label="Spätester Zeitpunkt" hint="Optional" wire:model.live.debounce.500ms="typeConfig.max_datetime" type="datetime-local" size="sm" />
+                    </div>
+                </div>
+            @endif
+
+            {{-- Time --}}
+            @if($blockDefinition->block_type === 'time')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Reine Uhrzeitauswahl.</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <x-ui-input-text name="typeConfig.min_time" label="Früheste Uhrzeit" hint="Optional" wire:model.live.debounce.500ms="typeConfig.min_time" type="time" size="sm" />
+                        <x-ui-input-text name="typeConfig.max_time" label="Späteste Uhrzeit" hint="Optional" wire:model.live.debounce.500ms="typeConfig.max_time" type="time" size="sm" />
+                        <x-ui-input-text name="typeConfig.step_minutes" label="Schritt (Min.)" hint="z.B. 15" wire:model.live.debounce.500ms="typeConfig.step_minutes" type="number" size="sm" />
+                    </div>
+                </div>
+            @endif
+
+            {{-- Slider --}}
+            @if($blockDefinition->block_type === 'slider')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Schieberegler mit Min/Max-Wert und optionaler Einheit.</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <x-ui-input-text name="typeConfig.min" label="Minimum" wire:model.live.debounce.500ms="typeConfig.min" type="number" size="sm" />
+                        <x-ui-input-text name="typeConfig.max" label="Maximum" wire:model.live.debounce.500ms="typeConfig.max" type="number" size="sm" />
+                        <x-ui-input-text name="typeConfig.step" label="Schrittgrösse" wire:model.live.debounce.500ms="typeConfig.step" type="number" size="sm" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui-input-text name="typeConfig.unit" label="Einheit" hint="Optional" wire:model.live.debounce.500ms="typeConfig.unit" placeholder="z.B. %, kg, EUR" size="sm" />
+                        <x-ui-input-select name="typeConfig.show_value" label="Wert anzeigen" wire:model.live="typeConfig.show_value" :options="collect([['value' => '1', 'label' => 'Ja'],['value' => '', 'label' => 'Nein']])" optionValue="value" optionLabel="label" size="sm" />
+                    </div>
+                </div>
+            @endif
+
+            {{-- Image Choice --}}
+            @if($blockDefinition->block_type === 'image_choice')
+                <div class="space-y-3">
+                    <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                        <x-ui-input-text name="typeConfig.columns" label="Spalten" hint="Grid-Spalten (z.B. 2, 3, 4)" wire:model.live.debounce.500ms="typeConfig.columns" type="number" size="sm" />
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-sm font-medium text-[var(--ui-secondary)]">Bild-Optionen</span>
+                            <p class="text-xs text-[var(--ui-muted)]">Bilder werden über die InlineFileUpload-Komponente hochgeladen (file_id).</p>
+                        </div>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addImageOption">
+                            <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Bild hinzufügen</span>
+                        </x-ui-button>
+                    </div>
+                    @if(!empty($typeConfig['options']))
+                        @foreach($typeConfig['options'] as $optIndex => $option)
+                            <div class="flex items-center gap-2 p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.label" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.label" placeholder="Label" size="sm" class="flex-grow" />
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.value" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.value" placeholder="Wert" size="sm" class="flex-grow" />
+                                <x-ui-input-text name="typeConfig.options.{{ $optIndex }}.file_id" wire:model.live.debounce.500ms="typeConfig.options.{{ $optIndex }}.file_id" placeholder="File-ID" size="sm" class="w-24" />
+                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeImageOption({{ $optIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Noch keine Bild-Optionen definiert.</div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Consent --}}
+            @if($blockDefinition->block_type === 'consent')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">DSGVO-Einwilligung mit optionalem Link zur Datenschutzerklärung.</p>
+                    <x-ui-input-textarea name="typeConfig.text" label="Einwilligungstext" wire:model.live.debounce.500ms="typeConfig.text" placeholder="z.B. Ich stimme der Verarbeitung meiner Daten gemäss..." rows="3" size="sm" />
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui-input-text name="typeConfig.link_url" label="Link-URL" hint="Optional" wire:model.live.debounce.500ms="typeConfig.link_url" placeholder="https://..." size="sm" />
+                        <x-ui-input-text name="typeConfig.link_label" label="Link-Text" wire:model.live.debounce.500ms="typeConfig.link_label" placeholder="Datenschutzerklärung" size="sm" />
+                    </div>
+                    <x-ui-input-select name="typeConfig.must_accept" label="Zustimmung erforderlich" wire:model.live="typeConfig.must_accept" :options="collect([['value' => '1', 'label' => 'Ja (Pflicht)'],['value' => '', 'label' => 'Nein (Optional)']])" optionValue="value" optionLabel="label" size="sm" />
+                </div>
+            @endif
+
+            {{-- Section --}}
+            @if($blockDefinition->block_type === 'section')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Visueller Abschnittstrenner — keine Eingabe, nur Anzeige von Titel, Untertitel und optionalem Inhalt.</p>
+                    <x-ui-input-text name="typeConfig.title" label="Abschnitts-Titel" wire:model.live.debounce.500ms="typeConfig.title" placeholder="z.B. Persönliche Angaben" size="sm" />
+                    <x-ui-input-text name="typeConfig.subtitle" label="Untertitel" hint="Optional" wire:model.live.debounce.500ms="typeConfig.subtitle" placeholder="Weitere Informationen..." size="sm" />
+                    <x-ui-input-textarea name="typeConfig.content" label="Inhalt" hint="Optional — erklärender Text, Hinweise etc." wire:model.live.debounce.500ms="typeConfig.content" placeholder="Optionaler Beschreibungstext für diesen Abschnitt..." rows="3" size="sm" />
+                </div>
+            @endif
+
+            {{-- Hidden --}}
+            @if($blockDefinition->block_type === 'hidden')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Unsichtbares Feld, das automatisch befüllt wird.</p>
+                    <x-ui-input-text name="typeConfig.default_value" label="Standardwert / Parameter" hint="Wert oder URL-Parameter-Name" wire:model.live.debounce.500ms="typeConfig.default_value" placeholder="z.B. campaign_id" size="sm" />
+                    <x-ui-input-select name="typeConfig.source" label="Quelle" hint="Woher kommt der Wert?" wire:model.live="typeConfig.source" :options="collect([['value' => 'static', 'label' => 'Statisch (fester Wert)'],['value' => 'url_param', 'label' => 'URL-Parameter'],['value' => 'referrer', 'label' => 'Referrer-URL']])" optionValue="value" optionLabel="label" size="sm" />
+                </div>
+            @endif
+
+            {{-- Address --}}
+            @if($blockDefinition->block_type === 'address')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Strukturierte Adresseingabe mit konfigurierbaren Feldern.</p>
+                    <div class="text-sm text-[var(--ui-secondary)] font-medium">Aktive Felder</div>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(['street' => 'Strasse', 'house_number' => 'Hausnummer', 'zip' => 'PLZ', 'city' => 'Ort', 'country' => 'Land'] as $field => $label)
+                            @php $active = in_array($field, $typeConfig['fields'] ?? []); @endphp
+                            <label class="flex items-center gap-1.5 text-xs text-[var(--ui-muted)] cursor-pointer">
+                                <input type="checkbox" value="{{ $field }}" wire:model.live="typeConfig.fields" class="rounded border-gray-300 text-violet-600 focus:ring-violet-500 w-3.5 h-3.5">
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Color --}}
+            @if($blockDefinition->block_type === 'color')
+                <div class="space-y-3">
+                    <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                        <x-ui-input-select name="typeConfig.format" label="Farbformat" wire:model.live="typeConfig.format" :options="collect([['value' => 'hex', 'label' => 'HEX (#ff6600)']])" optionValue="value" optionLabel="label" size="sm" />
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-sm font-medium text-[var(--ui-secondary)]">Farb-Presets</span>
+                            <p class="text-xs text-[var(--ui-muted)]">Vordefinierte Farben zur Schnellauswahl.</p>
+                        </div>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addColorPreset">
+                            <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Preset hinzufügen</span>
+                        </x-ui-button>
+                    </div>
+                    @if(!empty($typeConfig['presets']))
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($typeConfig['presets'] as $presetIndex => $preset)
+                                <div class="flex items-center gap-1 p-2 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                    <input type="color" wire:model.live.debounce.500ms="typeConfig.presets.{{ $presetIndex }}" class="w-6 h-6 rounded border-0 cursor-pointer p-0">
+                                    <input type="text" wire:model.live.debounce.500ms="typeConfig.presets.{{ $presetIndex }}" class="w-20 text-xs border border-[var(--ui-border)]/40 rounded px-1.5 py-0.5 font-mono" maxlength="7">
+                                    <button type="button" wire:click="removeColorPreset({{ $presetIndex }})" class="text-red-400 hover:text-red-600">@svg('heroicon-o-x-mark', 'w-4 h-4')</button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Keine Presets definiert.</div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Lookup --}}
+            @if($blockDefinition->block_type === 'lookup')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Auswahl aus einer vordefinierten Lookup-Liste. Verwalte Lookups unter Hatch → Lookups.</p>
+                    <x-ui-input-select name="typeConfig.lookup_id" label="Lookup-Liste" hint="Wähle eine vorhandene Liste" wire:model.live="typeConfig.lookup_id" :options="collect($availableLookups)" optionValue="value" optionLabel="label" size="sm" />
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui-input-select name="typeConfig.multiple" label="Mehrfachauswahl" wire:model.live="typeConfig.multiple" :options="collect([['value' => '', 'label' => 'Nein (Einzelauswahl)'],['value' => '1', 'label' => 'Ja (Multi)']])" optionValue="value" optionLabel="label" size="sm" />
+                        <x-ui-input-select name="typeConfig.searchable" label="Durchsuchbar" wire:model.live="typeConfig.searchable" :options="collect([['value' => '1', 'label' => 'Ja'],['value' => '', 'label' => 'Nein']])" optionValue="value" optionLabel="label" size="sm" />
+                    </div>
+                    <x-ui-input-text name="typeConfig.placeholder" label="Placeholder" wire:model.live.debounce.500ms="typeConfig.placeholder" placeholder="Bitte wählen..." size="sm" />
+                </div>
+            @endif
+
+            {{-- Signature --}}
+            @if($blockDefinition->block_type === 'signature')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Digitale Unterschrift via Canvas (Touch + Maus). Wird als Base64-PNG gespeichert.</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <x-ui-input-text name="typeConfig.width" label="Breite (px)" wire:model.live.debounce.500ms="typeConfig.width" type="number" size="sm" />
+                        <x-ui-input-text name="typeConfig.height" label="Höhe (px)" wire:model.live.debounce.500ms="typeConfig.height" type="number" size="sm" />
+                        <div>
+                            <label class="block text-xs font-medium text-[var(--ui-muted)] mb-1">Stiftfarbe</label>
+                            <input type="color" wire:model.live.debounce.500ms="typeConfig.pen_color" class="w-full h-8 rounded border border-[var(--ui-border)]/40 cursor-pointer p-0.5">
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Date Range --}}
+            @if($blockDefinition->block_type === 'date_range')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Von–Bis-Datumsbereich in zwei Feldern.</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <x-ui-input-text name="typeConfig.min_date" label="Frühestes Datum" hint="Optional" wire:model.live.debounce.500ms="typeConfig.min_date" type="date" size="sm" />
+                        <x-ui-input-text name="typeConfig.max_date" label="Spätestes Datum" hint="Optional" wire:model.live.debounce.500ms="typeConfig.max_date" type="date" size="sm" />
+                    </div>
+                </div>
+            @endif
+
+            {{-- Calculated --}}
+            @if($blockDefinition->block_type === 'calculated')
+                <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
+                    <p class="text-xs text-[var(--ui-muted)]">Berechnetes Feld — evaluiert eine Formel client-seitig. Referenziere andere Blöcke mit <code class="bg-white/50 px-1 rounded">{block_ID}</code>. Unterstützt: +, -, *, /, ().</p>
+                    <x-ui-input-text name="typeConfig.formula" label="Formel" hint="z.B. {block_12} * 2 + {block_15}" wire:model.live.debounce.500ms="typeConfig.formula" placeholder="{block_1} + {block_2}" size="sm" />
+                    <x-ui-input-text name="typeConfig.display_format" label="Anzeigeformat" hint="Optional, {result} als Platzhalter" wire:model.live.debounce.500ms="typeConfig.display_format" placeholder="z.B. {result} kg oder BMI: {result}" size="sm" />
+                    <x-ui-input-select name="typeConfig.operation" label="Operation" wire:model.live="typeConfig.operation" :options="collect([['value' => 'custom', 'label' => 'Benutzerdefinierte Formel'],['value' => 'sum', 'label' => 'Summe'],['value' => 'avg', 'label' => 'Durchschnitt'],['value' => 'min', 'label' => 'Minimum'],['value' => 'max', 'label' => 'Maximum']])" optionValue="value" optionLabel="label" size="sm" />
+                </div>
+            @endif
+
+            {{-- Repeater --}}
+            @if($blockDefinition->block_type === 'repeater')
+                <div class="space-y-3">
+                    <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 space-y-3">
+                        <p class="text-xs text-[var(--ui-muted)]">Wiederholbare Feldgruppe — Respondenten können mehrere Einträge mit denselben Feldern hinzufügen (z.B. Wettbewerber, Kontakte, Positionen).</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <x-ui-input-text name="typeConfig.min_entries" label="Min. Einträge" wire:model.live.debounce.500ms="typeConfig.min_entries" placeholder="0" size="sm" type="number" />
+                            <x-ui-input-text name="typeConfig.max_entries" label="Max. Einträge" wire:model.live.debounce.500ms="typeConfig.max_entries" placeholder="10" size="sm" type="number" />
+                        </div>
+                        <x-ui-input-text name="typeConfig.add_label" label="Button-Text" hint="Text des Hinzufügen-Buttons" wire:model.live.debounce.500ms="typeConfig.add_label" placeholder="Eintrag hinzufügen" size="sm" />
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <span class="text-sm font-medium text-[var(--ui-secondary)]">Felder pro Eintrag</span>
+                            <span class="text-xs text-[var(--ui-muted)] ml-1">({{ count($typeConfig['fields'] ?? []) }})</span>
+                        </div>
+                        <x-ui-button variant="secondary" size="sm" wire:click="addRepeaterField">
+                            <span class="flex items-center gap-1">@svg('heroicon-o-plus', 'w-3 h-3') Feld</span>
+                        </x-ui-button>
+                    </div>
+                    <div class="space-y-2">
+                        @forelse($typeConfig['fields'] ?? [] as $fIdx => $rField)
+                            <div class="flex items-start gap-2 p-2 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
+                                <div class="flex-1 grid grid-cols-3 gap-2">
+                                    <x-ui-input-text name="typeConfig.fields.{{ $fIdx }}.key" label="Key" wire:model.live.debounce.500ms="typeConfig.fields.{{ $fIdx }}.key" placeholder="field_key" size="sm" />
+                                    <x-ui-input-text name="typeConfig.fields.{{ $fIdx }}.label" label="Label" wire:model.live.debounce.500ms="typeConfig.fields.{{ $fIdx }}.label" placeholder="Feldname" size="sm" />
+                                    <x-ui-input-select name="typeConfig.fields.{{ $fIdx }}.type" label="Typ" wire:model.live="typeConfig.fields.{{ $fIdx }}.type" :options="collect([
+                                        ['value' => 'text', 'label' => 'Text'],
+                                        ['value' => 'long_text', 'label' => 'Langtext'],
+                                        ['value' => 'email', 'label' => 'E-Mail'],
+                                        ['value' => 'url', 'label' => 'URL'],
+                                        ['value' => 'phone', 'label' => 'Telefon'],
+                                        ['value' => 'number', 'label' => 'Zahl'],
+                                        ['value' => 'date', 'label' => 'Datum'],
+                                        ['value' => 'time', 'label' => 'Uhrzeit'],
+                                        ['value' => 'select', 'label' => 'Auswahl'],
+                                        ['value' => 'color', 'label' => 'Farbe'],
+                                    ])" optionValue="value" optionLabel="label" size="sm" />
+                                </div>
+                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeRepeaterField({{ $fIdx }})" class="mt-5">
+                                    @svg('heroicon-o-trash', 'w-3 h-3')
+                                </x-ui-button>
+                            </div>
+                        @empty
+                            <div class="text-center text-[var(--ui-muted)] p-3 border border-dashed border-[var(--ui-border)]/60 rounded text-xs">
+                                Noch keine Felder definiert. Füge mindestens ein Feld hinzu.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
             @endif
         </div>

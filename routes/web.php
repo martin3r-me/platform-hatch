@@ -12,3 +12,5 @@ Route::get('/project-intakes', Platform\Hatch\Livewire\ProjectIntake\Index::clas
 Route::get('/project-intakes/{projectIntake}', Platform\Hatch\Livewire\ProjectIntake\Show::class)->name('hatch.project-intakes.show');
 
 Route::get('/intake-sessions/{intakeSession}', Platform\Hatch\Livewire\IntakeSession\Show::class)->name('hatch.intake-sessions.show');
+
+Route::get('/lookups', Platform\Hatch\Livewire\Lookup\Index::class)->name('hatch.lookups.index');

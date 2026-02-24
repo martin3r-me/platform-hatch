@@ -37,7 +37,7 @@ class ListBlockDefinitionsTool implements ToolContract, ToolMetadataContract
                     ],
                     'block_type' => [
                         'type' => 'string',
-                        'description' => 'Optional: Filter nach Block-Typ (text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, custom).',
+                        'description' => 'Optional: Filter nach Block-Typ (text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom, matrix, ranking, nps, dropdown, datetime, time, slider, image_choice, consent, section, hidden, address, color, lookup, signature, date_range, calculated, repeater).',
                     ],
                     'is_active' => [
                         'type' => 'boolean',

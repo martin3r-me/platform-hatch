@@ -5,6 +5,7 @@ namespace Platform\Hatch\Models;
 use Illuminate\Database\Eloquent\Model;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Platform\Hatch\Models\HatchLookup;
 use Symfony\Component\Uid\UuidV7;
 
 class HatchBlockDefinition extends Model
@@ -111,8 +112,35 @@ class HatchBlockDefinition extends Model
             'rating' => 'Bewertung',
             'location' => 'Standort',
             'info' => 'Info / Hinweis (ohne Eingabe)',
-            'custom' => 'Benutzerdefiniert'
+            'custom' => 'Benutzerdefiniert',
+            'matrix' => 'Matrix / Likert-Raster',
+            'ranking' => 'Sortierung / Ranking',
+            'nps' => 'Net Promoter Score',
+            'dropdown' => 'Dropdown-Auswahl',
+            'datetime' => 'Datum & Uhrzeit',
+            'time' => 'Uhrzeit',
+            'slider' => 'Schieberegler',
+            'image_choice' => 'Bildauswahl',
+            'consent' => 'Einwilligung / DSGVO',
+            'section' => 'Abschnittstrenner',
+            'hidden' => 'Verstecktes Feld',
+            'address' => 'Strukturierte Adresse',
+            'color' => 'Farbauswahl',
+            'lookup' => 'Lookup-Auswahl',
+            'signature' => 'Digitale Unterschrift',
+            'date_range' => 'Datumsbereich',
+            'calculated' => 'Berechnetes Feld',
+            'repeater' => 'Wiederholung / Repeater',
         ];
+    }
+
+    public function lookup()
+    {
+        $lookupId = $this->logic_config['lookup_id'] ?? null;
+        if ($lookupId) {
+            return HatchLookup::find($lookupId);
+        }
+        return null;
     }
     
     public function getBlockTypeLabel(): string
