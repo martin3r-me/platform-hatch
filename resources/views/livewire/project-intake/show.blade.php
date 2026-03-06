@@ -1,42 +1,34 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="{{ $projectIntake->name ?? 'Erhebung' }}">
+        <x-ui-page-navbar title="" />
+    </x-slot>
+
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Erhebungen', 'href' => route('hatch.project-intakes.index')],
+            ['label' => $projectIntake->name ?? 'Erhebung'],
+        ]">
             @if($projectIntake->status === 'draft')
                 <x-ui-button variant="primary" size="sm" wire:click="publishIntake">
-                    <span class="flex items-center gap-2">
-                        <x-heroicon-o-rocket-launch class="w-4 h-4" />
-                        Veröffentlichen
-                    </span>
+                    @svg('heroicon-o-rocket-launch', 'w-4 h-4')
+                    <span>Veröffentlichen</span>
                 </x-ui-button>
             @endif
-        </x-ui-page-navbar>
+            <x-ui-button
+                variant="danger-outline"
+                size="sm"
+                wire:click="deleteProjectIntake"
+                wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+            >
+                @svg('heroicon-o-trash', 'w-4 h-4')
+            </x-ui-button>
+        </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Erhebungs-Details" width="w-80" :defaultOpen="true" side="left">
             <div class="p-6 space-y-6">
-                {{-- Navigation --}}
-                <div class="space-y-2">
-                    <x-ui-button variant="secondary" size="sm" :href="route('hatch.project-intakes.index')" wire:navigate class="w-full">
-                        <span class="flex items-center gap-2">
-                            @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                            Zurück zu Erhebungen
-                        </span>
-                    </x-ui-button>
-                    <x-ui-button
-                        variant="danger"
-                        size="sm"
-                        wire:click="deleteProjectIntake"
-                        wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-                        class="w-full"
-                    >
-                        <span class="flex items-center gap-2">
-                            @svg('heroicon-o-trash', 'w-4 h-4')
-                            Erhebung löschen
-                        </span>
-                    </x-ui-button>
-                </div>
-
                 {{-- Übersicht --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Übersicht</h3>

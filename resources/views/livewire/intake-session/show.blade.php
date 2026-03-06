@@ -1,22 +1,20 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="Session: {{ $intakeSession->session_token }}">
-        </x-ui-page-navbar>
+        <x-ui-page-navbar title="" />
+    </x-slot>
+
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Erhebungen', 'href' => route('hatch.project-intakes.index')],
+            ['label' => $intakeSession->projectIntake->name ?? 'Erhebung', 'href' => route('hatch.project-intakes.show', $intakeSession->projectIntake)],
+            ['label' => 'Session'],
+        ]" />
     </x-slot>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="Session-Details" width="w-80" :defaultOpen="true" side="left">
             <div class="p-6 space-y-6">
-                {{-- Navigation --}}
-                <div>
-                    <x-ui-button variant="secondary" size="sm" :href="route('hatch.project-intakes.show', $intakeSession->projectIntake)" wire:navigate class="w-full">
-                        <span class="flex items-center gap-2">
-                            @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                            Zurück zur Erhebung
-                        </span>
-                    </x-ui-button>
-                </div>
-
                 {{-- Token --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Session</h3>

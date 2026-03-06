@@ -1,30 +1,26 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="{{ $blockDefinition->name ?? 'BlockDefinition' }}">
+        <x-ui-page-navbar title="" />
+    </x-slot>
+
+    <x-slot name="actionbar">
+        <x-ui-page-actionbar :breadcrumbs="[
+            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'BlockDefinitionen', 'href' => route('hatch.block-definitions.index')],
+            ['label' => $blockDefinition->name ?? 'BlockDefinition'],
+        ]">
             @if($this->isDirty)
                 <x-ui-button variant="primary" size="sm" wire:click="saveBlockDefinition">
-                    <span class="flex items-center gap-2">
-                        @svg('heroicon-o-check', 'w-4 h-4')
-                        Speichern
-                    </span>
+                    @svg('heroicon-o-check', 'w-4 h-4')
+                    <span>Speichern</span>
                 </x-ui-button>
             @endif
-        </x-ui-page-navbar>
+        </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="sidebar">
         <x-ui-page-sidebar title="BlockDefinition-Einstellungen" width="w-80" :defaultOpen="true" side="left">
             <div class="p-6 space-y-6">
-                {{-- Navigation --}}
-                <div>
-                    <x-ui-button variant="secondary" size="sm" :href="route('hatch.block-definitions.index')" wire:navigate class="w-full">
-                        <span class="flex items-center gap-2">
-                            @svg('heroicon-o-arrow-left', 'w-4 h-4')
-                            Zurück zu BlockDefinitionen
-                        </span>
-                    </x-ui-button>
-                </div>
-
                 {{-- Grundkonfiguration --}}
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Grundkonfiguration</h3>
