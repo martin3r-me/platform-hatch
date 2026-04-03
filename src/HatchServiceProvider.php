@@ -35,6 +35,7 @@ class HatchServiceProvider extends ServiceProvider
             PlatformCore::registerModule([
                 'key'        => 'hatch',
                 'title'      => 'Hatch',
+                'group'      => 'planning',
                 'routing'    => config('hatch.routing'),
                 'guard'      => config('hatch.guard'),
                 'navigation' => config('hatch.navigation'),
