@@ -5,7 +5,7 @@
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'BlockDefinitionen', 'href' => route('hatch.block-definitions.index')],
             ['label' => $blockDefinition->name ?? 'BlockDefinition'],
         ]">
@@ -777,7 +777,7 @@
             {{-- Lookup --}}
             @if($blockDefinition->block_type === 'lookup')
                 <div class="space-y-3 p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40">
-                    <p class="text-xs text-[var(--ui-muted)]">Auswahl aus einer vordefinierten Lookup-Liste. Verwalte Lookups unter Hatch → Lookups.</p>
+                    <p class="text-xs text-[var(--ui-muted)]">Auswahl aus einer vordefinierten Lookup-Liste. Verwalte Lookups unter Formulare → Lookups.</p>
                     <x-ui-input-select name="typeConfig.lookup_id" label="Lookup-Liste" hint="Wähle eine vorhandene Liste" wire:model.live="typeConfig.lookup_id" :options="collect($availableLookups)" optionValue="value" optionLabel="label" size="sm" />
                     <div class="grid grid-cols-2 gap-3">
                         <x-ui-input-select name="typeConfig.multiple" label="Mehrfachauswahl" wire:model.live="typeConfig.multiple" :options="collect([['value' => '', 'label' => 'Nein (Einzelauswahl)'],['value' => '1', 'label' => 'Ja (Multi)']])" optionValue="value" optionLabel="label" size="sm" />

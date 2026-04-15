@@ -1398,7 +1398,7 @@
 
         {{-- Footer --}}
         <footer class="intake-shell-footer">
-            <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Hatch</p>
+            <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Formulare</p>
         </footer>
         </div>{{-- /.intake-shell --}}
     @endif

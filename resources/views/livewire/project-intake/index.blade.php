@@ -5,7 +5,7 @@
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Erhebungen'],
         ]">
             <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">

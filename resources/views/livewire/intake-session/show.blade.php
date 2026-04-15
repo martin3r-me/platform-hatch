@@ -5,7 +5,7 @@
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Erhebungen', 'href' => route('hatch.project-intakes.index')],
             ['label' => $intakeSession->projectIntake->name ?? 'Erhebung', 'href' => route('hatch.project-intakes.show', $intakeSession->projectIntake)],
             ['label' => 'Session'],

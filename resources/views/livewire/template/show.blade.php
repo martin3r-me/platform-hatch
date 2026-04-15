@@ -5,7 +5,7 @@
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
-            ['label' => 'Hatch', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
+            ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Templates', 'href' => route('hatch.templates.index')],
             ['label' => $template?->name ?? 'Template'],
         ]">
