@@ -81,6 +81,10 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
                     'template_block_id' => $tb->id,
                     'sort_order' => $tb->sort_order,
                     'is_required' => (bool)$tb->is_required,
+                    'name' => $tb->name,
+                    'description' => $tb->description,
+                    'group_uuid' => $tb->group_uuid,
+                    'visibility_rules' => $tb->visibility_rules,
                     'block_definition' => $tb->blockDefinition ? [
                         'id' => $tb->blockDefinition->id,
                         'uuid' => $tb->blockDefinition->uuid,
