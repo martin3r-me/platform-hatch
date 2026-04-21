@@ -72,7 +72,7 @@ class CreateBlockDefinitionTool implements ToolContract, ToolMetadataContract
                         . 'scale: {min (1), max (10), step, labels: {min_label, max_label}}. '
                         . 'rating: {min (1), max (5), step}. '
                         . 'boolean: {true_label, false_label, style}. '
-                        . 'matrix: {items: [{label, value}], scale_min (1), scale_max (5), scale_labels: {min_label, max_label}}. '
+                        . 'matrix: {items: [{label, value, group? (Gruppenname – Items mit gleichem Gruppennamen werden unter einer Zwischenüberschrift dargestellt), is_required? (nur relevant bei required_mode=per_row)}], scale_min (1), scale_max (5), scale_labels: {min_label, max_label}, required_mode: matrix (Default, alle Zeilen Pflicht wenn Block required) | per_row (nur Zeilen mit is_required=true sind Pflicht)}. '
                         . 'ranking: {options: [{label, value}]}. '
                         . 'slider: {min (0), max (100), step (1), unit, show_value}. '
                         . 'consent: {text, link_url, link_label, must_accept}. '

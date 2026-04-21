@@ -9,6 +9,7 @@ use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchComplexityLevel;
 use Platform\Hatch\Models\HatchTemplateBlock;
 use Platform\Hatch\Models\HatchBlockDefinition;
+use Symfony\Component\Uid\UuidV7;
 
 class Show extends Component
 {
@@ -60,31 +61,16 @@ class Show extends Component
 
     public function getAvailableBlockDefinitionOptions()
     {
-        $allBlockDefinitions = HatchBlockDefinition::where('is_active', true)
+        // BlockDefinitions dürfen mehrfach im selben Template verwendet werden
+        // (z. B. zwei Freitextfelder in unterschiedlichen Abfragen).
+        $all = HatchBlockDefinition::where('is_active', true)
             ->where('team_id', auth()->user()->current_team_id)
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $usedBlockDefinitionIds = [];
-        if ($this->template && $this->template->templateBlocks) {
-            $usedBlockDefinitionIds = $this->template->templateBlocks
-                ->where('block_definition_id', '!=', null)
-                ->pluck('block_definition_id')
-                ->toArray();
-        }
-
-        if ($this->editingBlock && $this->editingBlock->block_definition_id) {
-            $usedBlockDefinitionIds = array_filter($usedBlockDefinitionIds, function($id) {
-                return $id != $this->editingBlock->block_definition_id;
-            });
-        }
-
-        $availableBlockDefinitions = $allBlockDefinitions
-            ->whereNotIn('id', $usedBlockDefinitionIds);
-
         return collect([
             ['id' => '', 'name' => 'Jetzt auswählen...']
-        ])->merge($availableBlockDefinitions);
+        ])->merge($all);
     }
 
     #[Computed]
@@ -128,13 +114,32 @@ class Show extends Component
                 $this->editingBlock->block_definition_id = null;
             }
 
+            // Cycle-Detection für Visibility-Rules
+            $rules = $this->editingBlock->visibility_rules;
+            if (is_array($rules) && !empty($rules['rules'])) {
+                if ($this->hasVisibilityCycle($rules, $this->editingBlock->id)) {
+                    $this->dispatch('notifications:store', [
+                        'title' => 'Zyklische Regel',
+                        'message' => 'Die Sichtbarkeitsregeln erzeugen einen Zyklus und können so nicht gespeichert werden.',
+                        'notice_type' => 'error',
+                    ]);
+                    return;
+                }
+
+                // Leere Regeln (ohne Quelle) rausfiltern, damit Frontend nicht stolpert.
+                $rules['rules'] = array_values(array_filter(
+                    $rules['rules'],
+                    fn ($r) => is_array($r) && (int) ($r['source_block_id'] ?? 0) > 0
+                ));
+                $this->editingBlock->visibility_rules = empty($rules['rules']) ? null : $rules;
+            }
+
             $this->editingBlock->save();
         }
 
         $this->cancelEditingBlock();
 
-        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
-            ->find($this->template->id);
+        $this->refreshTemplate();
 
         $this->dispatch('notifications:store', [
             'title' => 'Block gespeichert',
@@ -172,35 +177,226 @@ class Show extends Component
 
     public function addBlock()
     {
+        // Neue Abfrage = neue Gruppe mit genau einem Feld.
+        $this->addQuestionGroup();
+    }
+
+    /**
+     * Legt eine neue Abfrage-Gruppe mit einem initialen Feld an.
+     */
+    public function addQuestionGroup(): void
+    {
         try {
+            $groupUuid = (string) UuidV7::generate();
+            $nextSort = $this->nextGroupSortOrder();
+
             $this->template->templateBlocks()->create([
-                'name' => 'Neuer Block',
+                'name' => 'Neue Abfrage',
                 'description' => 'Beschreibung eingeben...',
-                'sort_order' => $this->template->templateBlocks->count() + 1,
+                'sort_order' => $nextSort,
                 'is_required' => false,
                 'team_id' => auth()->user()->current_team_id,
                 'created_by_user_id' => auth()->id(),
                 'block_definition_id' => null,
+                'group_uuid' => $groupUuid,
             ]);
 
-            $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
-                ->find($this->template->id);
+            $this->refreshTemplate();
 
             $this->dispatch('notifications:store', [
-                'title' => 'Block hinzugefügt',
-                'message' => 'Neuer Block wurde erfolgreich hinzugefügt.',
+                'title' => 'Abfrage hinzugefügt',
+                'message' => 'Neue Abfrage wurde erstellt.',
                 'notice_type' => 'success',
                 'noticable_type' => HatchProjectTemplate::class,
                 'noticable_id' => $this->template->id,
             ]);
-
         } catch (\Exception $e) {
             $this->dispatch('notifications:store', [
                 'title' => 'Fehler',
-                'message' => 'Block konnte nicht hinzugefügt werden: ' . $e->getMessage(),
+                'message' => 'Abfrage konnte nicht angelegt werden: ' . $e->getMessage(),
                 'notice_type' => 'error',
             ]);
         }
+    }
+
+    /**
+     * Fügt einer bestehenden Abfrage-Gruppe ein weiteres Feld hinzu.
+     */
+    public function addFieldToGroup(string $groupUuid): void
+    {
+        try {
+            // Sort-Order: direkt nach dem letzten Block dieser Gruppe einfügen.
+            $lastInGroup = $this->template->templateBlocks
+                ->where('group_uuid', $groupUuid)
+                ->sortByDesc('sort_order')
+                ->first();
+
+            $insertAfter = $lastInGroup?->sort_order ?? 0;
+
+            // Nachfolgende Blocks um 1 nach hinten schieben.
+            foreach ($this->template->templateBlocks->where('sort_order', '>', $insertAfter) as $b) {
+                $b->sort_order = $b->sort_order + 1;
+                $b->save();
+            }
+
+            $this->template->templateBlocks()->create([
+                'name' => null,
+                'description' => null,
+                'sort_order' => $insertAfter + 1,
+                'is_required' => false,
+                'team_id' => auth()->user()->current_team_id,
+                'created_by_user_id' => auth()->id(),
+                'block_definition_id' => null,
+                'group_uuid' => $groupUuid,
+            ]);
+
+            $this->refreshTemplate();
+
+            $this->dispatch('notifications:store', [
+                'title' => 'Feld hinzugefügt',
+                'message' => 'Neues Feld wurde zur Abfrage hinzugefügt.',
+                'notice_type' => 'success',
+                'noticable_type' => HatchProjectTemplate::class,
+                'noticable_id' => $this->template->id,
+            ]);
+        } catch (\Exception $e) {
+            $this->dispatch('notifications:store', [
+                'title' => 'Fehler',
+                'message' => 'Feld konnte nicht hinzugefügt werden: ' . $e->getMessage(),
+                'notice_type' => 'error',
+            ]);
+        }
+    }
+
+    /**
+     * Fügt dem aktuell editierten Block eine leere Sichtbarkeitsregel hinzu.
+     */
+    public function addVisibilityRule(): void
+    {
+        if (!$this->editingBlock) return;
+
+        $rules = $this->editingBlock->visibility_rules ?? ['combinator' => 'AND', 'rules' => []];
+        if (!isset($rules['rules']) || !is_array($rules['rules'])) {
+            $rules['rules'] = [];
+        }
+        $rules['rules'][] = [
+            'source_block_id' => '',
+            'operator' => 'equals',
+            'value' => '',
+        ];
+        $this->editingBlock->visibility_rules = $rules;
+    }
+
+    public function removeVisibilityRule(int $index): void
+    {
+        if (!$this->editingBlock) return;
+
+        $rules = $this->editingBlock->visibility_rules ?? ['combinator' => 'AND', 'rules' => []];
+        if (isset($rules['rules'][$index])) {
+            array_splice($rules['rules'], $index, 1);
+        }
+        $this->editingBlock->visibility_rules = $rules;
+    }
+
+    public function setVisibilityCombinator(string $combinator): void
+    {
+        if (!$this->editingBlock) return;
+
+        $combinator = in_array($combinator, ['AND', 'OR']) ? $combinator : 'AND';
+        $rules = $this->editingBlock->visibility_rules ?? ['combinator' => 'AND', 'rules' => []];
+        $rules['combinator'] = $combinator;
+        $this->editingBlock->visibility_rules = $rules;
+    }
+
+    /**
+     * Einfache Cycle-Detection: baut aus allen TemplateBlocks einen
+     * Abhängigkeitsgraph (A hängt von B ab, wenn A.visibility_rules
+     * auf B.id verweist) und prüft auf Zyklen via DFS.
+     */
+    private function hasVisibilityCycle(array $pendingRules, int $targetBlockId): bool
+    {
+        $graph = [];
+        foreach ($this->template->templateBlocks as $b) {
+            $rules = $b->visibility_rules ?? null;
+            if ($b->id === $targetBlockId) {
+                $rules = $pendingRules;
+            }
+            $sources = collect($rules['rules'] ?? [])
+                ->pluck('source_block_id')
+                ->filter(fn ($id) => (int) $id > 0)
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $graph[$b->id] = $sources;
+        }
+
+        // DFS ab targetBlockId — Zyklus, wenn wir targetBlockId wieder erreichen.
+        $visiting = [];
+        $dfs = function (int $node) use (&$dfs, &$visiting, $graph): bool {
+            if (isset($visiting[$node])) return true;
+            $visiting[$node] = true;
+            foreach ($graph[$node] ?? [] as $dep) {
+                if ($dfs($dep)) return true;
+            }
+            unset($visiting[$node]);
+            return false;
+        };
+
+        return $dfs($targetBlockId);
+    }
+
+    public function deleteGroup(string $groupUuid): void
+    {
+        HatchTemplateBlock::where('project_template_id', $this->template->id)
+            ->where('group_uuid', $groupUuid)
+            ->delete();
+
+        $this->refreshTemplate();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Abfrage gelöscht',
+            'message' => 'Abfrage und alle zugehörigen Felder wurden gelöscht.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectTemplate::class,
+            'noticable_id' => $this->template->id,
+        ]);
+    }
+
+    private function refreshTemplate(): void
+    {
+        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+            ->find($this->template->id);
+    }
+
+    private function nextGroupSortOrder(): int
+    {
+        $max = (int) ($this->template->templateBlocks->max('sort_order') ?? 0);
+        return $max + 1;
+    }
+
+    /**
+     * Blocks gruppiert nach group_uuid — stabil nach sort_order.
+     * Ungroup-Blocks (aus Altbestand) bekommen automatisch eine virtuelle
+     * Einzelgruppe über ihre ID ("single:{id}").
+     */
+    public function getGroupedBlocksProperty(): array
+    {
+        $groups = [];
+        foreach ($this->template->templateBlocks->sortBy('sort_order') as $block) {
+            $key = $block->group_uuid ?: 'single:' . $block->id;
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'group_uuid' => $block->group_uuid,
+                    'is_virtual' => $block->group_uuid === null,
+                    'sort_order' => $block->sort_order,
+                    'header_block' => $block,
+                    'fields' => [],
+                ];
+            }
+            $groups[$key]['fields'][] = $block;
+        }
+
+        usort($groups, fn ($a, $b) => $a['sort_order'] <=> $b['sort_order']);
+        return $groups;
     }
 
     public function updateBlockOrder($items)

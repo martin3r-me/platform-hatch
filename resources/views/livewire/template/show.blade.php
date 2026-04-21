@@ -128,95 +128,158 @@
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Template-Blöcke --}}
+        {{-- Abfragen (Gruppen mit 1..n Feldern) --}}
         <div class="mb-6">
             <div class="flex items-center justify-between mb-1">
-                <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Template-Blöcke</h3>
-                <x-ui-button variant="primary" size="sm" wire:click="addBlock">
+                <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Abfragen</h3>
+                <x-ui-button variant="primary" size="sm" wire:click="addQuestionGroup">
                     <span class="flex items-center gap-2">
                         @svg('heroicon-o-plus', 'w-4 h-4')
-                        Block hinzufügen
+                        Abfrage hinzufügen
                     </span>
                 </x-ui-button>
             </div>
-            <p class="text-sm text-[var(--ui-muted)] mb-4">Blöcke bestimmen, welche Informationen in einer Erhebung erfasst werden. Ziehe Blöcke per Drag & Drop in die gewünschte Reihenfolge.</p>
+            <p class="text-sm text-[var(--ui-muted)] mb-4">Eine Abfrage kann aus einem oder mehreren Feldern bestehen (z. B. Checkbox + Freitextfeld). Felder innerhalb einer Abfrage werden im Formular gemeinsam auf einer Seite dargestellt.</p>
 
-            @if($template?->templateBlocks?->count() > 0)
-                <div wire:sortable="updateBlockOrder" class="space-y-3">
-                    @foreach($template->templateBlocks->sortBy('sort_order') as $block)
-                        <div wire:sortable.item="{{ $block->id }}"
-                             class="bg-[var(--ui-surface)] border border-[var(--ui-border)]/60 rounded-lg p-4 hover:border-[var(--ui-primary)]/60 transition-colors">
+            @php $groups = $this->groupedBlocks; @endphp
 
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3 flex-grow">
-                                    <div wire:sortable.handle class="cursor-move text-[var(--ui-muted)] hover:text-[var(--ui-primary)]">
-                                        <x-heroicon-o-bars-3 class="w-5 h-5" />
-                                    </div>
+            @if(count($groups) > 0)
+                <div class="space-y-4">
+                    @foreach($groups as $group)
+                        @php
+                            $groupUuid = $group['group_uuid'];
+                            $isVirtual = $group['is_virtual'];
+                            $header = $group['header_block'];
+                            $fields = $group['fields'];
+                        @endphp
+                        <div class="bg-[var(--ui-surface)] border border-[var(--ui-border)]/60 rounded-lg p-4 hover:border-[var(--ui-primary)]/60 transition-colors space-y-3">
 
-                                    @if($editingBlockId === $block->id)
-                                        <div class="flex-grow space-y-2">
+                            {{-- Abfrage-Header (Name / Beschreibung leben auf dem ersten Block der Gruppe) --}}
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex-grow">
+                                    @if($editingBlockId === $header->id)
+                                        <div class="space-y-2">
                                             <x-ui-input-text
                                                 name="editingBlock.name"
-                                                label="Block-Name"
-                                                hint="Anzeigename im Template"
+                                                label="Abfrage-Name"
                                                 wire:model.live.debounce.500ms="editingBlock.name"
-                                                placeholder="z.B. Projektdetails, Kontaktdaten"
+                                                placeholder="z.B. Projektdetails"
                                                 class="w-full"
                                             />
                                             <x-ui-input-text
                                                 name="editingBlock.description"
                                                 label="Beschreibung"
-                                                hint="Optional"
+                                                hint="Optional — wird im Formular unter dem Titel angezeigt"
                                                 wire:model.live.debounce.500ms="editingBlock.description"
-                                                placeholder="Kurze Erklärung für den Nutzer"
+                                                placeholder="Kurze Erklärung für den Respondenten"
                                                 class="w-full"
                                             />
-                                            <x-ui-input-select
-                                                name="editingBlock.block_definition_id"
-                                                label="BlockDefinition"
-                                                hint="Verknüpfter Feldtyp"
-                                                wire:model.live.debounce.500ms="editingBlock.block_definition_id"
-                                                :options="$blockDefinitionOptions"
-                                                optionValue="id"
-                                                optionLabel="name"
-                                                placeholder="BlockDefinition auswählen"
-                                                class="w-full"
-                                            />
+                                            @include('hatch::livewire.partials.visibility-rules-editor', [
+                                                'block' => $header,
+                                                'allBlocks' => $template->templateBlocks,
+                                            ])
                                             <div class="flex gap-2">
                                                 <x-ui-button variant="primary" size="sm" wire:click="saveBlock">Speichern</x-ui-button>
                                                 <x-ui-button variant="secondary" size="sm" wire:click="cancelEditingBlock">Abbrechen</x-ui-button>
                                             </div>
                                         </div>
                                     @else
-                                        <div class="flex-grow">
-                                            <h4 class="font-medium text-[var(--ui-secondary)]">{{ $block->name }}</h4>
-                                            @if($block->description)
-                                                <p class="text-sm text-[var(--ui-muted)] mt-1">{{ $block->description }}</p>
-                                            @endif
-                                            <div class="flex items-center gap-2 mt-2">
-                                                <span class="text-xs text-[var(--ui-muted)]">Sortierung: {{ $block->sort_order }}</span>
-                                                @if($block->is_required)
-                                                    <x-ui-badge variant="warning" size="xs">Pflicht</x-ui-badge>
-                                                @else
-                                                    <x-ui-badge variant="secondary" size="xs">Optional</x-ui-badge>
-                                                @endif
-                                                @if($block->blockDefinition)
-                                                    <x-ui-badge variant="info" size="xs">{{ $block->blockDefinition->name }}</x-ui-badge>
-                                                @else
-                                                    <x-ui-badge variant="secondary" size="xs">Keine Definition</x-ui-badge>
-                                                @endif
-                                            </div>
+                                        <h4 class="font-semibold text-[var(--ui-secondary)]">{{ $header->name ?: 'Unbenannte Abfrage' }}</h4>
+                                        @if($header->description)
+                                            <p class="text-sm text-[var(--ui-muted)] mt-1">{{ $header->description }}</p>
+                                        @endif
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <span class="text-xs text-[var(--ui-muted)]">Sortierung: {{ $header->sort_order }}</span>
+                                            <x-ui-badge variant="info" size="xs">{{ count($fields) }} Feld(er)</x-ui-badge>
                                         </div>
                                     @endif
                                 </div>
-
-                                @if($editingBlockId !== $block->id)
+                                @if($editingBlockId !== $header->id)
                                     <div class="flex gap-2">
-                                        <x-ui-button variant="secondary" size="sm" wire:click="startEditingBlock({{ $block->id }})">
+                                        <x-ui-button variant="secondary" size="sm" wire:click="startEditingBlock({{ $header->id }})">
                                             <x-heroicon-o-pencil class="w-4 h-4" />
                                         </x-ui-button>
-                                        <x-ui-button variant="danger" size="sm" wire:click="deleteBlock({{ $block->id }})" onclick="return confirm('Block wirklich löschen?')">
-                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                        @if(!$isVirtual)
+                                            <x-ui-button variant="danger" size="sm" wire:click="deleteGroup('{{ $groupUuid }}')" onclick="return confirm('Abfrage mit allen Feldern löschen?')">
+                                                <x-heroicon-o-trash class="w-4 h-4" />
+                                            </x-ui-button>
+                                        @else
+                                            <x-ui-button variant="danger" size="sm" wire:click="deleteBlock({{ $header->id }})" onclick="return confirm('Feld wirklich löschen?')">
+                                                <x-heroicon-o-trash class="w-4 h-4" />
+                                            </x-ui-button>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Felder der Abfrage --}}
+                            <div class="pl-2 border-l-2 border-[var(--ui-border)]/40 space-y-2">
+                                @foreach($fields as $field)
+                                    <div class="flex items-center gap-2 p-2 bg-[var(--ui-muted-5)] rounded">
+                                        @if($editingBlockId === $field->id && $field->id !== $header->id)
+                                            <div class="flex-grow space-y-2">
+                                                <x-ui-input-text
+                                                    name="editingBlock.name"
+                                                    label="Feld-Label"
+                                                    wire:model.live.debounce.500ms="editingBlock.name"
+                                                    placeholder="z.B. Bitte präzisieren"
+                                                    class="w-full"
+                                                />
+                                                <x-ui-input-select
+                                                    name="editingBlock.block_definition_id"
+                                                    label="BlockDefinition"
+                                                    hint="Verknüpfter Feldtyp"
+                                                    wire:model.live.debounce.500ms="editingBlock.block_definition_id"
+                                                    :options="$blockDefinitionOptions"
+                                                    optionValue="id"
+                                                    optionLabel="name"
+                                                    placeholder="BlockDefinition auswählen"
+                                                    class="w-full"
+                                                />
+                                                @include('hatch::livewire.partials.visibility-rules-editor', [
+                                                    'block' => $field,
+                                                    'allBlocks' => $template->templateBlocks,
+                                                ])
+                                                <div class="flex gap-2">
+                                                    <x-ui-button variant="primary" size="sm" wire:click="saveBlock">Speichern</x-ui-button>
+                                                    <x-ui-button variant="secondary" size="sm" wire:click="cancelEditingBlock">Abbrechen</x-ui-button>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="flex-grow flex items-center gap-2">
+                                                @if($field->blockDefinition)
+                                                    <x-ui-badge variant="info" size="xs">{{ $field->blockDefinition->name }}</x-ui-badge>
+                                                @else
+                                                    <x-ui-badge variant="secondary" size="xs">Keine Definition</x-ui-badge>
+                                                @endif
+                                                @if($field->name && $field->id !== $header->id)
+                                                    <span class="text-sm text-[var(--ui-secondary)]">{{ $field->name }}</span>
+                                                @endif
+                                                @if($field->is_required)
+                                                    <x-ui-badge variant="warning" size="xs">Pflicht</x-ui-badge>
+                                                @endif
+                                            </div>
+                                            <div class="flex gap-1">
+                                                <x-ui-button variant="secondary" size="xs" wire:click="startEditingBlock({{ $field->id }})">
+                                                    <x-heroicon-o-pencil class="w-3 h-3" />
+                                                </x-ui-button>
+                                                @if(count($fields) > 1 || $isVirtual)
+                                                    <x-ui-button variant="danger-outline" size="xs" wire:click="deleteBlock({{ $field->id }})" onclick="return confirm('Feld wirklich löschen?')">
+                                                        <x-heroicon-o-trash class="w-3 h-3" />
+                                                    </x-ui-button>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+
+                                @if(!$isVirtual)
+                                    <div>
+                                        <x-ui-button variant="secondary" size="xs" wire:click="addFieldToGroup('{{ $groupUuid }}')">
+                                            <span class="flex items-center gap-1">
+                                                @svg('heroicon-o-plus', 'w-3 h-3')
+                                                Feld hinzufügen
+                                            </span>
                                         </x-ui-button>
                                     </div>
                                 @endif
@@ -227,8 +290,8 @@
             @else
                 <div class="text-center py-8 rounded-lg border border-dashed border-[var(--ui-border)] bg-[var(--ui-surface)]">
                     <x-heroicon-o-puzzle-piece class="w-12 h-12 mx-auto mb-3 text-[var(--ui-muted)]" />
-                    <h4 class="text-lg font-medium text-[var(--ui-secondary)] mb-1">Noch keine Blöcke konfiguriert</h4>
-                    <p class="text-sm text-[var(--ui-muted)] max-w-md mx-auto">Blöcke definieren die Schritte einer Erhebung. Erstelle zuerst BlockDefinitionen und füge sie dann hier als Blöcke hinzu.</p>
+                    <h4 class="text-lg font-medium text-[var(--ui-secondary)] mb-1">Noch keine Abfragen konfiguriert</h4>
+                    <p class="text-sm text-[var(--ui-muted)] max-w-md mx-auto">Eine Abfrage bündelt ein oder mehrere Felder, die im Formular gemeinsam erfasst werden.</p>
                 </div>
             @endif
         </div>

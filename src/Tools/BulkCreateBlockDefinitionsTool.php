@@ -77,7 +77,7 @@ class BulkCreateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                                     . 'select/multi_select/dropdown: {options: [{label, value}]}. '
                                     . 'scale: {min, max, labels: {min_label, max_label}}. '
                                     . 'rating: {max}. boolean: {true_label, false_label}. '
-                                    . 'matrix: {items: [{label, value}], scale_min, scale_max}. '
+                                    . 'matrix: {items: [{label, value, group?, is_required?}], scale_min, scale_max, required_mode: matrix|per_row}. '
                                     . 'ranking: {options: [{label, value}]}. '
                                     . 'slider: {min, max, step, unit}. '
                                     . 'consent: {text, link_url, must_accept}. '

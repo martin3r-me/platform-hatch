@@ -18,17 +18,22 @@ class HatchTemplateBlock extends Model
         'uuid',
         'project_template_id',
         'block_definition_id',
+        'group_uuid',
+        'name',
+        'description',
         'sort_order',
         'is_required',
+        'visibility_rules',
         'is_active',
         'created_by_user_id',
         'team_id'
     ];
-    
+
     protected $casts = [
         'sort_order' => 'integer',
         'is_required' => 'boolean',
         'is_active' => 'boolean',
+        'visibility_rules' => 'array',
     ];
     
     protected static function booted(): void

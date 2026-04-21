@@ -55,11 +55,14 @@ class IntakeSession extends Component
                 ->values()
                 ->map(fn($block) => [
                     'id' => $block->id,
-                    'name' => $block->blockDefinition->name ?? 'Block',
-                    'description' => $block->blockDefinition->description ?? '',
+                    // Template-Block überschreibt Label/Description, falls gesetzt — sonst BlockDefinition.
+                    'name' => $block->name ?: ($block->blockDefinition->name ?? 'Block'),
+                    'description' => $block->description ?: ($block->blockDefinition->description ?? ''),
                     'type' => $block->blockDefinition->block_type ?? 'default',
                     'logic_config' => $block->blockDefinition->logic_config ?? [],
                     'is_required' => (bool) $block->is_required,
+                    'group_uuid' => $block->group_uuid,
+                    'visibility_rules' => $block->visibility_rules,
                 ])
                 ->toArray();
 
@@ -91,6 +94,15 @@ class IntakeSession extends Component
 
         // Auto-save hidden fields
         $this->autoSaveHiddenFields();
+
+        // Falls der gespeicherte currentStep wegen Conditional Logic nicht sichtbar ist:
+        // auf den nächsten sichtbaren springen.
+        if (isset($this->blocks[$this->currentStep]) && !$this->isBlockVisible($this->blocks[$this->currentStep])) {
+            $next = $this->findNextVisibleStep($this->currentStep, +1)
+                ?? $this->findNextVisibleStep($this->currentStep, -1)
+                ?? 0;
+            $this->currentStep = $next;
+        }
 
         $this->loadCurrentAnswer();
         $this->state = 'ready';
@@ -270,6 +282,76 @@ class IntakeSession extends Component
         return $intake && $intake->status === 'published';
     }
 
+    /**
+     * Wertet die visibility_rules eines Blocks gegen die bisherigen Antworten aus.
+     * Blocks ohne Regeln sind immer sichtbar.
+     */
+    public function isBlockVisible(array $block, ?array $answers = null): bool
+    {
+        $rules = $block['visibility_rules'] ?? null;
+        if (!is_array($rules) || empty($rules['rules'])) {
+            return true;
+        }
+
+        $answers = $answers ?? ($this->session?->answers ?? []);
+        $combinator = strtoupper($rules['combinator'] ?? 'AND');
+
+        $results = [];
+        foreach ($rules['rules'] as $rule) {
+            $sourceId = (int) ($rule['source_block_id'] ?? 0);
+            if ($sourceId <= 0) continue;
+
+            $operator = $rule['operator'] ?? 'equals';
+            $expected = $rule['value'] ?? '';
+            $key = "block_{$sourceId}";
+            $raw = $answers[$key] ?? '';
+
+            // JSON-encoded Antworten (multi_select, matrix, ...) für selected/contains vernünftig prüfen.
+            $decoded = null;
+            if (is_string($raw) && $raw !== '' && ($raw[0] === '[' || $raw[0] === '{')) {
+                $tmp = json_decode($raw, true);
+                if (is_array($tmp)) $decoded = $tmp;
+            }
+
+            $results[] = match ($operator) {
+                'equals' => (string) $raw === (string) $expected,
+                'not_equals' => (string) $raw !== (string) $expected,
+                'contains' => is_string($raw) ? str_contains($raw, (string) $expected) : false,
+                'empty' => $raw === '' || $raw === null || $raw === '[]' || $raw === '{}',
+                'not_empty' => !($raw === '' || $raw === null || $raw === '[]' || $raw === '{}'),
+                'selected' => is_array($decoded)
+                    ? in_array((string) $expected, array_map('strval', $decoded), true)
+                    : (string) $raw === (string) $expected,
+                'not_selected' => is_array($decoded)
+                    ? !in_array((string) $expected, array_map('strval', $decoded), true)
+                    : (string) $raw !== (string) $expected,
+                default => true,
+            };
+        }
+
+        if (empty($results)) return true;
+
+        return $combinator === 'OR'
+            ? in_array(true, $results, true)
+            : !in_array(false, $results, true);
+    }
+
+    /**
+     * Liefert den nächsten sichtbaren Block-Index in der Richtung (+1 vorwärts, -1 rückwärts).
+     * Liefert null, wenn keiner gefunden wird.
+     */
+    private function findNextVisibleStep(int $from, int $direction): ?int
+    {
+        $idx = $from + $direction;
+        while ($idx >= 0 && $idx < $this->totalBlocks) {
+            if ($this->isBlockVisible($this->blocks[$idx])) {
+                return $idx;
+            }
+            $idx += $direction;
+        }
+        return null;
+    }
+
     private function getUnansweredRequiredBlocks(): array
     {
         $answers = $this->session->answers ?? [];
@@ -279,6 +361,37 @@ class IntakeSession extends Component
             // Display-only types don't need answers
             if (in_array($block['type'], ['info', 'section', 'calculated', 'hidden'])) {
                 continue;
+            }
+
+            // Ausgeblendete Blocks werden nicht validiert.
+            if (!$this->isBlockVisible($block, $answers)) {
+                continue;
+            }
+
+            $config = $block['logic_config'] ?? [];
+
+            // Sonderfall: Matrix mit per_row-Pflicht. Greift auch, wenn der Block
+            // selbst nicht als "is_required" markiert ist, solange einzelne Zeilen Pflicht sind.
+            if ($block['type'] === 'matrix' && ($config['required_mode'] ?? 'matrix') === 'per_row') {
+                $key = "block_{$block['id']}";
+                $raw = $answers[$key] ?? '';
+                $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
+                $decoded = is_array($decoded) ? $decoded : [];
+
+                foreach (($config['items'] ?? []) as $item) {
+                    if (!is_array($item) || empty($item['is_required'])) {
+                        continue;
+                    }
+                    $itemValue = $item['value'] ?? $item['label'] ?? '';
+                    if ($itemValue === '' || !isset($decoded[$itemValue]) || $decoded[$itemValue] === '') {
+                        $missing[] = $index;
+                        continue 2;
+                    }
+                }
+                // per_row abgedeckt — falls der Block zusätzlich is_required ist, greift der reguläre Check unten.
+                if (!$block['is_required']) {
+                    continue;
+                }
             }
 
             if (!$block['is_required']) {
@@ -293,9 +406,20 @@ class IntakeSession extends Component
                     $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
                     return !is_array($decoded) || empty($decoded) || $raw === '' || $raw === '[]';
                 })(),
-                'matrix' => (function () use ($raw) {
+                'matrix' => (function () use ($raw, $config) {
                     $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
-                    return !is_array($decoded) || empty($decoded);
+                    if (!is_array($decoded) || empty($decoded)) return true;
+                    // Bei "matrix"-Mode: jede Zeile muss beantwortet sein
+                    if (($config['required_mode'] ?? 'matrix') === 'matrix') {
+                        foreach (($config['items'] ?? []) as $item) {
+                            $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
+                            if ($itemValue === '') continue;
+                            if (!isset($decoded[$itemValue]) || $decoded[$itemValue] === '') {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
                 })(),
                 'ranking' => (function () use ($raw) {
                     $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
@@ -449,7 +573,16 @@ class IntakeSession extends Component
         $this->missingRequiredBlocks = [];
         $this->validationError = null;
 
+        // Antworten ausgeblendeter Blocks entfernen — sie dürfen nicht im Export landen.
+        $answers = $this->session->answers ?? [];
+        foreach ($this->blocks as $block) {
+            if (!$this->isBlockVisible($block, $answers)) {
+                unset($answers["block_{$block['id']}"]);
+            }
+        }
+
         $this->session->update([
+            'answers' => $answers,
             'status' => 'completed',
             'completed_at' => now(),
         ]);
@@ -582,8 +715,9 @@ class IntakeSession extends Component
 
         $this->validationError = null;
 
-        if ($this->currentStep < $this->totalBlocks - 1) {
-            $this->currentStep++;
+        $next = $this->findNextVisibleStep($this->currentStep, +1);
+        if ($next !== null) {
+            $this->currentStep = $next;
             $this->loadCurrentAnswer();
         }
     }
@@ -596,8 +730,9 @@ class IntakeSession extends Component
 
         $this->validationError = null;
 
-        if ($this->currentStep > 0) {
-            $this->currentStep--;
+        $prev = $this->findNextVisibleStep($this->currentStep, -1);
+        if ($prev !== null) {
+            $this->currentStep = $prev;
             $this->loadCurrentAnswer();
         }
     }

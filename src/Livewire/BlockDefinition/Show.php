@@ -289,6 +289,7 @@ class Show extends Component
                 'scale_min' => 1,
                 'scale_max' => 5,
                 'scale_labels' => ['min_label' => '', 'max_label' => ''],
+                'required_mode' => 'matrix',
             ],
             'ranking' => [
                 'options' => [],
@@ -395,7 +396,7 @@ class Show extends Component
     public function addMatrixItem()
     {
         $items = $this->typeConfig['items'] ?? [];
-        $items[] = ['label' => '', 'value' => ''];
+        $items[] = ['label' => '', 'value' => '', 'group' => '', 'is_required' => false];
         $this->typeConfig['items'] = $items;
         $this->blockDefinition->logic_config = $this->typeConfig;
     }

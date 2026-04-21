@@ -22,7 +22,7 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/template_blocks/{id} - Aktualisiert einen Block innerhalb eines Templates (Reihenfolge, Pflichtfeld, Aktiv-Status). Parameter: template_block_id (required).';
+        return 'PUT /hatch/template_blocks/{id} - Aktualisiert einen Block innerhalb eines Templates (Reihenfolge, Pflichtfeld, Label, Gruppen-Zugehörigkeit, Sichtbarkeitsregeln). Parameter: template_block_id (required).';
     }
 
     public function getSchema(): array
@@ -37,6 +37,14 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                     'type' => 'integer',
                     'description' => 'ID des Template-Blocks (ERFORDERLICH). Sichtbar in "hatch.template.GET" als template_block_id.',
                 ],
+                'name' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Feld-Label (überschreibt den Default-Namen aus der BlockDefinition). Bei Abfrage-Headern (erster Block einer Gruppe) = Name der Abfrage.',
+                ],
+                'description' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Feld-Beschreibung/Helptext.',
+                ],
                 'sort_order' => [
                     'type' => 'integer',
                     'description' => 'Optional: Neue Position im Template.',
@@ -44,6 +52,14 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'is_required' => [
                     'type' => 'boolean',
                     'description' => 'Optional: Pflichtfeld ja/nein.',
+                ],
+                'group_uuid' => [
+                    'type' => 'string',
+                    'description' => 'Optional: UUID der Abfrage-Gruppe. Blocks mit gleicher group_uuid gehören zur selben Abfrage (mehrere Felder). NULL/leer = Einzelblock. Beim Neuanlegen mehrerer Felder für dieselbe Abfrage: dieselbe UUID setzen.',
+                ],
+                'visibility_rules' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Conditional Logic. Format: {combinator: AND|OR, rules: [{source_block_id: int, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value: string}]}. source_block_id muss auf einen Block mit kleinerem sort_order zeigen (keine Vorwärts-Referenzen, keine Zyklen). Block wird nur angezeigt, wenn die Regeln erfüllt sind. Null = immer sichtbar.',
                 ],
                 'is_active' => [
                     'type' => 'boolean',
@@ -81,7 +97,7 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('ACCESS_DENIED', 'Du hast keinen Zugriff auf diesen Template-Block.');
             }
 
-            $fields = ['sort_order', 'is_required', 'is_active'];
+            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'is_active'];
 
             foreach ($fields as $field) {
                 if (array_key_exists($field, $arguments)) {
@@ -98,6 +114,10 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'template_id' => $templateBlock->project_template_id,
                 'block_definition_id' => $templateBlock->block_definition_id,
                 'block_definition_name' => $templateBlock->blockDefinition?->name,
+                'name' => $templateBlock->name,
+                'description' => $templateBlock->description,
+                'group_uuid' => $templateBlock->group_uuid,
+                'visibility_rules' => $templateBlock->visibility_rules,
                 'sort_order' => (int)$templateBlock->sort_order,
                 'is_required' => (bool)$templateBlock->is_required,
                 'is_active' => (bool)$templateBlock->is_active,

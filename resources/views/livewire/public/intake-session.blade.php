@@ -173,8 +173,16 @@
                 $answers = $session->answers ?? [];
                 $answeredCount = 0;
                 $answerableCount = 0;
-                $blockStatus = []; // 'answered', 'missing', 'open', 'display'
+                $blockStatus = []; // 'answered', 'missing', 'open', 'display', 'hidden'
+                $visibleBlocks = [];
                 foreach ($blocks as $idx => $blk) {
+                    // Ausgeblendete Blocks (Conditional Logic) werden aus der Sidebar und dem Fortschritt ausgenommen.
+                    if (!$this->isBlockVisible($blk, $answers)) {
+                        $blockStatus[$idx] = 'hidden';
+                        continue;
+                    }
+                    $visibleBlocks[$idx] = $blk;
+
                     $key = "block_{$blk['id']}";
                     $raw = $answers[$key] ?? '';
                     $isDisplay = in_array($blk['type'], ['info', 'section', 'calculated', 'hidden']);
@@ -224,14 +232,24 @@
                                 </div>
                             </div>
 
-                            {{-- Block list --}}
+                            {{-- Block list: gruppiert nach group_uuid (Felder einer Abfrage werden unter dem Abfrage-Header zusammengefasst) --}}
                             <div class="intake-pills" x-ref="pillList">
+                                @php
+                                    $prevGroup = '__none__';
+                                @endphp
                                 @foreach($blocks as $index => $block)
                                     @php
-                                        $isActive = $index === $currentStep;
                                         $status = $blockStatus[$index] ?? 'open';
+                                        // Ausgeblendete Blocks (Conditional Logic) gar nicht in der Sidebar zeigen.
+                                        if ($status === 'hidden') continue;
+
+                                        $isActive = $index === $currentStep;
                                         $isAnswered = $status === 'answered' || $status === 'display';
                                         $isMissing = $status === 'missing';
+                                        $groupId = $block['group_uuid'] ?? null;
+                                        $isNewGroup = $groupId !== $prevGroup;
+                                        $isFieldInGroup = $groupId !== null && !$isNewGroup;
+                                        $prevGroup = $groupId;
                                     @endphp
                                     <button
                                         type="button"
@@ -239,6 +257,7 @@
                                         @if($isActive) data-active @endif
                                         @if(!empty($block['description'])) title="{{ $block['description'] }}" @endif
                                         class="intake-pill transition-all cursor-pointer
+                                            {{ $isFieldInGroup ? 'ml-4 border-l-2 border-white/10 pl-3' : '' }}
                                             {{ $isActive
                                                 ? 'bg-white/20 text-white ring-1 ring-white/30'
                                                 : ($isMissing
@@ -270,7 +289,7 @@
                                         </span>
                                         <span class="intake-pill-text">
                                             <span class="intake-pill-name truncate block">{{ $block['name'] }}</span>
-                                            @if(!empty($block['description']))
+                                            @if(!empty($block['description']) && !$isFieldInGroup)
                                                 <span class="intake-pill-desc truncate block">{{ $block['description'] }}</span>
                                             @endif
                                         </span>
@@ -284,14 +303,48 @@
                 {{-- Content --}}
                 <div class="intake-content">
                     <div class="intake-card">
-                        @if(isset($blocks[$currentStep]))
+                        @if(isset($blocks[$currentStep]) && ($blockStatus[$currentStep] ?? null) !== 'hidden')
                             @php
                                 $block = $blocks[$currentStep];
                                 $type = $block['type'];
                                 $config = $block['logic_config'] ?? [];
+
+                                // Multi-Feld-Abfrage: Kontext ermitteln (erster Block der Gruppe = Abfrage-Header).
+                                $groupUuid = $block['group_uuid'] ?? null;
+                                $groupFields = [];
+                                $groupIndex = 0;
+                                $groupTotal = 0;
+                                $groupHeader = null;
+                                if ($groupUuid) {
+                                    foreach ($blocks as $idx => $b) {
+                                        if (($b['group_uuid'] ?? null) === $groupUuid) {
+                                            $groupFields[] = ['index' => $idx, 'block' => $b];
+                                        }
+                                    }
+                                    $groupTotal = count($groupFields);
+                                    foreach ($groupFields as $pos => $gf) {
+                                        if ($gf['index'] === $currentStep) {
+                                            $groupIndex = $pos + 1;
+                                        }
+                                    }
+                                    $groupHeader = $groupFields[0]['block'] ?? null;
+                                }
+                                $isGroupFollowUp = $groupUuid && $groupTotal > 1 && $groupHeader && $groupHeader['id'] !== $block['id'];
                             @endphp
 
                             <div class="p-8 pb-6 border-b border-gray-100">
+                                @if($groupUuid && $groupTotal > 1)
+                                    <div class="mb-4 flex items-center gap-2 text-xs text-gray-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                                        <span>
+                                            Abfrage
+                                            @if($groupHeader)
+                                                <strong class="text-gray-600">„{{ $groupHeader['name'] }}"</strong>
+                                            @endif
+                                            · Feld {{ $groupIndex }} von {{ $groupTotal }}
+                                        </span>
+                                    </div>
+                                @endif
                                 <div class="flex items-start gap-4">
                                     <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                                         <span class="text-sm font-bold text-gray-600">{{ $currentStep + 1 }}</span>
@@ -303,11 +356,13 @@
                                                 <span class="text-rose-500 ml-1">*</span>
                                             @endif
                                         </h2>
-                                        @if($block['description'])
+                                        @if($block['description'] && !$isGroupFollowUp)
                                             <div class="mt-3 flex items-start gap-2.5 p-3 bg-gray-50 rounded-xl border border-gray-100">
                                                 <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                 <p class="text-sm text-gray-500 leading-relaxed">{{ $block['description'] }}</p>
                                             </div>
+                                        @elseif($block['description'] && $isGroupFollowUp)
+                                            <p class="mt-2 text-sm text-gray-500 leading-relaxed">{{ $block['description'] }}</p>
                                         @endif
                                     </div>
                                 </div>
@@ -588,49 +643,108 @@
                                             $scaleMin = (int)($config['scale_min'] ?? 1);
                                             $scaleMax = (int)($config['scale_max'] ?? 5);
                                             $scaleLabels = $config['scale_labels'] ?? [];
+                                            $requiredMode = $config['required_mode'] ?? 'matrix';
+
+                                            // Gruppieren: Items mit gleichem `group`-Wert werden zusammengefasst.
+                                            // Items ohne Gruppe landen in einer namenlosen Default-Gruppe.
+                                            $grouped = [];
+                                            foreach ($matrixItems as $item) {
+                                                $groupName = is_array($item) ? trim((string)($item['group'] ?? '')) : '';
+                                                $grouped[$groupName][] = $item;
+                                            }
                                         @endphp
-                                        <div class="overflow-x-auto">
+                                        <div class="space-y-6">
                                             @if(!empty($scaleLabels['min_label']) || !empty($scaleLabels['max_label']))
-                                                <div class="flex justify-between mb-2 text-xs text-gray-400 px-1">
-                                                    <span>{{ $scaleLabels['min_label'] ?? '' }}</span>
-                                                    <span>{{ $scaleLabels['max_label'] ?? '' }}</span>
+                                                <div class="flex justify-between text-xs text-gray-400 px-1">
+                                                    <span>{{ $scaleMin }} = {{ $scaleLabels['min_label'] ?? '' }}</span>
+                                                    <span>{{ $scaleMax }} = {{ $scaleLabels['max_label'] ?? '' }}</span>
                                                 </div>
                                             @endif
-                                            <table class="w-full text-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="text-left p-2 text-gray-500 font-medium"></th>
-                                                        @for($s = $scaleMin; $s <= $scaleMax; $s++)
-                                                            <th class="p-2 text-center text-gray-500 font-medium">{{ $s }}</th>
-                                                        @endfor
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($matrixItems as $item)
-                                                        @php
-                                                            $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
-                                                            $itemLabel = is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item;
-                                                        @endphp
-                                                        <tr class="border-t border-gray-100">
-                                                            <td class="p-3 text-gray-700">{{ $itemLabel }}</td>
-                                                            @for($s = $scaleMin; $s <= $scaleMax; $s++)
-                                                                <td class="p-2 text-center">
-                                                                    <button
-                                                                        type="button"
-                                                                        @if(!$isReadOnly) wire:click="setMatrixAnswer('{{ $itemValue }}', '{{ $s }}')" @endif
-                                                                        @if($isReadOnly) disabled @endif
-                                                                        class="w-8 h-8 rounded-full border-2 transition-all {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 hover:border-violet-400' }}"
-                                                                    >
-                                                                        @if(($matrixAnswers[$itemValue] ?? '') === (string)$s)
-                                                                            <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                                                        @endif
-                                                                    </button>
-                                                                </td>
-                                                            @endfor
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
+
+                                            @foreach($grouped as $groupName => $groupItems)
+                                                <div class="space-y-2">
+                                                    @if($groupName !== '')
+                                                        <h4 class="text-sm font-semibold text-gray-700 pt-2 border-t border-gray-100">{{ $groupName }}</h4>
+                                                    @endif
+
+                                                    {{-- Tabelle: Desktop --}}
+                                                    <div class="hidden md:block overflow-x-auto">
+                                                        <table class="w-full text-sm">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-left p-2 text-gray-500 font-medium"></th>
+                                                                    @for($s = $scaleMin; $s <= $scaleMax; $s++)
+                                                                        <th class="p-2 text-center text-gray-500 font-medium">{{ $s }}</th>
+                                                                    @endfor
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($groupItems as $item)
+                                                                    @php
+                                                                        $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
+                                                                        $itemLabel = is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item;
+                                                                        $itemRequired = is_array($item) && !empty($item['is_required']);
+                                                                        $rowMissing = in_array($currentStep, $missingRequiredBlocks ?? []) && $requiredMode === 'per_row' && $itemRequired && !isset($matrixAnswers[$itemValue]);
+                                                                    @endphp
+                                                                    <tr class="border-t border-gray-100 {{ $rowMissing ? 'bg-rose-50/40' : '' }}">
+                                                                        <td class="p-3 text-gray-700">
+                                                                            {{ $itemLabel }}
+                                                                            @if($requiredMode === 'per_row' && $itemRequired)
+                                                                                <span class="text-rose-500 ml-1" title="Pflichtangabe">*</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        @for($s = $scaleMin; $s <= $scaleMax; $s++)
+                                                                            <td class="p-2 text-center">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    @if(!$isReadOnly) wire:click="setMatrixAnswer('{{ $itemValue }}', '{{ $s }}')" @endif
+                                                                                    @if($isReadOnly) disabled @endif
+                                                                                    class="w-8 h-8 rounded-full border-2 transition-all {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 hover:border-violet-400' }}"
+                                                                                >
+                                                                                    @if(($matrixAnswers[$itemValue] ?? '') === (string)$s)
+                                                                                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                                                    @endif
+                                                                                </button>
+                                                                            </td>
+                                                                        @endfor
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    {{-- Mobile: vertikale Listenansicht --}}
+                                                    <div class="md:hidden space-y-3">
+                                                        @foreach($groupItems as $item)
+                                                            @php
+                                                                $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
+                                                                $itemLabel = is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item;
+                                                                $itemRequired = is_array($item) && !empty($item['is_required']);
+                                                            @endphp
+                                                            <div class="p-3 border border-gray-100 rounded-lg">
+                                                                <div class="text-sm font-medium text-gray-800 mb-2">
+                                                                    {{ $itemLabel }}
+                                                                    @if($requiredMode === 'per_row' && $itemRequired)
+                                                                        <span class="text-rose-500 ml-1">*</span>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="flex flex-wrap gap-2">
+                                                                    @for($s = $scaleMin; $s <= $scaleMax; $s++)
+                                                                        <button
+                                                                            type="button"
+                                                                            @if(!$isReadOnly) wire:click="setMatrixAnswer('{{ $itemValue }}', '{{ $s }}')" @endif
+                                                                            @if($isReadOnly) disabled @endif
+                                                                            class="w-10 h-10 rounded-full border-2 transition-all text-sm font-medium {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 text-gray-600 hover:border-violet-400' }}"
+                                                                        >
+                                                                            {{ $s }}
+                                                                        </button>
+                                                                    @endfor
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                         @break
 

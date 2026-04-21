@@ -22,7 +22,7 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/template_blocks/bulk - Aktualisiert mehrere Template-Blocks in einem Aufruf (Reihenfolge, Pflichtfeld, Aktiv-Status). ERFORDERLICH: items (Array mit je template_block_id). Maximal 50 Items pro Aufruf.';
+        return 'PUT /hatch/template_blocks/bulk - Aktualisiert mehrere Template-Blocks in einem Aufruf (Reihenfolge, Label, Gruppen-Zugehörigkeit, Sichtbarkeitsregeln, Pflichtfeld, Aktiv-Status). ERFORDERLICH: items (Array mit je template_block_id). Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -35,13 +35,21 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: template_block_id. Optional: sort_order, is_required, is_active.',
+                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: template_block_id. Optional: name, description, sort_order, is_required, group_uuid, visibility_rules, is_active.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
                             'template_block_id' => [
                                 'type' => 'integer',
                                 'description' => 'ID des Template-Blocks (ERFORDERLICH). Sichtbar in "hatch.template.GET" als template_block_id.',
+                            ],
+                            'name' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Feld-Label / Abfrage-Name (am Abfrage-Header).',
+                            ],
+                            'description' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Feld-Beschreibung / Abfrage-Beschreibung.',
                             ],
                             'sort_order' => [
                                 'type' => 'integer',
@@ -50,6 +58,14 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                             'is_required' => [
                                 'type' => 'boolean',
                                 'description' => 'Optional: Pflichtfeld ja/nein.',
+                            ],
+                            'group_uuid' => [
+                                'type' => 'string',
+                                'description' => 'Optional: UUID der Abfrage-Gruppe. Null = Einzelblock.',
+                            ],
+                            'visibility_rules' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Conditional Logic — {combinator: AND|OR, rules: [{source_block_id, operator, value}]}. Null = immer sichtbar.',
                             ],
                             'is_active' => [
                                 'type' => 'boolean',
@@ -82,7 +98,7 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'Maximal 50 Items pro Bulk-Aufruf erlaubt.');
             }
 
-            $fields = ['sort_order', 'is_required', 'is_active'];
+            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'is_active'];
             $updated = [];
             $errors = [];
 
@@ -118,6 +134,8 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'template_id' => $templateBlock->project_template_id,
                         'block_definition_id' => $templateBlock->block_definition_id,
                         'block_definition_name' => $templateBlock->blockDefinition?->name,
+                        'name' => $templateBlock->name,
+                        'group_uuid' => $templateBlock->group_uuid,
                         'sort_order' => (int)$templateBlock->sort_order,
                         'is_required' => (bool)$templateBlock->is_required,
                         'is_active' => (bool)$templateBlock->is_active,

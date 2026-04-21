@@ -66,7 +66,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                             'location' => ['label' => 'Standort', 'config' => 'placeholder, format'],
                             'info' => ['label' => 'Info (kein Input)', 'config' => 'content'],
                             'custom' => ['label' => 'Benutzerdefiniert', 'config' => '{}'],
-                            'matrix' => ['label' => 'Matrix / Likert', 'config' => 'items: [{label, value}], scale_min (1), scale_max (5), scale_labels: {min_label, max_label}', 'storage' => 'JSON {item_key: value}'],
+                            'matrix' => ['label' => 'Matrix / Likert', 'config' => 'items: [{label, value, group? (Gruppenname für Zwischenüberschrift), is_required? (bei required_mode=per_row)}], scale_min (1), scale_max (5), scale_labels: {min_label, max_label}, required_mode: matrix|per_row', 'storage' => 'JSON {item_key: value}'],
                             'ranking' => ['label' => 'Sortierung / Ranking', 'config' => 'options: [{label, value}]', 'storage' => 'JSON array of values'],
                             'nps' => ['label' => 'Net Promoter Score', 'config' => '{} (fix 0-10)'],
                             'dropdown' => ['label' => 'Dropdown', 'config' => 'options: [{label, value}], placeholder, searchable'],
@@ -135,7 +135,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'add' => 'hatch.template_blocks.POST',
                         'update' => 'hatch.template_blocks.PUT',
                         'remove' => 'hatch.template_blocks.DELETE',
-                        'note' => 'Verknüpft wiederverwendbare Block-Definitionen mit Templates. Blöcke sind in hatch.template.GET sichtbar.',
+                        'note' => 'Verknüpft wiederverwendbare Block-Definitionen mit Templates. Blöcke sind in hatch.template.GET sichtbar. Pro Block optional: group_uuid (Blocks mit gleicher UUID bilden eine Abfrage mit mehreren Feldern), visibility_rules (Conditional Logic: {combinator: AND|OR, rules: [{source_block_id, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value}]} – source_block_id muss auf einen Block mit kleinerem sort_order zeigen, keine Zyklen).',
                     ],
                     'block_definitions' => [
                         'list' => 'hatch.block_definitions.GET',

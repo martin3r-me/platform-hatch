@@ -24,7 +24,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/template_blocks/bulk - Fügt mehrere Block-Definitionen zu einem Template hinzu. ERFORDERLICH: template_id, items (Array mit je block_definition_id). Maximal 50 Items pro Aufruf.';
+        return 'POST /hatch/template_blocks/bulk - Fügt mehrere Blocks zu einem Template hinzu. ERFORDERLICH: template_id, items (Array mit je block_definition_id). Optional pro Item: name, description, sort_order, is_required, group_uuid (für Multi-Feld-Abfragen — Items mit gleicher UUID bilden eine Abfrage), visibility_rules (Conditional Logic). Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -41,13 +41,21 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Template-Blocks. Jedes Item benötigt: block_definition_id. Optional: sort_order, is_required.',
+                    'description' => 'ERFORDERLICH: Array von Template-Blocks. Jedes Item benötigt: block_definition_id. Optional: name, description, sort_order, is_required, group_uuid, visibility_rules. Für eine Multi-Feld-Abfrage: alle Felder dieser Abfrage mit derselben group_uuid übergeben.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
                             'block_definition_id' => [
                                 'type' => 'integer',
                                 'description' => 'ID der Block-Definition (ERFORDERLICH). Nutze "hatch.block_definitions.GET".',
+                            ],
+                            'name' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Feld-Label (überschreibt Default aus BlockDefinition). Am Abfrage-Header = Name der Abfrage.',
+                            ],
+                            'description' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Feld-Beschreibung/Helptext.',
                             ],
                             'sort_order' => [
                                 'type' => 'integer',
@@ -56,6 +64,14 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                             'is_required' => [
                                 'type' => 'boolean',
                                 'description' => 'Optional: Ist dieser Block Pflicht? Default: true.',
+                            ],
+                            'group_uuid' => [
+                                'type' => 'string',
+                                'description' => 'Optional: UUID der Abfrage-Gruppe. Mehrere Items mit derselben group_uuid bilden eine Abfrage mit mehreren Feldern. Leer = Einzelblock.',
+                            ],
+                            'visibility_rules' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Conditional Logic — {combinator: AND|OR, rules: [{source_block_id, operator, value}]}.',
                             ],
                         ],
                         'required' => ['block_definition_id'],
@@ -130,7 +146,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         $sortOrder = $maxSort;
                     }
 
-                    $templateBlock = HatchTemplateBlock::create([
+                    $payload = [
                         'project_template_id' => $templateId,
                         'block_definition_id' => $blockDefinitionId,
                         'sort_order' => (int)$sortOrder,
@@ -138,7 +154,15 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'is_active' => true,
                         'created_by_user_id' => $context->user->id,
                         'team_id' => $teamId,
-                    ]);
+                    ];
+
+                    foreach (['name', 'description', 'group_uuid', 'visibility_rules'] as $optional) {
+                        if (array_key_exists($optional, $item)) {
+                            $payload[$optional] = $item[$optional];
+                        }
+                    }
+
+                    $templateBlock = HatchTemplateBlock::create($payload);
 
                     $created[] = [
                         'index' => $index,
@@ -146,6 +170,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'uuid' => $templateBlock->uuid,
                         'block_definition_id' => $blockDefinitionId,
                         'block_definition_name' => $blockDefinition->name,
+                        'group_uuid' => $templateBlock->group_uuid,
                         'sort_order' => (int)$templateBlock->sort_order,
                         'is_required' => (bool)$templateBlock->is_required,
                     ];

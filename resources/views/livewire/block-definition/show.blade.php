@@ -536,11 +536,24 @@
                             <x-ui-input-text name="typeConfig.scale_labels.min_label" label="Beschriftung links" wire:model.live.debounce.500ms="typeConfig.scale_labels.min_label" placeholder="z.B. Trifft nicht zu" size="sm" />
                             <x-ui-input-text name="typeConfig.scale_labels.max_label" label="Beschriftung rechts" wire:model.live.debounce.500ms="typeConfig.scale_labels.max_label" placeholder="z.B. Trifft voll zu" size="sm" />
                         </div>
+                        <x-ui-input-select
+                            name="typeConfig.required_mode"
+                            label="Pflichtfeld-Logik"
+                            hint="Wie Pflichtangaben erzwungen werden"
+                            wire:model.live="typeConfig.required_mode"
+                            :options="collect([
+                                ['value' => 'matrix', 'label' => 'Gesamte Matrix (alle Zeilen müssen beantwortet sein, wenn Block required)'],
+                                ['value' => 'per_row', 'label' => 'Pro Zeile konfigurierbar'],
+                            ])"
+                            optionValue="value"
+                            optionLabel="label"
+                            size="sm"
+                        />
                     </div>
                     <div class="flex items-center justify-between mb-2">
                         <div>
                             <span class="text-sm font-medium text-[var(--ui-secondary)]">Matrix-Items (Zeilen)</span>
-                            <p class="text-xs text-[var(--ui-muted)]">Jedes Item wird als Zeile in der Matrix angezeigt.</p>
+                            <p class="text-xs text-[var(--ui-muted)]">Jedes Item wird als Zeile in der Matrix angezeigt. Items mit gleichem Gruppennamen werden im Formular unter einer Zwischenüberschrift zusammengefasst.</p>
                         </div>
                         <x-ui-button variant="secondary" size="sm" wire:click="addMatrixItem">
                             <span class="flex items-center gap-2">@svg('heroicon-o-plus', 'w-4 h-4') Item hinzufügen</span>
@@ -548,10 +561,21 @@
                     </div>
                     @if(!empty($typeConfig['items']))
                         @foreach($typeConfig['items'] as $itemIndex => $item)
-                            <div class="flex items-center gap-2 p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40">
-                                <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.label" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.label" placeholder="Angezeigter Text" size="sm" class="flex-grow" />
-                                <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.value" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.value" placeholder="Wert (Schlüssel)" size="sm" class="flex-grow" />
-                                <x-ui-button variant="danger-outline" size="sm" wire:click="removeMatrixItem({{ $itemIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                            <div class="p-3 bg-[var(--ui-muted-5)] rounded border border-[var(--ui-border)]/40 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.label" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.label" placeholder="Angezeigter Text" size="sm" class="flex-grow" />
+                                    <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.value" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.value" placeholder="Wert (Schlüssel)" size="sm" class="flex-grow" />
+                                    <x-ui-button variant="danger-outline" size="sm" wire:click="removeMatrixItem({{ $itemIndex }})">@svg('heroicon-o-trash', 'w-4 h-4')</x-ui-button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <x-ui-input-text name="typeConfig.items.{{ $itemIndex }}.group" wire:model.live.debounce.500ms="typeConfig.items.{{ $itemIndex }}.group" placeholder="Gruppe (optional, z.B. Planung)" size="sm" class="flex-grow" />
+                                    @if(($typeConfig['required_mode'] ?? 'matrix') === 'per_row')
+                                        <label class="flex items-center gap-1 text-xs text-[var(--ui-muted)] px-2">
+                                            <input type="checkbox" wire:model.live="typeConfig.items.{{ $itemIndex }}.is_required" class="rounded" />
+                                            Pflicht
+                                        </label>
+                                    @endif
+                                </div>
                             </div>
                         @endforeach
                     @else
