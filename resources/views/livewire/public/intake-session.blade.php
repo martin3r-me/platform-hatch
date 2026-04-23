@@ -504,10 +504,19 @@
                                                 $selectionHint = "Mindestens {$minSel} Option(en) auswählen";
                                             }
                                         @endphp
+                                        @php
+                                            $overLimit = $maxSel !== null && $selectedCount > $maxSel;
+                                        @endphp
                                         @if($selectionHint)
-                                            <div class="mb-3 text-xs text-gray-500 flex items-center justify-between">
+                                            <div class="mb-3 text-xs flex items-center justify-between {{ $overLimit ? 'text-rose-600' : 'text-gray-500' }}">
                                                 <span>{{ $selectionHint }}</span>
-                                                <span class="font-medium text-gray-600">{{ $selectedCount }}{{ $maxSel ? '/'.$maxSel : '' }} ausgewählt</span>
+                                                <span class="font-medium {{ $overLimit ? 'text-rose-700' : 'text-gray-600' }}">{{ $selectedCount }}{{ $maxSel ? '/'.$maxSel : '' }} ausgewählt</span>
+                                            </div>
+                                        @endif
+                                        @if($validationError && $maxSel !== null)
+                                            <div class="mb-3 p-3 rounded-lg border border-rose-200 bg-rose-50 text-sm text-rose-700 flex items-start gap-2">
+                                                <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                                <span>{{ $validationError }}</span>
                                             </div>
                                         @endif
                                         <div class="space-y-2.5">
@@ -522,9 +531,9 @@
                                                 <button
                                                     type="button"
                                                     @if(!$optDisabled) wire:click="toggleOption('{{ $optionValue }}')" @endif
-                                                    @if($optDisabled) disabled @endif
+                                                    @if($optDisabled) disabled aria-disabled="true" @endif
                                                     @if($maxReached) title="Maximale Anzahl erreicht — zuerst eine andere Auswahl abwählen." @endif
-                                                    class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }} {{ $maxReached ? 'opacity-40 cursor-not-allowed' : '' }}"
+                                                    class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }} {{ $maxReached ? 'opacity-40 cursor-not-allowed pointer-events-none' : '' }}"
                                                 >
                                                     <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors
                                                         {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">

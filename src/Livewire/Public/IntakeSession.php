@@ -562,6 +562,11 @@ class IntakeSession extends Component
             return;
         }
 
+        // Max-Limit auch beim finalen Absenden checken.
+        if (!$this->enforceMaxSelectionsOnCurrentBlock()) {
+            return;
+        }
+
         $this->saveCurrentBlock();
 
         if ($this->state === 'notActive') {
@@ -616,16 +621,50 @@ class IntakeSession extends Component
 
         // Max-Selections für multi_select hart durchsetzen.
         $block = $this->blocks[$this->currentStep] ?? null;
+        $max = null;
         if ($block && $block['type'] === 'multi_select') {
             $max = $block['logic_config']['max_selections'] ?? null;
-            if ($max !== null && $max !== '' && (int) $max > 0 && count($this->selectedOptions) >= (int) $max) {
-                $this->validationError = 'Du kannst maximal ' . (int) $max . ' Option(en) auswählen.';
-                return;
-            }
+            $max = ($max === null || $max === '') ? null : (int) $max;
+        }
+
+        if ($max !== null && $max > 0 && count($this->selectedOptions) >= $max) {
+            $this->validationError = 'Du kannst maximal ' . $max . ' Option(en) auswählen. Bitte zuerst eine andere Auswahl abwählen.';
+            return;
         }
 
         $this->selectedOptions[] = $value;
         $this->validationError = null;
+    }
+
+    /**
+     * Erzwingt Max-Selections für multi_select beim Speichern/Navigieren:
+     * falls selectedOptions bereits über dem Limit liegt (z. B. aus einer
+     * alten Session, die vor dem Setzen des Limits Antworten hatte), wird
+     * auf die ersten N getrimmt und eine Meldung gesetzt.
+     */
+    private function enforceMaxSelectionsOnCurrentBlock(): bool
+    {
+        $block = $this->blocks[$this->currentStep] ?? null;
+        if (!$block || $block['type'] !== 'multi_select') {
+            return true;
+        }
+
+        $max = $block['logic_config']['max_selections'] ?? null;
+        $max = ($max === null || $max === '') ? null : (int) $max;
+        if ($max === null || $max <= 0) {
+            return true;
+        }
+
+        if (count($this->selectedOptions) > $max) {
+            // Nicht automatisch trimmen — User muss selbst abwählen, damit
+            // die Entscheidung bewusst bleibt. Wir blockieren die Navigation.
+            $this->validationError = 'Du hast ' . count($this->selectedOptions)
+                . ' Optionen ausgewählt, erlaubt sind maximal ' . $max
+                . '. Bitte wähle einige Optionen ab, bevor du weitergehst.';
+            return false;
+        }
+
+        return true;
     }
 
     public function setAnswer(string $value): void
@@ -732,6 +771,11 @@ class IntakeSession extends Component
     public function nextBlock(): void
     {
         if ($this->state !== 'completed') {
+            // Max-Limit durchsetzen bevor wir weiterspringen. Wenn das fehlschlägt,
+            // bleibt der User auf dem aktuellen Block und sieht die Fehlermeldung.
+            if (!$this->enforceMaxSelectionsOnCurrentBlock()) {
+                return;
+            }
             $this->saveCurrentBlock();
         }
 
