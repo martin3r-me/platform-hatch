@@ -637,6 +637,94 @@ class IntakeSession extends Component
     }
 
     /**
+     * Prüft, ob der aktuelle Block beantwortet ist — basierend auf der
+     * Livewire-In-Memory-State (ohne Umweg über die Session-DB). Damit
+     * bekommen wir selbst bei noch nicht persistiertem State ein korrektes
+     * Ergebnis.
+     */
+    public function isCurrentBlockAnswered(): bool
+    {
+        $block = $this->blocks[$this->currentStep] ?? null;
+        if (!$block) return true;
+
+        $type = $block['type'];
+        $config = $block['logic_config'] ?? [];
+
+        if (in_array($type, ['info', 'section', 'calculated', 'hidden'])) {
+            return true;
+        }
+
+        switch ($type) {
+            case 'multi_select':
+                if (empty($this->selectedOptions)) return false;
+                $min = $config['min_selections'] ?? null;
+                $min = ($min === null || $min === '') ? null : (int) $min;
+                if ($min !== null && $min > 0) {
+                    return count($this->selectedOptions) >= $min;
+                }
+                return true;
+
+            case 'matrix':
+                if (empty($this->matrixAnswers)) return false;
+                if (($config['required_mode'] ?? 'matrix') === 'matrix') {
+                    foreach (($config['items'] ?? []) as $item) {
+                        $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
+                        if ($itemValue === '') continue;
+                        if (!isset($this->matrixAnswers[$itemValue]) || $this->matrixAnswers[$itemValue] === '') {
+                            return false;
+                        }
+                    }
+                } else {
+                    // per_row: nur Zeilen mit is_required müssen beantwortet sein
+                    foreach (($config['items'] ?? []) as $item) {
+                        if (!is_array($item) || empty($item['is_required'])) continue;
+                        $itemValue = $item['value'] ?? $item['label'] ?? '';
+                        if ($itemValue === '' || empty($this->matrixAnswers[$itemValue])) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+
+            case 'boolean':
+                return $this->currentAnswer === 'true' || $this->currentAnswer === 'false';
+
+            case 'consent':
+                $mustAccept = $config['must_accept'] ?? true;
+                if ($mustAccept) {
+                    return $this->currentAnswer === 'true';
+                }
+                return $this->currentAnswer === 'true' || $this->currentAnswer === 'false';
+
+            case 'lookup':
+                $multiple = $config['multiple'] ?? false;
+                if ($multiple) {
+                    return !empty($this->selectedOptions);
+                }
+                return is_string($this->currentAnswer) && trim($this->currentAnswer) !== '';
+
+            case 'address':
+                return !empty(array_filter($this->addressFields));
+
+            case 'date_range':
+                return $this->dateRangeStart !== '' && $this->dateRangeEnd !== '';
+
+            case 'ranking':
+                return !empty($this->rankingOrder);
+
+            case 'repeater':
+                $min = (int) ($config['min_entries'] ?? 0);
+                if ($min > 0) {
+                    return count($this->repeaterEntries) >= $min;
+                }
+                return !empty($this->repeaterEntries);
+
+            default:
+                return is_string($this->currentAnswer) && trim($this->currentAnswer) !== '';
+        }
+    }
+
+    /**
      * Erzwingt Max-Selections für multi_select beim Speichern/Navigieren:
      * falls selectedOptions bereits über dem Limit liegt (z. B. aus einer
      * alten Session, die vor dem Setzen des Limits Antworten hatte), wird
@@ -771,22 +859,29 @@ class IntakeSession extends Component
     public function nextBlock(): void
     {
         if ($this->state !== 'completed') {
-            // Max-Limit durchsetzen bevor wir weiterspringen. Wenn das fehlschlägt,
-            // bleibt der User auf dem aktuellen Block und sieht die Fehlermeldung.
+            // Max-Limit durchsetzen bevor wir weiterspringen.
             if (!$this->enforceMaxSelectionsOnCurrentBlock()) {
                 return;
             }
-            $this->saveCurrentBlock();
-            $this->session->refresh();
 
-            // Pflichtfeld-Check auf aktuellen Block: wenn required und leer,
-            // nicht weiter navigieren.
-            $missing = $this->getUnansweredRequiredBlocks();
-            if (in_array($this->currentStep, $missing, true)) {
-                $this->missingRequiredBlocks = $missing;
+            // Pflichtfeld-Check direkt auf In-Memory-State — blockiert
+            // "Weiter", wenn der aktuelle Block Pflicht ist und leer. Zurück
+            // und Sidebar-Klicks bleiben weiterhin frei.
+            $block = $this->blocks[$this->currentStep] ?? null;
+            $requiredByBlock = $block && !empty($block['is_required']);
+            $requiredByMatrixRow = $block
+                && $block['type'] === 'matrix'
+                && (($block['logic_config']['required_mode'] ?? 'matrix') === 'per_row');
+
+            if (($requiredByBlock || $requiredByMatrixRow) && !$this->isCurrentBlockAnswered()) {
                 $this->validationError = 'Dieses Feld ist ein Pflichtfeld. Bitte fülle es aus, bevor du weitergehst.';
+                if (!in_array($this->currentStep, $this->missingRequiredBlocks, true)) {
+                    $this->missingRequiredBlocks[] = $this->currentStep;
+                }
                 return;
             }
+
+            $this->saveCurrentBlock();
         }
 
         $this->validationError = null;
