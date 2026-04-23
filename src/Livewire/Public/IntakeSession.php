@@ -777,6 +777,16 @@ class IntakeSession extends Component
                 return;
             }
             $this->saveCurrentBlock();
+            $this->session->refresh();
+
+            // Pflichtfeld-Check auf aktuellen Block: wenn required und leer,
+            // nicht weiter navigieren.
+            $missing = $this->getUnansweredRequiredBlocks();
+            if (in_array($this->currentStep, $missing, true)) {
+                $this->missingRequiredBlocks = $missing;
+                $this->validationError = 'Dieses Feld ist ein Pflichtfeld. Bitte fülle es aus, bevor du weitergehst.';
+                return;
+            }
         }
 
         $this->validationError = null;
