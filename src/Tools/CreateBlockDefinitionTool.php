@@ -68,7 +68,9 @@ class CreateBlockDefinitionTool implements ToolContract, ToolMetadataContract
                 'logic_config' => [
                     'type' => 'object',
                     'description' => 'Optional: Logik-Konfiguration als JSON. Je nach block_type: '
-                        . 'select/multi_select/dropdown: {options: [{label, value}], placeholder?, searchable?}. '
+                        . 'select: {options: [{label, value}], placeholder?, searchable?}. '
+                        . 'multi_select: {options: [{label, value}], min_selections? (int, null=keine Mindestzahl), max_selections? (int, null=unbegrenzt)}. '
+                        . 'dropdown: {options: [{label, value}], placeholder?, searchable?}. '
                         . 'scale: {min (1), max (10), step, labels: {min_label, max_label}}. '
                         . 'rating: {min (1), max (5), step}. '
                         . 'boolean: {true_label, false_label, style}. '

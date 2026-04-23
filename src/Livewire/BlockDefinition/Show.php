@@ -244,6 +244,8 @@ class Show extends Component
             ],
             'select', 'multi_select' => [
                 'options' => [],
+                'min_selections' => null,
+                'max_selections' => null,
             ],
             'number' => [
                 'placeholder' => '',

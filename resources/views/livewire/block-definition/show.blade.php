@@ -414,6 +414,28 @@
 
             @if(in_array($blockDefinition->block_type, ['select', 'multi_select']))
                 <div class="space-y-3">
+                    @if($blockDefinition->block_type === 'multi_select')
+                        <div class="p-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 grid grid-cols-2 gap-3">
+                            <x-ui-input-text
+                                name="typeConfig.min_selections"
+                                label="Minimum Auswahlen"
+                                hint="Mindestanzahl (leer = keine Mindestzahl)"
+                                wire:model.live.debounce.500ms="typeConfig.min_selections"
+                                type="number"
+                                placeholder="z.B. 1"
+                                size="sm"
+                            />
+                            <x-ui-input-text
+                                name="typeConfig.max_selections"
+                                label="Maximum Auswahlen"
+                                hint="Höchstanzahl (leer = unbegrenzt)"
+                                wire:model.live.debounce.500ms="typeConfig.max_selections"
+                                type="number"
+                                placeholder="z.B. 3"
+                                size="sm"
+                            />
+                        </div>
+                    @endif
                     <div class="flex items-center justify-between mb-2">
                         <div>
                             <span class="text-sm font-medium text-[var(--ui-secondary)]">Auswahl-Optionen</span>

@@ -402,9 +402,18 @@ class IntakeSession extends Component
             $raw = $answers[$key] ?? '';
 
             $isEmpty = match ($block['type']) {
-                'multi_select' => (function () use ($raw) {
+                'multi_select' => (function () use ($raw, $config) {
                     $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
-                    return !is_array($decoded) || empty($decoded) || $raw === '' || $raw === '[]';
+                    if (!is_array($decoded) || empty($decoded) || $raw === '' || $raw === '[]') {
+                        return true;
+                    }
+                    // Min-Selections erzwingen — wenn gesetzt, zählt der Block auch dann als unvollständig,
+                    // wenn zwar eine Auswahl existiert aber unter dem Minimum liegt.
+                    $min = $config['min_selections'] ?? null;
+                    if ($min !== null && $min !== '' && (int) $min > 0) {
+                        return count($decoded) < (int) $min;
+                    }
+                    return false;
                 })(),
                 'matrix' => (function () use ($raw, $config) {
                     $decoded = is_string($raw) ? json_decode($raw, true) : $raw;
@@ -601,9 +610,22 @@ class IntakeSession extends Component
                 $this->selectedOptions,
                 fn($opt) => $opt !== $value
             ));
-        } else {
-            $this->selectedOptions[] = $value;
+            $this->validationError = null;
+            return;
         }
+
+        // Max-Selections für multi_select hart durchsetzen.
+        $block = $this->blocks[$this->currentStep] ?? null;
+        if ($block && $block['type'] === 'multi_select') {
+            $max = $block['logic_config']['max_selections'] ?? null;
+            if ($max !== null && $max !== '' && (int) $max > 0 && count($this->selectedOptions) >= (int) $max) {
+                $this->validationError = 'Du kannst maximal ' . (int) $max . ' Option(en) auswählen.';
+                return;
+            }
+        }
+
+        $this->selectedOptions[] = $value;
+        $this->validationError = null;
     }
 
     public function setAnswer(string $value): void

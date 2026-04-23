@@ -74,7 +74,8 @@ class BulkCreateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                             'logic_config' => [
                                 'type' => 'object',
                                 'description' => 'Optional: Logik-Konfiguration als JSON. Je nach block_type: '
-                                    . 'select/multi_select/dropdown: {options: [{label, value}]}. '
+                                    . 'select/dropdown: {options: [{label, value}]}. '
+                                    . 'multi_select: {options: [{label, value}], min_selections?, max_selections?}. '
                                     . 'scale: {min, max, labels: {min_label, max_label}}. '
                                     . 'rating: {max}. boolean: {true_label, false_label}. '
                                     . 'matrix: {items: [{label, value, group?, is_required?}], scale_min, scale_max, required_mode: matrix|per_row}. '

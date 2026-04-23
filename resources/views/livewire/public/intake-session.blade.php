@@ -487,18 +487,44 @@
 
                                     {{-- Multi Select --}}
                                     @case('multi_select')
+                                        @php
+                                            $minSel = $config['min_selections'] ?? null;
+                                            $maxSel = $config['max_selections'] ?? null;
+                                            $minSel = ($minSel === '' || $minSel === null) ? null : (int) $minSel;
+                                            $maxSel = ($maxSel === '' || $maxSel === null) ? null : (int) $maxSel;
+                                            $selectedCount = count($selectedOptions);
+                                            $selectionHint = null;
+                                            if ($minSel && $maxSel && $minSel === $maxSel) {
+                                                $selectionHint = "Genau {$minSel} Option(en) auswählen";
+                                            } elseif ($minSel && $maxSel) {
+                                                $selectionHint = "Zwischen {$minSel} und {$maxSel} Option(en) auswählen";
+                                            } elseif ($maxSel) {
+                                                $selectionHint = "Maximal {$maxSel} Option(en) auswählen";
+                                            } elseif ($minSel) {
+                                                $selectionHint = "Mindestens {$minSel} Option(en) auswählen";
+                                            }
+                                        @endphp
+                                        @if($selectionHint)
+                                            <div class="mb-3 text-xs text-gray-500 flex items-center justify-between">
+                                                <span>{{ $selectionHint }}</span>
+                                                <span class="font-medium text-gray-600">{{ $selectedCount }}{{ $maxSel ? '/'.$maxSel : '' }} ausgewählt</span>
+                                            </div>
+                                        @endif
                                         <div class="space-y-2.5">
                                             @foreach(($config['options'] ?? []) as $option)
                                                 @php
                                                     $optionValue = is_array($option) ? ($option['value'] ?? $option['label'] ?? '') : $option;
                                                     $optionLabel = is_array($option) ? ($option['label'] ?? $option['value'] ?? '') : $option;
                                                     $isSelected = in_array($optionValue, $selectedOptions);
+                                                    $maxReached = $maxSel !== null && $selectedCount >= $maxSel && !$isSelected;
+                                                    $optDisabled = $isReadOnly || $maxReached;
                                                 @endphp
                                                 <button
                                                     type="button"
-                                                    @if(!$isReadOnly) wire:click="toggleOption('{{ $optionValue }}')" @endif
-                                                    @if($isReadOnly) disabled @endif
-                                                    class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
+                                                    @if(!$optDisabled) wire:click="toggleOption('{{ $optionValue }}')" @endif
+                                                    @if($optDisabled) disabled @endif
+                                                    @if($maxReached) title="Maximale Anzahl erreicht — zuerst eine andere Auswahl abwählen." @endif
+                                                    class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }} {{ $maxReached ? 'opacity-40 cursor-not-allowed' : '' }}"
                                                 >
                                                     <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors
                                                         {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">

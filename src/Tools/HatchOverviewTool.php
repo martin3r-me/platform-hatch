@@ -56,7 +56,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                             'phone' => ['label' => 'Telefon', 'config' => 'placeholder, format'],
                             'url' => ['label' => 'URL', 'config' => 'placeholder'],
                             'select' => ['label' => 'Auswahl (Single)', 'config' => 'options: [{label, value}]'],
-                            'multi_select' => ['label' => 'Auswahl (Multiple)', 'config' => 'options: [{label, value}]', 'storage' => 'JSON array'],
+                            'multi_select' => ['label' => 'Auswahl (Multiple)', 'config' => 'options: [{label, value}], min_selections? (int, null = keine Mindestzahl), max_selections? (int, null = unbegrenzt)', 'storage' => 'JSON array'],
                             'number' => ['label' => 'Zahl', 'config' => 'placeholder, min, max, step, unit'],
                             'scale' => ['label' => 'Skala', 'config' => 'min (1), max (10), step, labels: {min_label, max_label}'],
                             'date' => ['label' => 'Datum', 'config' => 'format, min_date, max_date'],
