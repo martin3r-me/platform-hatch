@@ -25,29 +25,16 @@
     }
     $hasVisible = count($visibleGroups) > 0;
 
-    // Spalten-Definitionen aus der ersten Gruppe ableiten — Header-Labels
-    // koennen vom Template-Block (name) oder, falls leer, von der
-    // BlockDefinition kommen.
-    $columnHeads = [];
-    foreach ($segment['columns'] as $colBlock) {
-        $columnHeads[] = $colBlock['name'] ?: '—';
-    }
-
-    // Gemeinsame Beschreibung: nimm die description des Header-Blocks der
-    // ersten Gruppe, falls vorhanden — typischerweise dort hinterlegt.
-    $tableTitle = $segment['groups'][0]['fields'][0]['name'] ?? null;
-    $tableDescription = $segment['groups'][0]['fields'][0]['description'] ?? null;
+    // Spalten-Header werden in IntakeSessionOverview::getRenderSegments() per
+    // commonWordTail über alle Gruppen abgeleitet — damit nicht der
+    // Tag-spezifische Name der ersten Gruppe ("Montag") als Spalten-Header
+    // erscheint. Fallback: leerer Header, wenn kein gemeinsames Endwort
+    // gefunden wurde.
+    $columnHeads = $segment['column_headers'] ?? array_fill(0, count($segment['columns']), '');
 @endphp
 
 @if($hasVisible)
 <div class="intake-card overflow-hidden">
-    @if($tableDescription)
-        <div class="px-6 pt-5 pb-3 border-b border-gray-100">
-            @if($tableDescription)
-                <p class="text-sm text-gray-500 leading-relaxed">{{ $tableDescription }}</p>
-            @endif
-        </div>
-    @endif
     <div class="overflow-x-auto">
         <table class="intake-compact-table">
             <thead>

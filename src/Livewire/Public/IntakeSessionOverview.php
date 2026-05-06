@@ -75,6 +75,10 @@ class IntakeSessionOverview extends Component
                 ->map(fn($block) => [
                     'id' => (string) $block->id,
                     'name' => $block->name ?: ($block->blockDefinition->name ?? 'Block'),
+                    // block_definition_name separat behalten — wird im
+                    // Compact-Table-Renderer benötigt, um spaltenweite
+                    // Header-Heuristiken über mehrere Gruppen zu bilden.
+                    'block_definition_name' => $block->blockDefinition->name ?? null,
                     'description' => $block->description ?: ($block->blockDefinition->description ?? ''),
                     'type' => $block->blockDefinition->block_type ?? 'default',
                     'logic_config' => $block->blockDefinition->logic_config ?? [],
@@ -782,10 +786,28 @@ class IntakeSessionOverview extends Component
 
             if (count($bucket) > 1) {
                 // Mehrere strukturgleiche compact-Gruppen → eine Tabelle.
+                // Spalten-Header per gemeinsamem Wort-Tail aller block_definition.name
+                // über alle Gruppen ableiten (z. B. „… Montag Bewertung" /
+                // „… Dienstag Bewertung" → „Bewertung"). Damit werden die
+                // Header automatisch entkoppelt vom konkreten Zeilen-Label.
+                $columnCount = count($bucket[0]['fields']);
+                $columnHeaders = [];
+                for ($c = 0; $c < $columnCount; $c++) {
+                    $names = [];
+                    foreach ($bucket as $g) {
+                        $field = $g['fields'][$c] ?? null;
+                        if ($field) {
+                            $names[] = $field['block_definition_name'] ?? $field['name'] ?? '';
+                        }
+                    }
+                    $columnHeaders[] = $this->commonWordTail($names);
+                }
+
                 $segments[] = [
                     'kind' => 'compact_table',
                     'groups' => $bucket,
                     'columns' => $bucket[0]['fields'],
+                    'column_headers' => $columnHeaders,
                 ];
             } else {
                 // Einzelne compact-Gruppe — als Standard rendern (nichts zum Tabellieren).
@@ -807,6 +829,41 @@ class IntakeSessionOverview extends Component
         return collect($fields)
             ->map(fn($f) => $f['type'] . ':' . ($f['logic_config']['lookup_id'] ?? ''))
             ->implode('|');
+    }
+
+    /**
+     * Liefert den längsten gemeinsamen Wort-Tail (vom Ende her) aller
+     * übergebenen Strings. Beispiel:
+     *   ["Wochenfeedback - Montag Bewertung",
+     *    "Wochenfeedback - Dienstag Bewertung", …]
+     *   → "Bewertung"
+     * Leerer Rückgabewert, wenn kein gemeinsames Endwort gefunden wird oder
+     * die Eingabe leer ist.
+     */
+    private function commonWordTail(array $strings): string
+    {
+        $strings = array_values(array_filter($strings, fn($s) => is_string($s) && trim($s) !== ''));
+        if (empty($strings)) return '';
+
+        $tokenized = array_map(fn($s) => preg_split('/\s+/', trim($s)) ?: [], $strings);
+        if (count($tokenized) === 1) return implode(' ', $tokenized[0]);
+
+        $shortest = min(array_map('count', $tokenized));
+        $tail = [];
+        for ($i = 1; $i <= $shortest; $i++) {
+            $first = $tokenized[0][count($tokenized[0]) - $i] ?? null;
+            $allSame = $first !== null;
+            foreach ($tokenized as $tokens) {
+                if (($tokens[count($tokens) - $i] ?? null) !== $first) {
+                    $allSame = false;
+                    break;
+                }
+            }
+            if (!$allSame) break;
+            array_unshift($tail, $first);
+        }
+
+        return implode(' ', $tail);
     }
 
     public function render()
