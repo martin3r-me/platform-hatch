@@ -57,6 +57,10 @@ class UpdateTemplateTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Neues Komplexitätslevel (simple, medium, complex).',
                 ],
+                'flow_mode' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Render-Strategie. "block_flow" (Default) zeigt Felder Schritt für Schritt; "overview" rendert alle Felder auf einer Seite (z. B. Umfragen wie Wochenfeedback). Erlaubt: block_flow, overview.',
+                ],
                 'ai_instructions' => [
                     'type' => 'object',
                     'description' => 'Optional: Neue AI-Anweisungen als JSON-Objekt.',
@@ -101,12 +105,17 @@ class UpdateTemplateTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'complexity_level muss simple, medium oder complex sein.');
             }
 
+            if (isset($arguments['flow_mode']) && !in_array($arguments['flow_mode'], HatchProjectTemplate::FLOW_MODES, true)) {
+                return ToolResult::error('VALIDATION_ERROR', 'flow_mode muss block_flow oder overview sein.');
+            }
+
             $fields = [
                 'name',
                 'description',
                 'ai_personality',
                 'industry_context',
                 'complexity_level',
+                'flow_mode',
                 'ai_instructions',
                 'is_active',
             ];
@@ -124,6 +133,7 @@ class UpdateTemplateTool implements ToolContract, ToolMetadataContract
                 'uuid' => $template->uuid,
                 'name' => $template->name,
                 'complexity_level' => $template->complexity_level,
+                'flow_mode' => $template->flow_mode,
                 'is_active' => (bool)$template->is_active,
                 'team_id' => $template->team_id,
                 'message' => 'Template erfolgreich aktualisiert.',

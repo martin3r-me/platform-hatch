@@ -67,6 +67,10 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                     'type' => 'object',
                     'description' => 'Optional: Conditional Logic. Format: {combinator: AND|OR, rules: [{source_block_id: int, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value: string}]}. source_block_id muss auf einen Block mit kleinerem sort_order zeigen. NULL = immer sichtbar.',
                 ],
+                'display_compact' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: Wirkt nur wenn das Template flow_mode = "overview" hat. true = Gruppe wird als kompakte Tabellenzeile gerendert. Default: false.',
+                ],
             ],
             'required' => ['template_id', 'block_definition_id'],
         ]);
@@ -128,7 +132,7 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'team_id' => $teamId,
             ];
 
-            foreach (['name', 'description', 'group_uuid', 'visibility_rules'] as $optional) {
+            foreach (['name', 'description', 'group_uuid', 'visibility_rules', 'display_compact'] as $optional) {
                 if (array_key_exists($optional, $arguments)) {
                     $payload[$optional] = $arguments[$optional];
                 }
@@ -148,6 +152,7 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'group_uuid' => $templateBlock->group_uuid,
                 'sort_order' => (int)$templateBlock->sort_order,
                 'is_required' => (bool)$templateBlock->is_required,
+                'display_compact' => (bool)$templateBlock->display_compact,
                 'message' => "Block \"{$blockDefinition->name}\" zum Template \"{$template->name}\" hinzugefügt.",
             ]);
         } catch (\Throwable $e) {

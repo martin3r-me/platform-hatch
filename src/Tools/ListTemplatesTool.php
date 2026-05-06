@@ -101,6 +101,7 @@ class ListTemplatesTool implements ToolContract, ToolMetadataContract
                     'ai_personality' => $t->ai_personality,
                     'industry_context' => $t->industry_context,
                     'complexity_level' => $t->complexity_level,
+                    'flow_mode' => $t->flow_mode,
                     'is_active' => (bool)$t->is_active,
                     'template_blocks_count' => $t->template_blocks_count,
                     'project_intakes_count' => $t->project_intakes_count,

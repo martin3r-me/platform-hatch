@@ -61,6 +61,10 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                     'type' => 'object',
                     'description' => 'Optional: Conditional Logic. Format: {combinator: AND|OR, rules: [{source_block_id: int, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value: string}]}. source_block_id muss auf einen Block mit kleinerem sort_order zeigen (keine Vorwärts-Referenzen, keine Zyklen). Block wird nur angezeigt, wenn die Regeln erfüllt sind. Null = immer sichtbar.',
                 ],
+                'display_compact' => [
+                    'type' => 'boolean',
+                    'description' => 'Optional: Wirkt nur wenn das Template flow_mode = "overview" hat. true = die Gruppe dieses Blocks wird im Übersichts-Modus als kompakte Tabellenzeile gerendert. Aufeinanderfolgende compact-Gruppen mit identischer Feld-Struktur werden zu einer gemeinsamen Tabelle zusammengefasst (z. B. Mo–Fr Wochenfeedback). Reicht aus, das Flag auf einem Block der Gruppe zu setzen — typischerweise dem Header-Block (erstes Feld der Gruppe).',
+                ],
                 'is_active' => [
                     'type' => 'boolean',
                     'description' => 'Optional: Aktiv-Status.',
@@ -97,7 +101,7 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('ACCESS_DENIED', 'Du hast keinen Zugriff auf diesen Template-Block.');
             }
 
-            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'is_active'];
+            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'display_compact', 'is_active'];
 
             foreach ($fields as $field) {
                 if (array_key_exists($field, $arguments)) {
@@ -120,6 +124,7 @@ class UpdateTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'visibility_rules' => $templateBlock->visibility_rules,
                 'sort_order' => (int)$templateBlock->sort_order,
                 'is_required' => (bool)$templateBlock->is_required,
+                'display_compact' => (bool)$templateBlock->display_compact,
                 'is_active' => (bool)$templateBlock->is_active,
                 'message' => 'Template-Block erfolgreich aktualisiert.',
             ]);

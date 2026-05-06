@@ -73,6 +73,10 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                                 'type' => 'object',
                                 'description' => 'Optional: Conditional Logic — {combinator: AND|OR, rules: [{source_block_id, operator, value}]}.',
                             ],
+                            'display_compact' => [
+                                'type' => 'boolean',
+                                'description' => 'Optional: Wirkt nur bei flow_mode = "overview". true = Gruppe als kompakte Tabellenzeile rendern. Default: false.',
+                            ],
                         ],
                         'required' => ['block_definition_id'],
                     ],
@@ -156,7 +160,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'team_id' => $teamId,
                     ];
 
-                    foreach (['name', 'description', 'group_uuid', 'visibility_rules'] as $optional) {
+                    foreach (['name', 'description', 'group_uuid', 'visibility_rules', 'display_compact'] as $optional) {
                         if (array_key_exists($optional, $item)) {
                             $payload[$optional] = $item[$optional];
                         }
@@ -173,6 +177,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'group_uuid' => $templateBlock->group_uuid,
                         'sort_order' => (int)$templateBlock->sort_order,
                         'is_required' => (bool)$templateBlock->is_required,
+                        'display_compact' => (bool)$templateBlock->display_compact,
                     ];
                 } catch (\Throwable $e) {
                     $errors[] = ['index' => $index, 'block_definition_id' => $blockDefinitionId, 'error' => $e->getMessage()];

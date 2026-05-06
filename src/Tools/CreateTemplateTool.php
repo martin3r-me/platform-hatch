@@ -22,7 +22,7 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/templates - Erstellt ein neues Projekt-Template. ERFORDERLICH: name. Optional: description, ai_personality, industry_context, complexity_level, ai_instructions.';
+        return 'POST /hatch/templates - Erstellt ein neues Projekt-Template. ERFORDERLICH: name. Optional: description, ai_personality, industry_context, complexity_level, flow_mode (block_flow|overview), ai_instructions.';
     }
 
     public function getSchema(): array
@@ -52,6 +52,10 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
                 'complexity_level' => [
                     'type' => 'string',
                     'description' => 'Optional: Komplexitätslevel (simple, medium, complex). Default: medium.',
+                ],
+                'flow_mode' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Render-Strategie. "block_flow" (Default) zeigt Felder Schritt für Schritt; "overview" rendert alle Felder auf einer Seite (z. B. Umfragen). Erlaubt: block_flow, overview.',
                 ],
                 'ai_instructions' => [
                     'type' => 'object',
@@ -89,12 +93,18 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'complexity_level muss simple, medium oder complex sein.');
             }
 
+            $flowMode = $arguments['flow_mode'] ?? HatchProjectTemplate::FLOW_MODE_BLOCK_FLOW;
+            if (!in_array($flowMode, HatchProjectTemplate::FLOW_MODES, true)) {
+                return ToolResult::error('VALIDATION_ERROR', 'flow_mode muss block_flow oder overview sein.');
+            }
+
             $template = HatchProjectTemplate::create([
                 'name' => $name,
                 'description' => $arguments['description'] ?? null,
                 'ai_personality' => $arguments['ai_personality'] ?? null,
                 'industry_context' => $arguments['industry_context'] ?? null,
                 'complexity_level' => $complexityLevel,
+                'flow_mode' => $flowMode,
                 'ai_instructions' => $arguments['ai_instructions'] ?? null,
                 'is_active' => (bool)($arguments['is_active'] ?? true),
                 'created_by_user_id' => $context->user->id,
@@ -106,6 +116,7 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
                 'uuid' => $template->uuid,
                 'name' => $template->name,
                 'complexity_level' => $template->complexity_level,
+                'flow_mode' => $template->flow_mode,
                 'is_active' => (bool)$template->is_active,
                 'team_id' => $template->team_id,
                 'message' => 'Template erfolgreich erstellt.',

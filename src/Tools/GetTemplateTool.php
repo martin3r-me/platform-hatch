@@ -73,6 +73,7 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
                 'ai_personality' => $template->ai_personality,
                 'industry_context' => $template->industry_context,
                 'complexity_level' => $template->complexity_level,
+                'flow_mode' => $template->flow_mode,
                 'ai_instructions' => $template->ai_instructions,
                 'is_active' => (bool)$template->is_active,
                 'team_id' => $template->team_id,
@@ -85,6 +86,7 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
                     'description' => $tb->description,
                     'group_uuid' => $tb->group_uuid,
                     'visibility_rules' => $tb->visibility_rules,
+                    'display_compact' => (bool)$tb->display_compact,
                     'block_definition' => $tb->blockDefinition ? [
                         'id' => $tb->blockDefinition->id,
                         'uuid' => $tb->blockDefinition->uuid,

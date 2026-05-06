@@ -67,6 +67,10 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                                 'type' => 'object',
                                 'description' => 'Optional: Conditional Logic — {combinator: AND|OR, rules: [{source_block_id, operator, value}]}. Null = immer sichtbar.',
                             ],
+                            'display_compact' => [
+                                'type' => 'boolean',
+                                'description' => 'Optional: Wirkt nur bei flow_mode = "overview". true = Gruppe als kompakte Tabellenzeile rendern.',
+                            ],
                             'is_active' => [
                                 'type' => 'boolean',
                                 'description' => 'Optional: Aktiv-Status.',
@@ -98,7 +102,7 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'Maximal 50 Items pro Bulk-Aufruf erlaubt.');
             }
 
-            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'is_active'];
+            $fields = ['name', 'description', 'sort_order', 'is_required', 'group_uuid', 'visibility_rules', 'display_compact', 'is_active'];
             $updated = [];
             $errors = [];
 
@@ -138,6 +142,7 @@ class BulkUpdateTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'group_uuid' => $templateBlock->group_uuid,
                         'sort_order' => (int)$templateBlock->sort_order,
                         'is_required' => (bool)$templateBlock->is_required,
+                        'display_compact' => (bool)$templateBlock->display_compact,
                         'is_active' => (bool)$templateBlock->is_active,
                     ];
                 } catch (\Throwable $e) {
