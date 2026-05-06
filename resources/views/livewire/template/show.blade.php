@@ -52,6 +52,16 @@
                             wire:model.live="template.complexity_level"
                             :errorKey="'template.complexity_level'"
                         />
+                        <x-ui-input-select
+                            name="template.flow_mode"
+                            label="Darstellungs-Modus"
+                            hint="Block-Flow zeigt Felder Schritt für Schritt; Gesamtübersicht rendert alle Felder auf einer Seite (z. B. für Umfragen)."
+                            :options="$flowModeOptions"
+                            optionValue="value"
+                            optionLabel="label"
+                            wire:model.live="template.flow_mode"
+                            :errorKey="'template.flow_mode'"
+                        />
                         <x-ui-input-text
                             name="template.ai_personality"
                             label="KI-Persönlichkeit"
@@ -174,6 +184,19 @@
                                                 placeholder="Kurze Erklärung für den Respondenten"
                                                 class="w-full"
                                             />
+                                            @if(($template->flow_mode ?? 'block_flow') === 'overview')
+                                                <label class="flex items-start gap-3 p-3 rounded-lg border border-[var(--ui-border)]/60 bg-[var(--ui-muted-5)] cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        wire:model.live="editingBlock.display_compact"
+                                                        class="mt-0.5 w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                                                    >
+                                                    <div class="flex-1">
+                                                        <span class="block text-sm font-medium text-[var(--ui-secondary)]">Als kompakte Tabellenzeile rendern</span>
+                                                        <span class="block text-xs text-[var(--ui-muted)] mt-0.5">Im Übersichts-Modus wird diese Abfrage als Zeile dargestellt. Aufeinanderfolgende Abfragen mit identischer Feld-Struktur (z. B. Mo–Fr Wochenfeedback) werden zu einer gemeinsamen Tabelle gruppiert.</span>
+                                                    </div>
+                                                </label>
+                                            @endif
                                             @include('hatch::livewire.partials.visibility-rules-editor', [
                                                 'block' => $header,
                                                 'allBlocks' => $template->templateBlocks,

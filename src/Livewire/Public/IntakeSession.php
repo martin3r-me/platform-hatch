@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\Public;
 use Livewire\Component;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
+use Platform\Hatch\Models\HatchProjectTemplate;
 
 class IntakeSession extends Component
 {
@@ -44,6 +45,18 @@ class IntakeSession extends Component
         }
 
         $intake = $this->session->projectIntake;
+
+        // Wenn das Template auf 'overview' konfiguriert ist, leiten wir auf die
+        // Overview-Route um. Der bestehende Block-Flow bleibt unverändert.
+        $flowMode = $intake?->projectTemplate?->flow_mode
+            ?? HatchProjectTemplate::FLOW_MODE_BLOCK_FLOW;
+
+        if ($flowMode === HatchProjectTemplate::FLOW_MODE_OVERVIEW) {
+            return redirect()->route('hatch.public.intake-session.overview', [
+                'sessionToken' => $sessionToken,
+            ]);
+        }
+
         $this->intakeName = $intake->name;
         $this->sessionToken = $this->session->session_token;
         $this->currentStep = $this->session->current_step;

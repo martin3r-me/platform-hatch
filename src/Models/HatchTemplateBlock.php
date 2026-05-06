@@ -24,6 +24,7 @@ class HatchTemplateBlock extends Model
         'sort_order',
         'is_required',
         'visibility_rules',
+        'display_compact',
         'is_active',
         'created_by_user_id',
         'team_id'
@@ -34,6 +35,7 @@ class HatchTemplateBlock extends Model
         'is_required' => 'boolean',
         'is_active' => 'boolean',
         'visibility_rules' => 'array',
+        'display_compact' => 'boolean',
     ];
     
     protected static function booted(): void

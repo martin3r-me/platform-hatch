@@ -13,6 +13,14 @@ class HatchProjectTemplate extends Model
     
     protected $table = 'hatch_project_templates';
     
+    public const FLOW_MODE_BLOCK_FLOW = 'block_flow';
+    public const FLOW_MODE_OVERVIEW = 'overview';
+
+    public const FLOW_MODES = [
+        self::FLOW_MODE_BLOCK_FLOW,
+        self::FLOW_MODE_OVERVIEW,
+    ];
+
     protected $fillable = [
         'uuid',
         'name',
@@ -20,12 +28,17 @@ class HatchProjectTemplate extends Model
         'ai_personality',
         'industry_context',
         'complexity_level',
+        'flow_mode',
         'ai_instructions',
         'is_active',
         'created_by_user_id',
         'team_id'
     ];
-    
+
+    protected $attributes = [
+        'flow_mode' => self::FLOW_MODE_BLOCK_FLOW,
+    ];
+
     protected $casts = [
         'ai_instructions' => 'array',
         'is_active' => 'boolean',

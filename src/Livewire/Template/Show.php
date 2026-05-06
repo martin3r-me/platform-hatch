@@ -27,10 +27,18 @@ class Show extends Component
         'template.ai_personality' => 'nullable|string|max:255',
         'template.industry_context' => 'nullable|string|max:255',
         'template.complexity_level' => 'required|in:simple,medium,complex',
+        'template.flow_mode' => 'required|in:block_flow,overview',
         'template.ai_instructions' => 'nullable|array',
         'editingBlock.name' => 'required|string|max:255',
         'editingBlock.description' => 'nullable|string|max:1000',
         'editingBlock.block_definition_id' => 'nullable|exists:hatch_block_definitions,id',
+        'editingBlock.display_compact' => 'nullable|boolean',
+    ];
+
+    /** Optionen fuer die Auswahl der Render-Strategie auf Template-Ebene. */
+    public array $flowModeOptions = [
+        ['value' => 'block_flow', 'label' => 'Block-Flow (Schritt fuer Schritt)'],
+        ['value' => 'overview',   'label' => 'Gesamtuebersicht (alle Bloecke auf einer Seite)'],
     ];
 
     public function mount(HatchProjectTemplate $template)
