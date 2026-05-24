@@ -5,7 +5,6 @@ namespace Platform\Hatch\Livewire;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Platform\Hatch\Models\HatchProjectIntake;
-use Platform\Organization\Models\OrganizationContext;
 use Platform\Organization\Services\EntityDimensionBridge;
 use Platform\Organization\Models\OrganizationEntity;
 
@@ -59,7 +58,7 @@ class Sidebar extends Component
         $intakesToShow = $this->showAllIntakes ? $allIntakes : $myIntakes;
         $hasMoreIntakes = $allIntakes->count() > $myIntakes->count();
 
-        // 2. Entity-Verknüpfungen laden (OrganizationContext + DimensionLink)
+        // 2. Entity-Verknüpfungen laden via DimensionLink
         $intakeIds = $intakesToShow->pluck('id')->toArray();
 
         $entityIntakeMap = []; // entity_id => [intake_ids]
@@ -68,24 +67,6 @@ class Sidebar extends Component
         // Morph-Varianten
         $contextMorphTypes = ['hatch_project_intake', HatchProjectIntake::class];
 
-        // a) OrganizationContext (primäre Quelle – UI / HasOrganizationContexts trait)
-        $contexts = OrganizationContext::query()
-            ->whereIn('contextable_type', $contextMorphTypes)
-            ->whereIn('contextable_id', $intakeIds)
-            ->where('is_active', true)
-            ->with(['organizationEntity.type'])
-            ->get();
-
-        foreach ($contexts as $ctx) {
-            $entityId = $ctx->organization_entity_id;
-            $intakeId = $ctx->contextable_id;
-            if ($entityId) {
-                $entityIntakeMap[$entityId][] = $intakeId;
-                $linkedIntakeIds[] = $intakeId;
-            }
-        }
-
-        // b) DimensionLink entity dimension (sekundäre Quelle – DimensionLinker / LLM Tools)
         $entityLinks = EntityDimensionBridge::linksForLinkables($contextMorphTypes, $intakeIds);
 
         foreach ($entityLinks as $link) {
