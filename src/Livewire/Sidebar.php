@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Organization\Models\OrganizationContext;
-use Platform\Organization\Models\OrganizationEntityLink;
+use Platform\Organization\Services\EntityDimensionBridge;
 use Platform\Organization\Models\OrganizationEntity;
 
 class Sidebar extends Component
@@ -59,7 +59,7 @@ class Sidebar extends Component
         $intakesToShow = $this->showAllIntakes ? $allIntakes : $myIntakes;
         $hasMoreIntakes = $allIntakes->count() > $myIntakes->count();
 
-        // 2. Entity-Verknüpfungen laden (OrganizationContext + OrganizationEntityLink)
+        // 2. Entity-Verknüpfungen laden (OrganizationContext + DimensionLink)
         $intakeIds = $intakesToShow->pluck('id')->toArray();
 
         $entityIntakeMap = []; // entity_id => [intake_ids]
@@ -85,12 +85,8 @@ class Sidebar extends Component
             }
         }
 
-        // b) OrganizationEntityLink (sekundäre Quelle – DimensionLinker / LLM Tools)
-        $entityLinks = OrganizationEntityLink::query()
-            ->whereIn('linkable_type', $contextMorphTypes)
-            ->whereIn('linkable_id', $intakeIds)
-            ->with(['entity.type'])
-            ->get();
+        // b) DimensionLink entity dimension (sekundäre Quelle – DimensionLinker / LLM Tools)
+        $entityLinks = EntityDimensionBridge::linksForLinkables($contextMorphTypes, $intakeIds);
 
         foreach ($entityLinks as $link) {
             $entityId = $link->entity_id;
