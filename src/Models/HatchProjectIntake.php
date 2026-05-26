@@ -4,6 +4,7 @@ namespace Platform\Hatch\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Platform\ActivityLog\Traits\LogsActivity;
+use Platform\Hatch\Support\IsoWeekResolver;
 use Platform\Organization\Traits\HasOrganizationContexts;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,6 +32,7 @@ class HatchProjectIntake extends Model
         'conversation_history',
         'ai_confidence_score',
         'user_preferences',
+        'intake_settings',
         'started_at',
         'completed_at',
         'created_by_user_id',
@@ -38,11 +40,12 @@ class HatchProjectIntake extends Model
         'team_id',
         'is_active'
     ];
-    
+
     protected $casts = [
         'conversation_history' => 'array',
         'ai_confidence_score' => 'decimal:2',
         'user_preferences' => 'array',
+        'intake_settings' => 'array',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
         'is_active' => 'boolean',
@@ -222,5 +225,14 @@ class HatchProjectIntake extends Model
     public function scopeByConfidence($query, $minScore)
     {
         return $query->where('ai_confidence_score', '>=', $minScore);
+    }
+
+    /**
+     * Aktuelle ISO-KW unter Berücksichtigung von intake_settings.week_cutoff.
+     * Verwendet vom Public-View, um Platzhalter im Namen aufzulösen.
+     */
+    public function currentIsoWeek(): array
+    {
+        return app(IsoWeekResolver::class)->resolve($this);
     }
 }

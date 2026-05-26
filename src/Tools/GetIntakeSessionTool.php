@@ -75,6 +75,8 @@ class GetIntakeSessionTool implements ToolContract, ToolMetadataContract
                 'project_intake_id' => $session->project_intake_id,
                 'project_intake_name' => $session->projectIntake?->name,
                 'status' => $session->status,
+                'iso_week' => $session->iso_week,
+                'iso_year' => $session->iso_year,
                 'respondent_name' => $session->respondent_name,
                 'respondent_email' => $session->respondent_email,
                 'current_step' => (int)$session->current_step,

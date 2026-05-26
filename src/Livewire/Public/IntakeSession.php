@@ -6,6 +6,7 @@ use Livewire\Component;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
 use Platform\Hatch\Models\HatchProjectTemplate;
+use Platform\Hatch\Support\IntakeStringRenderer;
 
 class IntakeSession extends Component
 {
@@ -57,7 +58,7 @@ class IntakeSession extends Component
             ]);
         }
 
-        $this->intakeName = $intake->name;
+        $this->intakeName = app(IntakeStringRenderer::class)->render($intake->name, $intake);
         $this->sessionToken = $this->session->session_token;
         $this->currentStep = $this->session->current_step;
         $this->respondentName = $this->session->respondent_name;

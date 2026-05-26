@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\Public;
 use Livewire\Component;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchIntakeSession;
+use Platform\Hatch\Support\IntakeStringRenderer;
 
 class IntakeStart extends Component
 {
@@ -26,20 +27,22 @@ class IntakeStart extends Component
             return;
         }
 
+        $renderer = app(IntakeStringRenderer::class);
+
         if ($intake->status === 'draft') {
             $this->state = 'notStarted';
-            $this->intakeName = $intake->name;
+            $this->intakeName = $renderer->render($intake->name, $intake);
             return;
         }
 
         if ($intake->status === 'closed') {
             $this->state = 'notActive';
-            $this->intakeName = $intake->name;
+            $this->intakeName = $renderer->render($intake->name, $intake);
             return;
         }
 
-        $this->intakeName = $intake->name;
-        $this->intakeDescription = $intake->description;
+        $this->intakeName = $renderer->render($intake->name, $intake);
+        $this->intakeDescription = $renderer->render($intake->description, $intake);
         $this->state = 'ready';
     }
 

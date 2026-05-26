@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Hatch\Models\HatchProjectIntake;
+use Platform\Hatch\Support\IntakeStringRenderer;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
 
 class GetIntakeTool implements ToolContract, ToolMetadataContract
@@ -68,12 +69,20 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('NOT_FOUND', 'Intake nicht gefunden (oder kein Zugriff).');
             }
 
+            $renderer = app(IntakeStringRenderer::class);
+            $currentIso = $intake->currentIsoWeek();
+
             return ToolResult::success([
                 'id' => $intake->id,
                 'uuid' => $intake->uuid,
                 'name' => $intake->name,
+                'name_rendered' => $renderer->render($intake->name, $intake),
                 'description' => $intake->description,
+                'description_rendered' => $renderer->render($intake->description, $intake),
                 'status' => $intake->status,
+                'intake_settings' => $intake->intake_settings,
+                'current_iso_week' => $currentIso['iso_week'],
+                'current_iso_year' => $currentIso['iso_year'],
                 'project_template' => $intake->projectTemplate ? [
                     'id' => $intake->projectTemplate->id,
                     'name' => $intake->projectTemplate->name,

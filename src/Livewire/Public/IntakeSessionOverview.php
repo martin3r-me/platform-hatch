@@ -6,6 +6,7 @@ use Livewire\Component;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
 use Platform\Hatch\Models\HatchProjectTemplate;
+use Platform\Hatch\Support\IntakeStringRenderer;
 
 /**
  * Overview-Modus: rendert alle Blöcke einer Session auf einer einzigen Seite
@@ -64,7 +65,7 @@ class IntakeSessionOverview extends Component
             ]);
         }
 
-        $this->intakeName = $intake->name;
+        $this->intakeName = app(IntakeStringRenderer::class)->render($intake->name, $intake);
         $this->sessionToken = $this->session->session_token;
         $this->respondentName = $this->session->respondent_name;
 

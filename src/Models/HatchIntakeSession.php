@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Platform\Core\Traits\Encryptable;
 use Platform\Crm\Traits\HasContactLinksTrait;
+use Platform\Hatch\Support\IsoWeekResolver;
 use Symfony\Component\Uid\UuidV7;
 
 class HatchIntakeSession extends Model
@@ -19,6 +20,8 @@ class HatchIntakeSession extends Model
         'session_token',
         'project_intake_id',
         'status',
+        'iso_week',
+        'iso_year',
         'answers',
         'respondent_name',
         'respondent_email',
@@ -36,6 +39,8 @@ class HatchIntakeSession extends Model
     ];
 
     protected $casts = [
+        'iso_week' => 'integer',
+        'iso_year' => 'integer',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
@@ -57,6 +62,15 @@ class HatchIntakeSession extends Model
 
             if (empty($model->started_at)) {
                 $model->started_at = now();
+            }
+
+            // ISO-KW automatisch stempeln. Genutzt für Auswertungen pro Woche
+            // (z. B. Wochenfeedback) ohne separaten Intake pro KW.
+            if ($model->iso_week === null || $model->iso_year === null) {
+                $resolver = app(IsoWeekResolver::class);
+                $resolved = $resolver->resolve($model->projectIntake, $model->started_at);
+                $model->iso_year = $resolved['iso_year'];
+                $model->iso_week = $resolved['iso_week'];
             }
         });
     }

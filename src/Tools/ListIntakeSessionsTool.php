@@ -23,7 +23,7 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /hatch/intake_sessions - Listet Sessions eines Intakes. Parameter: intake_id (required), team_id (optional), status (optional), filters/search/sort/limit/offset (optional).';
+        return 'GET /hatch/intake_sessions - Listet Sessions eines Intakes. Parameter: intake_id (required), team_id (optional), status (optional), iso_year/iso_week (optional, für Auswertungen pro Kalenderwoche), filters/search/sort/limit/offset (optional).';
     }
 
     public function getSchema(): array
@@ -43,6 +43,14 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
                     'status' => [
                         'type' => 'string',
                         'description' => 'Optional: Filter nach Session-Status (z.B. started, completed).',
+                    ],
+                    'iso_year' => [
+                        'type' => 'integer',
+                        'description' => 'Optional: Filter nach ISO-Jahr der Session (z.B. 2026).',
+                    ],
+                    'iso_week' => [
+                        'type' => 'integer',
+                        'description' => 'Optional: Filter nach ISO-Kalenderwoche (1–53). Sinnvoll in Kombination mit iso_year.',
                     ],
                 ],
             ]
@@ -76,11 +84,19 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
             if (isset($arguments['status'])) {
                 $query->where('status', $arguments['status']);
             }
+            if (isset($arguments['iso_year'])) {
+                $query->where('iso_year', (int) $arguments['iso_year']);
+            }
+            if (isset($arguments['iso_week'])) {
+                $query->where('iso_week', (int) $arguments['iso_week']);
+            }
 
             $this->applyStandardFilters($query, $arguments, [
                 'status',
                 'respondent_name',
                 'respondent_email',
+                'iso_year',
+                'iso_week',
                 'created_at',
             ]);
             $this->applyStandardSearch($query, $arguments, ['respondent_name', 'respondent_email']);
@@ -89,6 +105,8 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
                 'created_at',
                 'started_at',
                 'completed_at',
+                'iso_year',
+                'iso_week',
             ], 'created_at', 'desc');
 
             $result = $this->applyStandardPaginationResult($query, $arguments);
@@ -99,6 +117,8 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
                     'uuid' => $s->uuid,
                     'session_token' => $s->session_token,
                     'status' => $s->status,
+                    'iso_week' => $s->iso_week,
+                    'iso_year' => $s->iso_year,
                     'respondent_name' => $s->respondent_name,
                     'respondent_email' => $s->respondent_email,
                     'current_step' => (int)$s->current_step,

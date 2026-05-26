@@ -89,14 +89,14 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                     'project_intakes' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntake',
                         'table' => 'hatch_project_intakes',
-                        'key_fields' => ['id', 'uuid', 'name', 'status', 'project_template_id', 'public_token', 'is_active', 'team_id'],
-                        'note' => 'Konkrete Intake-Instanzen basierend auf einem Template. Haben einen öffentlichen Link (public_token) für Respondenten.',
+                        'key_fields' => ['id', 'uuid', 'name', 'status', 'project_template_id', 'public_token', 'is_active', 'intake_settings', 'team_id'],
+                        'note' => 'Konkrete Intake-Instanzen basierend auf einem Template. Haben einen öffentlichen Link (public_token) für Respondenten. name/description unterstützen Platzhalter {{iso_week}}, {{iso_week2}}, {{iso_year}}, {{iso_year2}} – werden im Public-View durch die aktuelle Kalenderwoche ersetzt. intake_settings.week_cutoff steuert die KW-Zuordnung neuer Sessions (Default: ISO-Standard, Montag 00:00).',
                     ],
                     'intake_sessions' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchIntakeSession',
                         'table' => 'hatch_intake_sessions',
-                        'key_fields' => ['id', 'uuid', 'session_token', 'project_intake_id', 'status', 'respondent_name', 'respondent_email', 'answers'],
-                        'note' => 'Einzelne Antwort-Sessions von Respondenten. Read-only via LLM (werden von Respondenten befüllt).',
+                        'key_fields' => ['id', 'uuid', 'session_token', 'project_intake_id', 'status', 'iso_week', 'iso_year', 'respondent_name', 'respondent_email', 'answers'],
+                        'note' => 'Einzelne Antwort-Sessions von Respondenten. Read-only via LLM (werden von Respondenten befüllt). iso_week/iso_year werden beim Anlegen automatisch gestempelt – Auswertung pro Kalenderwoche möglich via hatch.intake_sessions.GET mit iso_year/iso_week-Filter.',
                     ],
                     'intake_steps' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntakeStep',

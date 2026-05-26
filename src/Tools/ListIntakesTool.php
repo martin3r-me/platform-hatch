@@ -93,6 +93,7 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                     'name' => $i->name,
                     'description' => $i->description,
                     'status' => $i->status,
+                    'intake_settings' => $i->intake_settings,
                     'project_template_id' => $i->project_template_id,
                     'project_template_name' => $i->projectTemplate?->name,
                     'public_token' => $i->public_token,
