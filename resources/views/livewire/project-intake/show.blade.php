@@ -195,6 +195,34 @@
             </div>
         </div>
 
+        {{-- Live-Vorschau: wenn name/description Platzhalter wie {{iso_week}} nutzen,
+             zeigen wir hier den gerenderten Wert. Damit ist sofort sichtbar, was
+             Respondenten gerade sehen würden. --}}
+        @php
+            $hasPlaceholders = str_contains((string) $projectIntake->name, '{{iso_')
+                || str_contains((string) $projectIntake->description, '{{iso_');
+        @endphp
+        @if($hasPlaceholders)
+            @php
+                $renderer = app(\Platform\Hatch\Support\IntakeStringRenderer::class);
+                $renderedName = $renderer->render($projectIntake->name, $projectIntake);
+                $renderedDescription = $renderer->render($projectIntake->description, $projectIntake);
+            @endphp
+            <div class="mb-6 p-4 rounded-lg border border-[var(--ui-primary)]/30 bg-[var(--ui-primary)]/5">
+                <div class="flex items-center gap-2 mb-2">
+                    @svg('heroicon-o-eye', 'w-4 h-4 text-[var(--ui-primary)]')
+                    <span class="text-xs font-semibold uppercase tracking-wider text-[var(--ui-primary)]">Aktuelle Live-Anzeige</span>
+                </div>
+                <div class="text-base font-semibold text-[var(--ui-secondary)]">{{ $renderedName }}</div>
+                @if($renderedDescription)
+                    <div class="text-sm text-[var(--ui-muted)] mt-1">{{ $renderedDescription }}</div>
+                @endif
+                <div class="text-[11px] text-[var(--ui-muted)] mt-2">
+                    Platzhalter ({{ '{{iso_week}}' }} etc.) werden bei jedem Aufruf neu ausgewertet — der Link bleibt derselbe.
+                </div>
+            </div>
+        @endif
+
         {{-- Block Progress --}}
         @if($projectIntake->projectTemplate && $projectIntake->projectTemplate->templateBlocks->count() > 0)
             <div class="mb-6">

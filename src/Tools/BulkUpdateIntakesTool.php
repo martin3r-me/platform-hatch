@@ -22,7 +22,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/intakes/bulk - Aktualisiert mehrere Project Intakes in einem Aufruf. ERFORDERLICH: items (Array mit je intake_id). Status-Modell: draft → published → closed. Maximal 50 Items pro Aufruf.';
+        return 'PUT /hatch/intakes/bulk - Aktualisiert mehrere Project Intakes in einem Aufruf. ERFORDERLICH: items (Array mit je intake_id). Status-Modell: draft → published → closed. Optional pro Item: name, description, status, intake_settings (Partial-Merge). Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -35,7 +35,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: intake_id. Optional: name, description, status (draft/published/closed).',
+                    'description' => 'ERFORDERLICH: Array von Updates. Jedes Item benötigt: intake_id. Optional: name, description, status (draft/published/closed), intake_settings.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
@@ -45,16 +45,21 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Neuer Name.',
+                                'description' => 'Optional: Neuer Name. Unterstützt {{iso_week}} / {{iso_year}} Platzhalter.',
                             ],
                             'description' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Neue Beschreibung.',
+                                'description' => 'Optional: Neue Beschreibung. Gleiche Platzhalter wie name.',
                             ],
                             'status' => [
                                 'type' => 'string',
                                 'enum' => ['draft', 'published', 'closed'],
                                 'description' => 'Optional: Neuer Status (draft, published, closed). "published" = live, "closed" = beendet.',
+                            ],
+                            'intake_settings' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Partial-Merge in bestehende Settings. Beispiel: {"week_cutoff": {"rollover_weekday": "saturday"}}. Schema siehe hatch.intakes.PUT.',
+                                'additionalProperties' => true,
                             ],
                         ],
                         'required' => ['intake_id'],
@@ -110,6 +115,20 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                         }
                     }
 
+                    // intake_settings (Partial-Merge, analog UpdateIntakeTool)
+                    if (array_key_exists('intake_settings', $item)) {
+                        $patch = $item['intake_settings'];
+                        if ($patch === null || $patch === []) {
+                            $intake->intake_settings = null;
+                        } elseif (is_array($patch)) {
+                            $existing = is_array($intake->intake_settings) ? $intake->intake_settings : [];
+                            $intake->intake_settings = array_replace_recursive($existing, $patch);
+                        } else {
+                            $errors[] = ['index' => $index, 'intake_id' => $intakeId, 'error' => 'intake_settings muss ein Objekt sein.'];
+                            continue;
+                        }
+                    }
+
                     // Status-Wechsel mit automatischer Logik
                     if (array_key_exists('status', $item) && $item['status'] !== $intake->status) {
                         $newStatus = $item['status'];
@@ -145,6 +164,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                         'uuid' => $intake->uuid,
                         'name' => $intake->name,
                         'status' => $intake->status,
+                        'intake_settings' => $intake->intake_settings,
                         'started_at' => $intake->started_at?->toISOString(),
                     ];
                 } catch (\Throwable $e) {

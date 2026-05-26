@@ -102,6 +102,12 @@ class Show extends Component
             abort(403);
         }
 
+        // Unsaved Template-Änderungen vor der Navigation persistieren —
+        // sonst gingen sie beim Redirect verloren.
+        if ($this->template->isDirty()) {
+            $this->template->save();
+        }
+
         $intake = HatchProjectIntake::create([
             'name' => $this->template->name,
             'description' => $this->template->description,

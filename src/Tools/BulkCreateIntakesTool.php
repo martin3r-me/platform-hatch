@@ -23,7 +23,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
+        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Optional pro Item: description, intake_settings. name/description unterstützen Platzhalter {{iso_week}} / {{iso_year}}. Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -36,7 +36,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Intakes. Jedes Item benötigt: project_template_id, name. Optional: description.',
+                    'description' => 'ERFORDERLICH: Array von Intakes. Jedes Item benötigt: project_template_id, name. Optional: description, intake_settings.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
@@ -46,11 +46,16 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'Name des Intakes (ERFORDERLICH).',
+                                'description' => 'Name des Intakes (ERFORDERLICH). Unterstützt {{iso_week}} / {{iso_year}}.',
                             ],
                             'description' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Beschreibung.',
+                                'description' => 'Optional: Beschreibung. Gleiche Platzhalter wie name.',
+                            ],
+                            'intake_settings' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Owner-Konfiguration (z.B. week_cutoff). Schema siehe hatch.intakes.POST.',
+                                'additionalProperties' => true,
                             ],
                         ],
                         'required' => ['project_template_id', 'name'],
@@ -116,6 +121,12 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                     continue;
                 }
 
+                $intakeSettings = $item['intake_settings'] ?? null;
+                if ($intakeSettings !== null && !is_array($intakeSettings)) {
+                    $errors[] = ['index' => $index, 'error' => 'intake_settings muss ein Objekt sein.'];
+                    continue;
+                }
+
                 try {
                     $intake = HatchProjectIntake::create([
                         'project_template_id' => $template->id,
@@ -123,6 +134,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'description' => $item['description'] ?? null,
                         'status' => 'draft',
                         'is_active' => false,
+                        'intake_settings' => $intakeSettings,
                         'created_by_user_id' => $context->user->id,
                         'owned_by_user_id' => $context->user->id,
                         'team_id' => $teamId,
@@ -134,6 +146,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'uuid' => $intake->uuid,
                         'name' => $intake->name,
                         'status' => $intake->status,
+                        'intake_settings' => $intake->intake_settings,
                         'project_template_id' => $intake->project_template_id,
                     ];
                 } catch (\Throwable $e) {

@@ -7,6 +7,7 @@ use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Support\IntakeStringRenderer;
+use Platform\Hatch\Support\IsoWeekResolver;
 
 /**
  * Overview-Modus: rendert alle Blöcke einer Session auf einer einzigen Seite
@@ -576,9 +577,13 @@ class IntakeSessionOverview extends Component
             }
         }
 
+        // ISO-KW beim Submit re-stamp (siehe Begründung in IntakeSession::submitIntake).
+        $iso = app(IsoWeekResolver::class)->resolve($this->session->projectIntake);
         $this->session->update([
             'answers' => $answers,
             'status' => 'completed',
+            'iso_year' => $iso['iso_year'],
+            'iso_week' => $iso['iso_week'],
             'completed_at' => now(),
         ]);
 

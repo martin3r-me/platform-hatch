@@ -7,6 +7,7 @@ use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Support\IntakeStringRenderer;
+use Platform\Hatch\Support\IsoWeekResolver;
 
 class IntakeSession extends Component
 {
@@ -609,9 +610,16 @@ class IntakeSession extends Component
             }
         }
 
+        // ISO-KW beim Submit nochmal aktualisieren — falls die Session über
+        // einen Wochenwechsel hinweg offen war (z. B. So 23:50 gestartet,
+        // Mo 00:15 abgeschickt) zählt der Abschluss-Zeitpunkt, nicht der
+        // ursprüngliche Start.
+        $iso = app(IsoWeekResolver::class)->resolve($this->session->projectIntake);
         $this->session->update([
             'answers' => $answers,
             'status' => 'completed',
+            'iso_year' => $iso['iso_year'],
+            'iso_week' => $iso['iso_week'],
             'completed_at' => now(),
         ]);
 
