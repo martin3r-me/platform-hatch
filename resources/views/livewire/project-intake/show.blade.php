@@ -218,7 +218,7 @@
                     <div class="text-sm text-[var(--ui-muted)] mt-1">{{ $renderedDescription }}</div>
                 @endif
                 <div class="text-[11px] text-[var(--ui-muted)] mt-2">
-                    Platzhalter ({{ '{{iso_week}}' }} etc.) werden bei jedem Aufruf neu ausgewertet — der Link bleibt derselbe.
+                    Platzhalter (@{{iso_week}} etc.) werden bei jedem Aufruf neu ausgewertet — der Link bleibt derselbe.
                 </div>
             </div>
         @endif
