@@ -9,6 +9,10 @@
             ['label' => 'Templates', 'href' => route('hatch.templates.index')],
             ['label' => $template?->name ?? 'Template'],
         ]">
+            <x-ui-button variant="secondary" size="sm" wire:click="createIntakeFromTemplate">
+                @svg('heroicon-o-paper-airplane', 'w-4 h-4')
+                <span>Als Erhebung starten</span>
+            </x-ui-button>
             @if($this->isDirty)
                 <x-ui-button variant="primary" size="sm" wire:click="saveTemplate">
                     @svg('heroicon-o-check', 'w-4 h-4')

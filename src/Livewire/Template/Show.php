@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\Template;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchComplexityLevel;
 use Platform\Hatch\Models\HatchTemplateBlock;
@@ -85,6 +86,42 @@ class Show extends Component
     public function isDirty()
     {
         return $this->template->isDirty();
+    }
+
+    /**
+     * Legt aus dem aktuellen Template eine neue Erhebung (Intake) an und
+     * springt direkt auf die Detailseite. Status bleibt zunächst "draft",
+     * sodass der User vor dem Veröffentlichen noch Name/Beschreibung
+     * anpassen oder pro Einrichtung individualisieren kann.
+     */
+    public function createIntakeFromTemplate()
+    {
+        $teamId = auth()->user()->current_team_id;
+
+        if ((int) $this->template->team_id !== (int) $teamId) {
+            abort(403);
+        }
+
+        $intake = HatchProjectIntake::create([
+            'name' => $this->template->name,
+            'description' => $this->template->description,
+            'project_template_id' => $this->template->id,
+            'status' => 'draft',
+            'is_active' => false,
+            'team_id' => $teamId,
+            'created_by_user_id' => auth()->id(),
+            'owned_by_user_id' => auth()->id(),
+        ]);
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung erstellt',
+            'message' => 'Erhebung aus Template angelegt — jetzt anpassen und veröffentlichen.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $intake->id,
+        ]);
+
+        return redirect()->route('hatch.project-intakes.show', $intake);
     }
 
     public function saveTemplate()
