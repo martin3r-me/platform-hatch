@@ -381,6 +381,10 @@
             @if($sessions->isNotEmpty())
                 @php
                     $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
+                    // KW-Spalte nur bei wiederkehrenden Intakes anzeigen — erkannt
+                    // daran, dass Name oder Description einen ISO-Platzhalter nutzen.
+                    $intakeIsRecurring = str_contains((string) $projectIntake->name, '{{iso_')
+                        || str_contains((string) $projectIntake->description, '{{iso_');
                 @endphp
                 <div class="overflow-x-auto border border-[var(--ui-border)]/60 rounded-lg">
                     <table class="w-full text-sm">
@@ -392,6 +396,9 @@
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Status</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Fortschritt</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Link</th>
+                                @if($intakeIsRecurring)
+                                    <th class="text-left p-3 font-medium text-[var(--ui-muted)]">KW</th>
+                                @endif
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Gestartet</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Abgeschlossen</th>
                                 <th class="text-left p-3 font-medium text-[var(--ui-muted)]">Aktionen</th>
@@ -457,6 +464,15 @@
                                             </button>
                                         </div>
                                     </td>
+                                    @if($intakeIsRecurring)
+                                        <td class="p-3 text-[var(--ui-secondary)] whitespace-nowrap">
+                                            @if($session->iso_week && $session->iso_year)
+                                                <span class="font-mono text-xs">KW {{ str_pad($session->iso_week, 2, '0', STR_PAD_LEFT) }}/{{ $session->iso_year }}</span>
+                                            @else
+                                                <span class="text-[var(--ui-muted)]">–</span>
+                                            @endif
+                                        </td>
+                                    @endif
                                     <td class="p-3 text-[var(--ui-muted)]">
                                         {{ $session->started_at?->format('d.m.Y H:i') ?? '–' }}
                                     </td>
