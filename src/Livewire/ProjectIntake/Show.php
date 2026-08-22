@@ -122,7 +122,6 @@ class Show extends Component
             if (!$existingStep) {
                 $this->projectIntake->intakeSteps()->create([
                     'template_block_id'   => $block->id,
-                    'block_definition_id' => $block->block_definition_id,
                     'is_completed'        => false,
                     'team_id'             => auth()->user()->current_team_id,
                     'created_by_user_id'  => auth()->id(),

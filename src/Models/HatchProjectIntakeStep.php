@@ -17,7 +17,6 @@ class HatchProjectIntakeStep extends Model
         'uuid',
         'project_intake_id',
         'template_block_id',
-        'block_definition_id',
         'answers',
         'ai_interpretation',
         'user_clarification_needed',
@@ -67,11 +66,6 @@ class HatchProjectIntakeStep extends Model
     public function templateBlock(): BelongsTo
     {
         return $this->belongsTo(HatchTemplateBlock::class, 'template_block_id');
-    }
-    
-    public function blockDefinition(): BelongsTo
-    {
-        return $this->belongsTo(HatchBlockDefinition::class, 'block_definition_id');
     }
     
     public function createdByUser(): BelongsTo
