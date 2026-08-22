@@ -249,6 +249,7 @@ class Show extends Component
                 'team_id' => auth()->user()->current_team_id,
                 'created_by_user_id' => auth()->id(),
                 'block_definition_id' => null,
+                'block_type' => 'text',
                 'group_uuid' => $groupUuid,
             ]);
 
@@ -298,6 +299,7 @@ class Show extends Component
                 'team_id' => auth()->user()->current_team_id,
                 'created_by_user_id' => auth()->id(),
                 'block_definition_id' => null,
+                'block_type' => 'text',
                 'group_uuid' => $groupUuid,
             ]);
 
