@@ -68,11 +68,6 @@ class HatchBlockDefinition extends Model
         return $this->hasMany(HatchTemplateBlock::class, 'block_definition_id');
     }
     
-    public function intakeSteps(): HasMany
-    {
-        return $this->hasMany(HatchProjectIntakeStep::class, 'block_definition_id');
-    }
-    
     /**
      * Scopes
      */

@@ -101,8 +101,8 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                     'intake_steps' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntakeStep',
                         'table' => 'hatch_project_intake_steps',
-                        'key_fields' => ['id', 'uuid', 'project_intake_id', 'block_definition_id', 'answers', 'ai_confidence', 'is_completed'],
-                        'note' => 'Einzelne Steps innerhalb eines Intakes (pro Block Definition).',
+                        'key_fields' => ['id', 'uuid', 'project_intake_id', 'template_block_id', 'answers', 'ai_confidence', 'is_completed'],
+                        'note' => 'Einzelne Steps innerhalb eines Intakes (pro Template Block).',
                     ],
                     'lookups' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchLookup',
