@@ -5,6 +5,7 @@ namespace Platform\Hatch\Models;
 use Illuminate\Database\Eloquent\Model;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchLookup;
 use Symfony\Component\Uid\UuidV7;
 
@@ -86,49 +87,6 @@ class HatchBlockDefinition extends Model
         return $query->where('block_type', $type);
     }
     
-    /**
-     * Hilfsmethoden für Block-Typen
-     */
-    public static function getBlockTypes(): array
-    {
-        return [
-            'text' => 'Text-Eingabe',
-            'long_text' => 'Langer Text / Freitext',
-            'email' => 'E-Mail Adresse',
-            'phone' => 'Telefonnummer',
-            'url' => 'URL / Webadresse',
-            'select' => 'Auswahl (Single)',
-            'multi_select' => 'Auswahl (Multiple)',
-            'number' => 'Zahl',
-            'scale' => 'Skala (1-10, 1-5 etc.)',
-            'date' => 'Datum',
-            'boolean' => 'Ja/Nein',
-            'file' => 'Datei-Upload',
-            'rating' => 'Bewertung',
-            'location' => 'Standort',
-            'info' => 'Info / Hinweis (ohne Eingabe)',
-            'custom' => 'Benutzerdefiniert',
-            'matrix' => 'Matrix / Likert-Raster',
-            'ranking' => 'Sortierung / Ranking',
-            'nps' => 'Net Promoter Score',
-            'dropdown' => 'Dropdown-Auswahl',
-            'datetime' => 'Datum & Uhrzeit',
-            'time' => 'Uhrzeit',
-            'slider' => 'Schieberegler',
-            'image_choice' => 'Bildauswahl',
-            'consent' => 'Einwilligung / DSGVO',
-            'section' => 'Abschnittstrenner',
-            'hidden' => 'Verstecktes Feld',
-            'address' => 'Strukturierte Adresse',
-            'color' => 'Farbauswahl',
-            'lookup' => 'Lookup-Auswahl',
-            'signature' => 'Digitale Unterschrift',
-            'date_range' => 'Datumsbereich',
-            'calculated' => 'Berechnetes Feld',
-            'repeater' => 'Wiederholung / Repeater',
-        ];
-    }
-
     public function lookup()
     {
         $lookupId = $this->logic_config['lookup_id'] ?? null;
@@ -140,6 +98,6 @@ class HatchBlockDefinition extends Model
     
     public function getBlockTypeLabel(): string
     {
-        return self::getBlockTypes()[$this->block_type] ?? $this->block_type;
+        return HatchBlockType::tryFrom($this->block_type)?->label() ?? $this->block_type;
     }
 }

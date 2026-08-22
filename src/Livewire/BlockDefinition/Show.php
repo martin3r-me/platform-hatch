@@ -4,6 +4,7 @@ namespace Platform\Hatch\Livewire\BlockDefinition;
 
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Models\HatchLookup;
 
@@ -57,7 +58,7 @@ class Show extends Component
         $this->validationRulesInput = $this->blockDefinition->validation_rules;
         $this->typeConfig = $this->blockDefinition->logic_config ?? $this->getDefaultTypeConfig($this->blockDefinition->block_type);
 
-        $this->blockTypeOptions = collect(HatchBlockDefinition::getBlockTypes())->map(function($label, $value) {
+        $this->blockTypeOptions = collect(HatchBlockType::options())->map(function($label, $value) {
             return ['value' => $value, 'label' => $label];
         });
 

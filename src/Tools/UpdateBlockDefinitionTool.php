@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
 
@@ -114,7 +115,7 @@ class UpdateBlockDefinitionTool implements ToolContract, ToolMetadataContract
             }
 
             if (isset($arguments['block_type'])) {
-                $validTypes = array_keys(HatchBlockDefinition::getBlockTypes());
+                $validTypes = HatchBlockType::values();
                 if (!in_array($arguments['block_type'], $validTypes)) {
                     return ToolResult::error('VALIDATION_ERROR', 'Ungültiger block_type. Erlaubt: ' . implode(', ', $validTypes));
                 }
