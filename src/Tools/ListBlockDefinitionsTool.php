@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardGetOperations;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
 
@@ -104,7 +105,7 @@ class ListBlockDefinitionsTool implements ToolContract, ToolMetadataContract
                 'data' => $data,
                 'pagination' => $result['pagination'] ?? null,
                 'team_id' => $teamId,
-                'available_block_types' => array_keys(HatchBlockDefinition::getBlockTypes()),
+                'available_block_types' => HatchBlockType::values(),
             ]);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler beim Laden der Block-Definitionen: ' . $e->getMessage());

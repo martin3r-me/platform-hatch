@@ -7,6 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
 
@@ -114,7 +115,7 @@ class BulkUpdateBlockDefinitionsTool implements ToolContract, ToolMetadataContra
                 return ToolResult::error('VALIDATION_ERROR', 'Maximal 50 Items pro Bulk-Aufruf erlaubt.');
             }
 
-            $validTypes = array_keys(HatchBlockDefinition::getBlockTypes());
+            $validTypes = HatchBlockType::values();
             $fields = [
                 'name', 'block_type', 'description', 'ai_prompt',
                 'conditional_logic', 'response_format', 'fallback_questions',
