@@ -21,6 +21,7 @@ class HatchTemplateBlock extends Model
         'group_uuid',
         'name',
         'description',
+        'block_type',
         'sort_order',
         'is_required',
         'visibility_rules',
