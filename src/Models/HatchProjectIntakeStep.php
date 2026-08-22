@@ -70,12 +70,12 @@ class HatchProjectIntakeStep extends Model
     
     public function createdByUser(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by_user_id');
+        return $this->belongsTo(\Platform\Core\Models\User::class, 'created_by_user_id');
     }
-    
+
     public function team(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Team::class, 'team_id');
+        return $this->belongsTo(\Platform\Core\Models\Team::class, 'team_id');
     }
     
     /**
