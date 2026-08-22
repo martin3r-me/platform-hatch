@@ -10,6 +10,7 @@ use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchComplexityLevel;
 use Platform\Hatch\Models\HatchTemplateBlock;
 use Platform\Hatch\Models\HatchBlockDefinition;
+use Platform\Hatch\Enums\HatchBlockType;
 use Symfony\Component\Uid\UuidV7;
 
 class Show extends Component
@@ -17,6 +18,7 @@ class Show extends Component
     public HatchProjectTemplate $template;
     public $complexityLevels;
     public $blockDefinitionOptions;
+    public $blockTypeOptions;
 
     // Block editing
     public $editingBlockId = null;
@@ -32,7 +34,8 @@ class Show extends Component
         'template.ai_instructions' => 'nullable|array',
         'editingBlock.name' => 'required|string|max:255',
         'editingBlock.description' => 'nullable|string|max:1000',
-        'editingBlock.block_definition_id' => 'nullable|exists:hatch_block_definitions,id',
+        'editingBlock.block_type' => 'required|string',
+        'editingBlock.ai_prompt' => 'nullable|string',
         'editingBlock.display_compact' => 'nullable|boolean',
     ];
 
@@ -52,6 +55,10 @@ class Show extends Component
         }
 
         $this->complexityLevels = HatchComplexityLevel::all();
+
+        $this->blockTypeOptions = collect(HatchBlockType::options())->map(function ($label, $value) {
+            return ['value' => $value, 'label' => $label];
+        });
 
         $teamId = auth()->user()->current_team_id;
 
@@ -152,19 +159,11 @@ class Show extends Component
         $this->editingBlock = $this->template->templateBlocks->find($blockId);
 
         $this->blockDefinitionOptions = $this->getAvailableBlockDefinitionOptions();
-
-        if ($this->editingBlock && !$this->editingBlock->block_definition_id) {
-            $this->editingBlock->block_definition_id = '';
-        }
     }
 
     public function saveBlock()
     {
         if ($this->editingBlock) {
-            if ($this->editingBlock->block_definition_id === '') {
-                $this->editingBlock->block_definition_id = null;
-            }
-
             // Cycle-Detection für Visibility-Rules
             $rules = $this->editingBlock->visibility_rules;
             if (is_array($rules) && !empty($rules['rules'])) {
@@ -248,7 +247,6 @@ class Show extends Component
                 'is_required' => false,
                 'team_id' => auth()->user()->current_team_id,
                 'created_by_user_id' => auth()->id(),
-                'block_definition_id' => null,
                 'block_type' => 'text',
                 'group_uuid' => $groupUuid,
             ]);
@@ -298,7 +296,6 @@ class Show extends Component
                 'is_required' => false,
                 'team_id' => auth()->user()->current_team_id,
                 'created_by_user_id' => auth()->id(),
-                'block_definition_id' => null,
                 'block_type' => 'text',
                 'group_uuid' => $groupUuid,
             ]);
@@ -489,6 +486,7 @@ class Show extends Component
             'template' => $this->template,
             'complexityLevels' => $this->complexityLevels,
             'blockDefinitionOptions' => $this->blockDefinitionOptions,
+            'blockTypeOptions' => $this->blockTypeOptions,
         ])->layout('platform::layouts.app');
     }
 }

@@ -253,15 +253,24 @@
                                                     class="w-full"
                                                 />
                                                 <x-ui-input-select
-                                                    name="editingBlock.block_definition_id"
-                                                    label="BlockDefinition"
-                                                    hint="Verknüpfter Feldtyp"
-                                                    wire:model.live.debounce.500ms="editingBlock.block_definition_id"
-                                                    :options="$blockDefinitionOptions"
-                                                    optionValue="id"
-                                                    optionLabel="name"
-                                                    placeholder="BlockDefinition auswählen"
+                                                    name="editingBlock.block_type"
+                                                    label="Feldtyp"
+                                                    hint="Art des Eingabefelds"
+                                                    wire:model.live.debounce.500ms="editingBlock.block_type"
+                                                    :options="$blockTypeOptions"
+                                                    optionValue="value"
+                                                    optionLabel="label"
+                                                    placeholder="Feldtyp auswählen"
                                                     class="w-full"
+                                                />
+                                                <x-ui-input-textarea
+                                                    name="editingBlock.ai_prompt"
+                                                    label="KI-Prompt"
+                                                    hint="Optional — zusätzliche Anweisung für die KI zu diesem Feld"
+                                                    wire:model.live.debounce.500ms="editingBlock.ai_prompt"
+                                                    placeholder="z.B. Frage freundlich nach dem gewünschten Budget."
+                                                    class="w-full"
+                                                    rows="3"
                                                 />
                                                 @include('hatch::livewire.partials.visibility-rules-editor', [
                                                     'block' => $field,
@@ -276,8 +285,10 @@
                                             <div class="flex-grow flex items-center gap-2">
                                                 @if($field->blockDefinition)
                                                     <x-ui-badge variant="info" size="xs">{{ $field->blockDefinition->name }}</x-ui-badge>
+                                                @elseif($field->block_type)
+                                                    <x-ui-badge variant="info" size="xs">{{ \Platform\Hatch\Enums\HatchBlockType::tryFrom($field->block_type)?->label() ?? $field->block_type }}</x-ui-badge>
                                                 @else
-                                                    <x-ui-badge variant="secondary" size="xs">Keine Definition</x-ui-badge>
+                                                    <x-ui-badge variant="secondary" size="xs">Kein Feldtyp</x-ui-badge>
                                                 @endif
                                                 @if($field->name && $field->id !== $header->id)
                                                     <span class="text-sm text-[var(--ui-secondary)]">{{ $field->name }}</span>
