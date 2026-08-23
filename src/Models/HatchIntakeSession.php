@@ -9,6 +9,12 @@ use Platform\Crm\Traits\HasContactLinksTrait;
 use Platform\Hatch\Support\IsoWeekResolver;
 use Symfony\Component\Uid\UuidV7;
 
+/**
+ * @property array<string, mixed>|null $answers
+ * @property array<string, mixed>|null $metadata
+ * @property string|null $respondent_name
+ * @property string|null $respondent_email
+ */
 class HatchIntakeSession extends Model
 {
     use Encryptable;
