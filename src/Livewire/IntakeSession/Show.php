@@ -3,6 +3,7 @@
 namespace Platform\Hatch\Livewire\IntakeSession;
 
 use Livewire\Component;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchIntakeSession;
 
 class Show extends Component
@@ -13,7 +14,7 @@ class Show extends Component
     {
         $this->intakeSession = $intakeSession;
         $this->intakeSession->load([
-            'projectIntake.projectTemplate.templateBlocks.blockDefinition',
+            'projectIntake.projectTemplate.templateBlocks',
         ]);
     }
 
@@ -28,17 +29,15 @@ class Show extends Component
                 ->sortBy('sort_order')
                 ->values()
                 ->map(function ($templateBlock) use ($answers) {
-                    $blockDef = $templateBlock->blockDefinition;
-                    $blockId = $blockDef?->id;
                     $answer = $answers["block_{$templateBlock->id}"] ?? null;
 
                     return [
-                        'name' => $blockDef?->name ?? 'Unbekannt',
-                        'type' => $blockDef?->block_type ?? 'text',
-                        'type_label' => $blockDef?->getBlockTypeLabel() ?? 'Text',
-                        'description' => $blockDef?->description,
+                        'name' => $templateBlock->name ?? 'Unbekannt',
+                        'type' => $templateBlock->block_type ?? 'text',
+                        'type_label' => HatchBlockType::tryFrom($templateBlock->block_type)?->label() ?? 'Text',
+                        'description' => $templateBlock->description,
                         'is_required' => $templateBlock->is_required ?? false,
-                        'logic_config' => $blockDef?->logic_config ?? [],
+                        'logic_config' => $templateBlock->logic_config ?? [],
                         'answer' => $answer,
                         'sort_order' => $templateBlock->sort_order,
                     ];

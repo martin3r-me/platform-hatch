@@ -45,12 +45,6 @@ class Show extends Component
         if ($this->projectIntake->projectTemplate) {
             $this->templateBlocks = $this->projectIntake->projectTemplate
                 ->templateBlocks()
-                ->with(['blockDefinition' => function($query) {
-                    $query->select(
-                        'id','name','ai_prompt','validation_rules','block_type','description',
-                        'conditional_logic','response_format','fallback_questions','ai_behavior'
-                    );
-                }])
                 ->orderBy('sort_order')
                 ->get()
                 ->values();
@@ -71,7 +65,7 @@ class Show extends Component
             return;
         }
 
-        $this->projectIntake->loadMissing(['intakeSteps','projectTemplate.templateBlocks.blockDefinition']);
+        $this->projectIntake->loadMissing(['intakeSteps','projectTemplate.templateBlocks']);
 
         $nextStep = $this->nextOpenStep();
 
