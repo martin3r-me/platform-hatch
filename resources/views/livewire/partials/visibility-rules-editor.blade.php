@@ -16,7 +16,7 @@
         ->sortBy('sort_order')
         ->map(fn ($b) => [
             'id' => (string) $b->id,
-            'label' => ($b->name ?: ($b->blockDefinition->name ?? 'Block ' . $b->id))
+            'label' => ($b->name ?: 'Block ' . $b->id)
                 . ' (#' . $b->sort_order . ')',
         ])
         ->values()

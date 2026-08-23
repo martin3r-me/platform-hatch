@@ -119,7 +119,7 @@
                         <div class="space-y-2">
                             @foreach($template->templateBlocks->take(3) as $block)
                                 <div class="flex items-center gap-2 p-2 bg-[var(--ui-muted-5)] rounded">
-                                    <span class="flex-grow text-sm">{{ $block->blockDefinition->name ?? 'Unbekannter Block' }}</span>
+                                    <span class="flex-grow text-sm">{{ $block->name ?? 'Unbekannter Block' }}</span>
                                     <x-ui-badge variant="primary" size="xs">{{ $block->sort_order }}</x-ui-badge>
                                 </div>
                             @endforeach
@@ -283,9 +283,7 @@
                                             </div>
                                         @else
                                             <div class="flex-grow flex items-center gap-2">
-                                                @if($field->blockDefinition)
-                                                    <x-ui-badge variant="info" size="xs">{{ $field->blockDefinition->name }}</x-ui-badge>
-                                                @elseif($field->block_type)
+                                                @if($field->block_type)
                                                     <x-ui-badge variant="info" size="xs">{{ \Platform\Hatch\Enums\HatchBlockType::tryFrom($field->block_type)?->label() ?? $field->block_type }}</x-ui-badge>
                                                 @else
                                                     <x-ui-badge variant="secondary" size="xs">Kein Feldtyp</x-ui-badge>

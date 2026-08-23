@@ -237,7 +237,7 @@
                             :variant="$status === 'completed' ? 'success' : ($status === 'in_progress' ? 'info' : 'secondary')"
                             size="sm"
                         >
-                            Block {{ $index + 1 }}: {{ $templateBlock->blockDefinition->name ?? 'Unbekannt' }}
+                            Block {{ $index + 1 }}: {{ $templateBlock->name ?? 'Unbekannt' }}
                         </x-ui-badge>
                     @endforeach
                 </div>
@@ -341,10 +341,10 @@
                                 <div class="w-3 h-3 {{ $step->is_completed ? 'bg-green-500' : 'bg-blue-500' }} rounded-full"></div>
                                 <div class="flex-grow">
                                     <div class="font-semibold text-[var(--ui-secondary)]">
-                                        {{ $step->templateBlock->blockDefinition->name ?? 'Schritt' }}
+                                        {{ $step->templateBlock->name ?? 'Schritt' }}
                                     </div>
                                     <div class="text-sm text-[var(--ui-muted)]">
-                                        {{ $step->templateBlock->blockDefinition->description ?? '' }}
+                                        {{ $step->templateBlock->description ?? '' }}
                                     </div>
                                 </div>
                                 <div class="text-sm text-[var(--ui-muted)]">
