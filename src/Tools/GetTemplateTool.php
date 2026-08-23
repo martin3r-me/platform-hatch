@@ -20,7 +20,7 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /hatch/templates/{id} - Ruft ein einzelnes Projekt-Template ab (inkl. Block-Definitionen und Intake-Anzahl). Parameter: template_id (required), team_id (optional).';
+        return 'GET /hatch/templates/{id} - Ruft ein einzelnes Projekt-Template ab (inkl. Template-Blocks und Intake-Anzahl). Parameter: template_id (required), team_id (optional).';
     }
 
     public function getSchema(): array
@@ -56,7 +56,7 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
             }
 
             $template = HatchProjectTemplate::query()
-                ->with(['templateBlocks.blockDefinition'])
+                ->with(['templateBlocks'])
                 ->withCount('projectIntakes')
                 ->where('team_id', $teamId)
                 ->find($templateId);
@@ -84,17 +84,11 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
                     'is_required' => (bool)$tb->is_required,
                     'name' => $tb->name,
                     'description' => $tb->description,
+                    'block_type' => $tb->block_type,
+                    'is_active' => (bool)$tb->is_active,
                     'group_uuid' => $tb->group_uuid,
                     'visibility_rules' => $tb->visibility_rules,
                     'display_compact' => (bool)$tb->display_compact,
-                    'block_definition' => $tb->blockDefinition ? [
-                        'id' => $tb->blockDefinition->id,
-                        'uuid' => $tb->blockDefinition->uuid,
-                        'name' => $tb->blockDefinition->name,
-                        'block_type' => $tb->blockDefinition->block_type,
-                        'description' => $tb->blockDefinition->description,
-                        'is_active' => (bool)$tb->blockDefinition->is_active,
-                    ] : null,
                 ])->values()->toArray(),
                 'created_at' => $template->created_at?->toISOString(),
                 'updated_at' => $template->updated_at?->toISOString(),

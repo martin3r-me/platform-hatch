@@ -22,7 +22,7 @@ class BulkRemoveTemplateBlocksTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'DELETE /hatch/template_blocks/bulk - Entfernt mehrere Blocks aus einem Template. Die Block-Definitionen bleiben erhalten. ERFORDERLICH: items (Array mit je template_block_id), confirm=true. Maximal 50 Items pro Aufruf.';
+        return 'DELETE /hatch/template_blocks/bulk - Entfernt mehrere Blocks aus einem Template. ERFORDERLICH: items (Array mit je template_block_id), confirm=true. Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -91,7 +91,6 @@ class BulkRemoveTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 try {
                     $templateBlock = HatchTemplateBlock::query()
                         ->where('team_id', $teamId)
-                        ->with('blockDefinition:id,name')
                         ->find($tbId);
 
                     if (!$templateBlock) {
@@ -99,7 +98,7 @@ class BulkRemoveTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         continue;
                     }
 
-                    $bdName = $templateBlock->blockDefinition?->name ?? 'Unbekannt';
+                    $blockName = $templateBlock->name ?? 'Unbekannt';
                     $templateId = (int)$templateBlock->project_template_id;
 
                     $templateBlock->delete();
@@ -108,7 +107,7 @@ class BulkRemoveTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'index' => $index,
                         'template_block_id' => $tbId,
                         'template_id' => $templateId,
-                        'block_definition_name' => $bdName,
+                        'block_name' => $blockName,
                     ];
                 } catch (\Throwable $e) {
                     $errors[] = ['index' => $index, 'template_block_id' => $tbId, 'error' => $e->getMessage()];
@@ -120,7 +119,7 @@ class BulkRemoveTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 'error_count' => count($errors),
                 'deleted' => $deleted,
                 'errors' => $errors,
-                'message' => count($deleted) . ' Template-Block(s) entfernt, ' . count($errors) . ' Fehler. Die Block-Definitionen existieren weiterhin.',
+                'message' => count($deleted) . ' Template-Block(s) entfernt, ' . count($errors) . ' Fehler.',
             ]);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler beim Bulk-Entfernen der Template-Blocks: ' . $e->getMessage());

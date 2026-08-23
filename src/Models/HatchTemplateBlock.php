@@ -10,7 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Symfony\Component\Uid\UuidV7;
 
 /**
+ * @property string $name
+ * @property string|null $description
+ * @property string|null $group_uuid
  * @property string|null $block_type
+ * @property int|null $sort_order
+ * @property bool $is_required
+ * @property array<string, mixed>|null $visibility_rules
+ * @property bool $display_compact
+ * @property bool $is_active
  * @property array<string, mixed>|null $logic_config
  * @property array<string, mixed>|null $validation_rules
  * @property array<string, mixed>|null $conditional_logic
@@ -95,11 +103,6 @@ class HatchTemplateBlock extends Model
     public function projectTemplate(): BelongsTo
     {
         return $this->belongsTo(HatchProjectTemplate::class, 'project_template_id');
-    }
-    
-    public function blockDefinition(): BelongsTo
-    {
-        return $this->belongsTo(HatchBlockDefinition::class, 'block_definition_id');
     }
     
     public function intakeSteps(): HasMany

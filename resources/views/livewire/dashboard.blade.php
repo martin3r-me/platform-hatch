@@ -20,10 +20,6 @@
                             <span class="text-lg font-bold text-[var(--ui-secondary)]">{{ $activeTemplates }}</span>
                         </div>
                         <div class="py-3 px-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 flex items-center justify-between">
-                            <span class="text-xs text-[var(--ui-muted)]">Block Definitionen</span>
-                            <span class="text-lg font-bold text-[var(--ui-secondary)]">{{ $totalBlockDefinitions }}</span>
-                        </div>
-                        <div class="py-3 px-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 flex items-center justify-between">
                             <span class="text-xs text-[var(--ui-muted)]">Abschlussrate</span>
                             <span class="text-lg font-bold text-[var(--ui-secondary)]">{{ $completionRate }}%</span>
                         </div>
@@ -41,9 +37,8 @@
 
     <x-ui-page-container>
         <!-- Haupt-Statistiken -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <x-ui-dashboard-tile title="Templates" :count="$activeTemplates" icon="document-text" variant="secondary" size="lg" :href="route('hatch.templates.index')" />
-            <x-ui-dashboard-tile title="Block Definitionen" :count="$totalBlockDefinitions" icon="puzzle-piece" variant="secondary" size="lg" :href="route('hatch.block-definitions.index')" />
             <x-ui-dashboard-tile title="Erhebungen" :count="$totalIntakes" icon="rocket-launch" variant="secondary" size="lg" :href="route('hatch.project-intakes.index')" />
             <x-ui-dashboard-tile title="Abgeschlossen" :count="$completedIntakes" icon="check-circle" variant="secondary" size="lg" />
         </div>

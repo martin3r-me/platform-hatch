@@ -9,7 +9,6 @@ use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchComplexityLevel;
 use Platform\Hatch\Models\HatchTemplateBlock;
-use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Enums\HatchBlockType;
 use Symfony\Component\Uid\UuidV7;
 
@@ -17,7 +16,6 @@ class Show extends Component
 {
     public HatchProjectTemplate $template;
     public $complexityLevels;
-    public $blockDefinitionOptions;
     public $blockTypeOptions;
 
     // Block editing
@@ -47,7 +45,7 @@ class Show extends Component
 
     public function mount(HatchProjectTemplate $template)
     {
-        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+        $this->template = HatchProjectTemplate::with(['templateBlocks'])
             ->find($template->id);
 
         if ($this->template->team_id !== auth()->user()->current_team_id) {
@@ -59,34 +57,6 @@ class Show extends Component
         $this->blockTypeOptions = collect(HatchBlockType::options())->map(function ($label, $value) {
             return ['value' => $value, 'label' => $label];
         });
-
-        $teamId = auth()->user()->current_team_id;
-
-        $this->blockDefinitionOptions = collect([
-            ['id' => '', 'name' => 'Jetzt auswählen...']
-        ])->merge(
-            HatchBlockDefinition::where('is_active', true)
-                ->where('team_id', $teamId)
-                ->orderBy('name')
-                ->get(['id', 'name'])
-                ->map(function($item) {
-                    return ['id' => $item->id, 'name' => $item->name];
-                })
-        );
-    }
-
-    public function getAvailableBlockDefinitionOptions()
-    {
-        // BlockDefinitions dürfen mehrfach im selben Template verwendet werden
-        // (z. B. zwei Freitextfelder in unterschiedlichen Abfragen).
-        $all = HatchBlockDefinition::where('is_active', true)
-            ->where('team_id', auth()->user()->current_team_id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        return collect([
-            ['id' => '', 'name' => 'Jetzt auswählen...']
-        ])->merge($all);
     }
 
     #[Computed]
@@ -141,7 +111,7 @@ class Show extends Component
     {
         $this->template->save();
 
-        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+        $this->template = HatchProjectTemplate::with(['templateBlocks'])
             ->find($this->template->id);
 
         $this->dispatch('notifications:store', [
@@ -157,8 +127,6 @@ class Show extends Component
     {
         $this->editingBlockId = $blockId;
         $this->editingBlock = $this->template->templateBlocks->find($blockId);
-
-        $this->blockDefinitionOptions = $this->getAvailableBlockDefinitionOptions();
     }
 
     public function saveBlock()
@@ -212,7 +180,7 @@ class Show extends Component
         if ($block) {
             $block->delete();
 
-            $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+            $this->template = HatchProjectTemplate::with(['templateBlocks'])
                 ->find($this->template->id);
 
             $this->dispatch('notifications:store', [
@@ -413,7 +381,7 @@ class Show extends Component
 
     private function refreshTemplate(): void
     {
-        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+        $this->template = HatchProjectTemplate::with(['templateBlocks'])
             ->find($this->template->id);
     }
 
@@ -466,7 +434,7 @@ class Show extends Component
             }
         }
 
-        $this->template = HatchProjectTemplate::with(['templateBlocks.blockDefinition'])
+        $this->template = HatchProjectTemplate::with(['templateBlocks'])
             ->find($this->template->id);
 
         $this->dispatch('notifications:store', [
@@ -480,12 +448,9 @@ class Show extends Component
 
     public function render()
     {
-        $this->blockDefinitionOptions = $this->getAvailableBlockDefinitionOptions();
-
         return view('hatch::livewire.template.show', [
             'template' => $this->template,
             'complexityLevels' => $this->complexityLevels,
-            'blockDefinitionOptions' => $this->blockDefinitionOptions,
             'blockTypeOptions' => $this->blockTypeOptions,
         ])->layout('platform::layouts.app');
     }

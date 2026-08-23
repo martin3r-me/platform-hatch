@@ -7,7 +7,6 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Models\Team;
 use Platform\Core\Models\User;
-use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchTemplateBlock;
 use Platform\Hatch\Tools\BulkAddTemplateBlocksTool;
@@ -293,17 +292,12 @@ class BulkTemplateBlockToolsTest extends TestCase
 
     public function test_bulk_remove_template_blocks_success(): void
     {
-        $bd1 = HatchBlockDefinition::factory()->create(['team_id' => $this->team->id]);
-        $bd2 = HatchBlockDefinition::factory()->create(['team_id' => $this->team->id]);
-
         $tb1 = HatchTemplateBlock::factory()->create([
             'project_template_id' => $this->template->id,
-            'block_definition_id' => $bd1->id,
             'team_id' => $this->team->id,
         ]);
         $tb2 = HatchTemplateBlock::factory()->create([
             'project_template_id' => $this->template->id,
-            'block_definition_id' => $bd2->id,
             'team_id' => $this->team->id,
         ]);
 
@@ -325,10 +319,6 @@ class BulkTemplateBlockToolsTest extends TestCase
 
         $this->assertDatabaseMissing('hatch_template_blocks', ['id' => $tb1->id]);
         $this->assertDatabaseMissing('hatch_template_blocks', ['id' => $tb2->id]);
-
-        // Block definitions should still exist
-        $this->assertDatabaseHas('hatch_block_definitions', ['id' => $bd1->id]);
-        $this->assertDatabaseHas('hatch_block_definitions', ['id' => $bd2->id]);
     }
 
     public function test_bulk_remove_template_blocks_requires_confirm(): void

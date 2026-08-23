@@ -5,7 +5,6 @@ namespace Platform\Hatch\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Hatch\Models\HatchProjectTemplate;
-use Platform\Hatch\Models\HatchBlockDefinition;
 use Platform\Hatch\Models\HatchProjectIntake;
 
 class Dashboard extends Component
@@ -17,7 +16,6 @@ class Dashboard extends Component
 
         $totalTemplates = HatchProjectTemplate::where('team_id', $teamId)->count();
         $activeTemplates = HatchProjectTemplate::where('team_id', $teamId)->where('is_active', true)->count();
-        $totalBlockDefinitions = HatchBlockDefinition::where('team_id', $teamId)->count();
 
         $intakesByStatus = HatchProjectIntake::where('team_id', $teamId)
             ->selectRaw('status, count(*) as count')
@@ -38,7 +36,6 @@ class Dashboard extends Component
         return view('hatch::livewire.dashboard', [
             'totalTemplates' => $totalTemplates,
             'activeTemplates' => $activeTemplates,
-            'totalBlockDefinitions' => $totalBlockDefinitions,
             'intakesByStatus' => $intakesByStatus,
             'totalIntakes' => $totalIntakes,
             'completedIntakes' => $completedIntakes,

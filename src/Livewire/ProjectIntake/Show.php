@@ -335,7 +335,7 @@ class Show extends Component
     {
         $this->projectIntake->load([
             'projectTemplate',
-            'intakeSteps.templateBlock.blockDefinition'
+            'intakeSteps.templateBlock'
         ]);
 
         $activities = $this->projectIntake->activities()
