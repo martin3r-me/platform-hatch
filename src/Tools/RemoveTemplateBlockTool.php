@@ -22,7 +22,7 @@ class RemoveTemplateBlockTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'DELETE /hatch/template_blocks/{id} - Entfernt einen Block aus einem Template. Die Block-Definition selbst bleibt erhalten und kann in anderen Templates weiter genutzt werden. Parameter: template_block_id (required), confirm (required=true).';
+        return 'DELETE /hatch/template_blocks/{id} - Entfernt einen Block aus einem Template. Parameter: template_block_id (required), confirm (required=true).';
     }
 
     public function getSchema(): array
@@ -77,19 +77,17 @@ class RemoveTemplateBlockTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('ACCESS_DENIED', 'Du hast keinen Zugriff auf diesen Template-Block.');
             }
 
-            $templateBlock->load('blockDefinition:id,name');
-
             $blockId = (int)$templateBlock->id;
             $templateId = (int)$templateBlock->project_template_id;
-            $bdName = $templateBlock->blockDefinition?->name ?? 'Unbekannt';
+            $blockName = $templateBlock->name ?? 'Unbekannt';
 
             $templateBlock->delete();
 
             return ToolResult::success([
                 'template_block_id' => $blockId,
                 'template_id' => $templateId,
-                'block_definition_name' => $bdName,
-                'message' => "Block \"{$bdName}\" aus Template entfernt. Die Block-Definition existiert weiterhin.",
+                'block_name' => $blockName,
+                'message' => "Block \"{$blockName}\" aus Template entfernt.",
             ]);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler beim Entfernen des Blocks: ' . $e->getMessage());

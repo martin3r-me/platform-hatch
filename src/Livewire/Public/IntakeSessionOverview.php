@@ -44,7 +44,7 @@ class IntakeSessionOverview extends Component
     public function mount(string $sessionToken)
     {
         $this->session = HatchIntakeSession::where('session_token', $sessionToken)
-            ->with(['projectIntake.projectTemplate.templateBlocks.blockDefinition'])
+            ->with(['projectIntake.projectTemplate.templateBlocks'])
             ->first();
 
         if (!$this->session) {
@@ -76,14 +76,10 @@ class IntakeSessionOverview extends Component
                 ->values()
                 ->map(fn($block) => [
                     'id' => (string) $block->id,
-                    'name' => $block->name ?: ($block->blockDefinition->name ?? 'Block'),
-                    // block_definition_name separat behalten — wird im
-                    // Compact-Table-Renderer benötigt, um spaltenweite
-                    // Header-Heuristiken über mehrere Gruppen zu bilden.
-                    'block_definition_name' => $block->blockDefinition->name ?? null,
-                    'description' => $block->description ?: ($block->blockDefinition->description ?? ''),
-                    'type' => $block->blockDefinition->block_type ?? 'default',
-                    'logic_config' => $block->blockDefinition->logic_config ?? [],
+                    'name' => $block->name ?: 'Block',
+                    'description' => $block->description ?: '',
+                    'type' => $block->block_type ?? 'default',
+                    'logic_config' => $block->logic_config ?? [],
                     'is_required' => (bool) $block->is_required,
                     'group_uuid' => $block->group_uuid,
                     'visibility_rules' => $block->visibility_rules,
@@ -792,7 +788,7 @@ class IntakeSessionOverview extends Component
 
             if (count($bucket) > 1) {
                 // Mehrere strukturgleiche compact-Gruppen → eine Tabelle.
-                // Spalten-Header per gemeinsamem Wort-Tail aller block_definition.name
+                // Spalten-Header per gemeinsamem Wort-Tail aller Feld-Namen
                 // über alle Gruppen ableiten (z. B. „… Montag Bewertung" /
                 // „… Dienstag Bewertung" → „Bewertung"). Damit werden die
                 // Header automatisch entkoppelt vom konkreten Zeilen-Label.
@@ -803,7 +799,7 @@ class IntakeSessionOverview extends Component
                     foreach ($bucket as $g) {
                         $field = $g['fields'][$c] ?? null;
                         if ($field) {
-                            $names[] = $field['block_definition_name'] ?? $field['name'] ?? '';
+                            $names[] = $field['name'] ?? '';
                         }
                     }
                     $columnHeaders[] = $this->commonWordTail($names);
@@ -826,8 +822,8 @@ class IntakeSessionOverview extends Component
     }
 
     /**
-     * Signatur einer Gruppenstruktur: Sequenz aus block_definition_id +
-     * block_type. Zwei Gruppen sind tabellarisch zusammenführbar, wenn ihre
+     * Signatur einer Gruppenstruktur: Sequenz aus block_type + lookup_id.
+     * Zwei Gruppen sind tabellarisch zusammenführbar, wenn ihre
      * Signaturen identisch sind (z. B. Mo, Di, Mi mit jeweils rating + long_text).
      */
     private function groupStructureSignature(array $fields): string

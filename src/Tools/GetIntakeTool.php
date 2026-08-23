@@ -59,7 +59,7 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
             $intake = HatchProjectIntake::query()
                 ->with([
                     'projectTemplate:id,name,complexity_level',
-                    'intakeSteps.templateBlock.blockDefinition:id,name,block_type',
+                    'intakeSteps.templateBlock:id,name,block_type',
                 ])
                 ->withCount('sessions')
                 ->where('team_id', $teamId)
@@ -97,10 +97,10 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                 'steps' => $intake->intakeSteps->map(fn ($s) => [
                     'id' => $s->id,
                     'uuid' => $s->uuid,
-                    'block_definition' => $s->templateBlock?->blockDefinition ? [
-                        'id' => $s->templateBlock->blockDefinition->id,
-                        'name' => $s->templateBlock->blockDefinition->name,
-                        'block_type' => $s->templateBlock->blockDefinition->block_type,
+                    'template_block' => $s->templateBlock ? [
+                        'id' => $s->templateBlock->id,
+                        'name' => $s->templateBlock->name,
+                        'block_type' => $s->templateBlock->block_type,
                     ] : null,
                     'is_completed' => (bool)$s->is_completed,
                     'ai_confidence' => (float)$s->ai_confidence,

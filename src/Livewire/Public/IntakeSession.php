@@ -38,7 +38,7 @@ class IntakeSession extends Component
     public function mount(string $sessionToken)
     {
         $this->session = HatchIntakeSession::where('session_token', $sessionToken)
-            ->with(['projectIntake.projectTemplate.templateBlocks.blockDefinition'])
+            ->with(['projectIntake.projectTemplate.templateBlocks'])
             ->first();
 
         if (!$this->session) {
@@ -70,11 +70,10 @@ class IntakeSession extends Component
                 ->values()
                 ->map(fn($block) => [
                     'id' => $block->id,
-                    // Template-Block überschreibt Label/Description, falls gesetzt — sonst BlockDefinition.
-                    'name' => $block->name ?: ($block->blockDefinition->name ?? 'Block'),
-                    'description' => $block->description ?: ($block->blockDefinition->description ?? ''),
-                    'type' => $block->blockDefinition->block_type ?? 'default',
-                    'logic_config' => $block->blockDefinition->logic_config ?? [],
+                    'name' => $block->name ?: 'Block',
+                    'description' => $block->description ?: '',
+                    'type' => $block->block_type ?? 'default',
+                    'logic_config' => $block->logic_config ?? [],
                     'is_required' => (bool) $block->is_required,
                     'group_uuid' => $block->group_uuid,
                     'visibility_rules' => $block->visibility_rules,

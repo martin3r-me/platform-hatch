@@ -99,7 +99,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                             ],
                             'logic_config' => [
                                 'type' => 'object',
-                                'description' => 'Optional: Typ-spezifische Konfiguration als JSON. Siehe "hatch.block_definitions.POST" für die vollständige Referenz je block_type.',
+                                'description' => 'Optional: Typ-spezifische Konfiguration als JSON. Siehe "hatch.overview.GET" für die vollständige Referenz je block_type.',
                             ],
                             'ai_behavior' => [
                                 'type' => 'object',

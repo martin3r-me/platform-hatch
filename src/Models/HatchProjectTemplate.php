@@ -70,6 +70,9 @@ class HatchProjectTemplate extends Model
         return $this->belongsTo(\Platform\Core\Models\Team::class, 'team_id');
     }
     
+    /**
+     * @return HasMany<HatchTemplateBlock, $this>
+     */
     public function templateBlocks(): HasMany
     {
         return $this->hasMany(HatchTemplateBlock::class, 'project_template_id');

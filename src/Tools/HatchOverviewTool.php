@@ -16,7 +16,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /hatch/overview - Zeigt Übersicht über Hatch-Konzepte (Project Templates, Block Definitions, Project Intakes, Intake Sessions, Intake Steps) und verfügbare Tools.';
+        return 'GET /hatch/overview - Zeigt Übersicht über Hatch-Konzepte (Project Templates, Template Blocks, Project Intakes, Intake Sessions, Intake Steps) und verfügbare Tools.';
     }
 
     public function getSchema(): array
@@ -42,13 +42,13 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectTemplate',
                         'table' => 'hatch_project_templates',
                         'key_fields' => ['id', 'uuid', 'name', 'description', 'ai_personality', 'industry_context', 'complexity_level', 'ai_instructions', 'is_active', 'team_id'],
-                        'note' => 'Vorlagen für Project Intakes. Definieren Struktur und AI-Verhalten über verknüpfte Block Definitions.',
+                        'note' => 'Vorlagen für Project Intakes. Definieren Struktur und AI-Verhalten über self-contained Template-Blocks.',
                     ],
-                    'block_definitions' => [
-                        'model' => 'Platform\\Hatch\\Models\\HatchBlockDefinition',
-                        'table' => 'hatch_block_definitions',
-                        'key_fields' => ['id', 'uuid', 'name', 'block_type', 'ai_prompt', 'is_active', 'team_id'],
-                        'note' => 'Wiederverwendbare Bausteine (Frage-Typen) für Templates. Konfiguration via logic_config JSON.',
+                    'template_blocks' => [
+                        'model' => 'Platform\\Hatch\\Models\\HatchTemplateBlock',
+                        'table' => 'hatch_template_blocks',
+                        'key_fields' => ['id', 'uuid', 'project_template_id', 'name', 'block_type', 'ai_prompt', 'logic_config', 'is_active', 'team_id'],
+                        'note' => 'Bausteine (Frage-Typen) eines Templates. Self-contained: Typ und Konfiguration (logic_config JSON) liegen direkt am Block, keine separate Definition.',
                         'block_types' => [
                             'text' => ['label' => 'Text-Eingabe', 'config' => 'placeholder, min_length, max_length (255)'],
                             'long_text' => ['label' => 'Langer Text', 'config' => 'placeholder, min_length, max_length (5000), rows (6)'],
@@ -118,7 +118,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                     ],
                 ],
                 'relationships' => [
-                    'template_has_blocks' => 'ProjectTemplate → TemplateBlocks → BlockDefinitions',
+                    'template_has_blocks' => 'ProjectTemplate → TemplateBlocks',
                     'intake_from_template' => 'ProjectIntake → ProjectTemplate',
                     'intake_has_steps' => 'ProjectIntake → IntakeSteps',
                     'intake_has_sessions' => 'ProjectIntake → IntakeSessions',
@@ -135,14 +135,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'add' => 'hatch.template_blocks.POST',
                         'update' => 'hatch.template_blocks.PUT',
                         'remove' => 'hatch.template_blocks.DELETE',
-                        'note' => 'Verknüpft wiederverwendbare Block-Definitionen mit Templates. Blöcke sind in hatch.template.GET sichtbar. Pro Block optional: group_uuid (Blocks mit gleicher UUID bilden eine Abfrage mit mehreren Feldern), visibility_rules (Conditional Logic: {combinator: AND|OR, rules: [{source_block_id, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value}]} – source_block_id muss auf einen Block mit kleinerem sort_order zeigen, keine Zyklen).',
-                    ],
-                    'block_definitions' => [
-                        'list' => 'hatch.block_definitions.GET',
-                        'get' => 'hatch.block_definition.GET',
-                        'create' => 'hatch.block_definitions.POST',
-                        'update' => 'hatch.block_definitions.PUT',
-                        'delete' => 'hatch.block_definitions.DELETE',
+                        'note' => 'Self-contained Bausteine eines Templates (Typ + Konfiguration direkt am Block, siehe concepts.template_blocks.block_types). Blöcke sind in hatch.template.GET sichtbar. Pro Block optional: group_uuid (Blocks mit gleicher UUID bilden eine Abfrage mit mehreren Feldern), visibility_rules (Conditional Logic: {combinator: AND|OR, rules: [{source_block_id, operator: equals|not_equals|contains|empty|not_empty|selected|not_selected, value}]} – source_block_id muss auf einen Block mit kleinerem sort_order zeigen, keine Zyklen).',
                     ],
                     'intakes' => [
                         'list' => 'hatch.intakes.GET',
