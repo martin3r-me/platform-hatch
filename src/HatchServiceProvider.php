@@ -103,17 +103,8 @@ class HatchServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Hatch\Tools\BulkUpdateTemplateBlocksTool());
             $registry->register(new \Platform\Hatch\Tools\BulkRemoveTemplateBlocksTool());
 
-            // Block Definitions (CRUD)
+            // Block Definitions (Read-Only)
             $registry->register(new \Platform\Hatch\Tools\ListBlockDefinitionsTool());
-            $registry->register(new \Platform\Hatch\Tools\GetBlockDefinitionTool());
-            $registry->register(new \Platform\Hatch\Tools\CreateBlockDefinitionTool());
-            $registry->register(new \Platform\Hatch\Tools\UpdateBlockDefinitionTool());
-            $registry->register(new \Platform\Hatch\Tools\DeleteBlockDefinitionTool());
-
-            // Block Definitions (Bulk)
-            $registry->register(new \Platform\Hatch\Tools\BulkCreateBlockDefinitionsTool());
-            $registry->register(new \Platform\Hatch\Tools\BulkUpdateBlockDefinitionsTool());
-            $registry->register(new \Platform\Hatch\Tools\BulkDeleteBlockDefinitionsTool());
 
             // Intakes (CRUD)
             $registry->register(new \Platform\Hatch\Tools\ListIntakesTool());
