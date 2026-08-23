@@ -2,14 +2,30 @@
 
 namespace Platform\Hatch\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Symfony\Component\Uid\UuidV7;
 
+/**
+ * @property string|null $block_type
+ * @property array<string, mixed>|null $logic_config
+ * @property array<string, mixed>|null $validation_rules
+ * @property array<string, mixed>|null $conditional_logic
+ * @property array<string, mixed>|null $response_format
+ * @property array<string, mixed>|null $fallback_questions
+ * @property string|null $ai_prompt
+ * @property array<string, mixed>|null $ai_behavior
+ * @property array<string, mixed>|null $exit_conditions
+ * @property string|null $min_confidence_threshold
+ * @property int|null $max_clarification_attempts
+ * @property int|null $max_messages_per_block
+ */
 class HatchTemplateBlock extends Model
 {
+    use HasFactory;
     use LogsActivity;
     
     protected $table = 'hatch_template_blocks';

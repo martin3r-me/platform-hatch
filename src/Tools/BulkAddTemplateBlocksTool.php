@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
-use Platform\Hatch\Models\HatchBlockDefinition;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchTemplateBlock;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
@@ -24,7 +24,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/template_blocks/bulk - Fügt mehrere Blocks zu einem Template hinzu. ERFORDERLICH: template_id, items (Array mit je block_definition_id). Optional pro Item: name, description, sort_order, is_required, group_uuid (für Multi-Feld-Abfragen — Items mit gleicher UUID bilden eine Abfrage), visibility_rules (Conditional Logic). Maximal 50 Items pro Aufruf.';
+        return 'POST /hatch/template_blocks/bulk - Fügt mehrere Blocks zu einem Template hinzu. ERFORDERLICH: template_id, items (Array mit je block_type). Optional pro Item: name, description, sort_order, is_required, group_uuid (für Multi-Feld-Abfragen — Items mit gleicher UUID bilden eine Abfrage), visibility_rules (Conditional Logic), ai_prompt, conditional_logic, response_format, fallback_questions, validation_rules, logic_config, ai_behavior, exit_conditions, min_confidence_threshold, max_clarification_attempts, max_messages_per_block. Maximal 50 Items pro Aufruf.';
     }
 
     public function getSchema(): array
@@ -41,17 +41,17 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                 ],
                 'items' => [
                     'type' => 'array',
-                    'description' => 'ERFORDERLICH: Array von Template-Blocks. Jedes Item benötigt: block_definition_id. Optional: name, description, sort_order, is_required, group_uuid, visibility_rules. Für eine Multi-Feld-Abfrage: alle Felder dieser Abfrage mit derselben group_uuid übergeben.',
+                    'description' => 'ERFORDERLICH: Array von Template-Blocks. Jedes Item benötigt: block_type. Optional: name, description, sort_order, is_required, group_uuid, visibility_rules, ai_prompt, conditional_logic, response_format, fallback_questions, validation_rules, logic_config, ai_behavior, exit_conditions, min_confidence_threshold, max_clarification_attempts, max_messages_per_block. Für eine Multi-Feld-Abfrage: alle Felder dieser Abfrage mit derselben group_uuid übergeben.',
                     'items' => [
                         'type' => 'object',
                         'properties' => [
-                            'block_definition_id' => [
-                                'type' => 'integer',
-                                'description' => 'ID der Block-Definition (ERFORDERLICH). Nutze "hatch.block_definitions.GET".',
+                            'block_type' => [
+                                'type' => 'string',
+                                'description' => 'Block-Typ (ERFORDERLICH). Erlaubt: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom, matrix, ranking, nps, dropdown, datetime, time, slider, image_choice, consent, section, hidden, address, color, lookup, signature, date_range, calculated, repeater.',
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Feld-Label (überschreibt Default aus BlockDefinition). Am Abfrage-Header = Name der Abfrage.',
+                                'description' => 'Optional: Feld-Label. Am Abfrage-Header = Name der Abfrage.',
                             ],
                             'description' => [
                                 'type' => 'string',
@@ -77,8 +77,52 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                                 'type' => 'boolean',
                                 'description' => 'Optional: Wirkt nur bei flow_mode = "overview". true = Gruppe als kompakte Tabellenzeile rendern. Default: false.',
                             ],
+                            'ai_prompt' => [
+                                'type' => 'string',
+                                'description' => 'Optional: AI-Prompt für diesen Block.',
+                            ],
+                            'conditional_logic' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Bedingte Logik (AI-Gesprächsführung) als JSON.',
+                            ],
+                            'response_format' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Erwartetes Antwortformat als JSON.',
+                            ],
+                            'fallback_questions' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Fallback-Fragen als JSON.',
+                            ],
+                            'validation_rules' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Validierungsregeln als JSON.',
+                            ],
+                            'logic_config' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Typ-spezifische Konfiguration als JSON. Siehe "hatch.block_definitions.POST" für die vollständige Referenz je block_type.',
+                            ],
+                            'ai_behavior' => [
+                                'type' => 'object',
+                                'description' => 'Optional: AI-Verhaltenskonfiguration als JSON.',
+                            ],
+                            'exit_conditions' => [
+                                'type' => 'object',
+                                'description' => 'Optional: Abbruch-/Exit-Bedingungen für die AI-Konversation als JSON.',
+                            ],
+                            'min_confidence_threshold' => [
+                                'type' => 'number',
+                                'description' => 'Optional: Mindest-Konfidenz (0.00-1.00).',
+                            ],
+                            'max_clarification_attempts' => [
+                                'type' => 'integer',
+                                'description' => 'Optional: Maximale Anzahl an Nachfragen der AI bei Unklarheit.',
+                            ],
+                            'max_messages_per_block' => [
+                                'type' => 'integer',
+                                'description' => 'Optional: Maximale Anzahl an Nachrichten für diesen Block.',
+                            ],
                         ],
-                        'required' => ['block_definition_id'],
+                        'required' => ['block_type'],
                     ],
                 ],
             ],
@@ -128,22 +172,16 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
             $created = [];
             $errors = [];
 
+            $validTypes = HatchBlockType::values();
+
             foreach ($items as $index => $item) {
-                $blockDefinitionId = (int)($item['block_definition_id'] ?? 0);
-                if ($blockDefinitionId <= 0) {
-                    $errors[] = ['index' => $index, 'error' => 'block_definition_id ist erforderlich.'];
+                $blockType = trim((string)($item['block_type'] ?? ''));
+                if (!in_array($blockType, $validTypes)) {
+                    $errors[] = ['index' => $index, 'error' => 'Ungültiger oder fehlender block_type. Erlaubt: ' . implode(', ', $validTypes)];
                     continue;
                 }
 
                 try {
-                    $blockDefinition = HatchBlockDefinition::query()
-                        ->where('team_id', $teamId)
-                        ->find($blockDefinitionId);
-                    if (!$blockDefinition) {
-                        $errors[] = ['index' => $index, 'block_definition_id' => $blockDefinitionId, 'error' => 'Block-Definition nicht gefunden (oder kein Zugriff).'];
-                        continue;
-                    }
-
                     $sortOrder = $item['sort_order'] ?? null;
                     if ($sortOrder === null) {
                         $maxSort++;
@@ -152,7 +190,7 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
 
                     $payload = [
                         'project_template_id' => $templateId,
-                        'block_definition_id' => $blockDefinitionId,
+                        'block_type' => $blockType,
                         'sort_order' => (int)$sortOrder,
                         'is_required' => (bool)($item['is_required'] ?? true),
                         'is_active' => true,
@@ -160,7 +198,24 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'team_id' => $teamId,
                     ];
 
-                    foreach (['name', 'description', 'group_uuid', 'visibility_rules', 'display_compact'] as $optional) {
+                    foreach ([
+                        'name',
+                        'description',
+                        'group_uuid',
+                        'visibility_rules',
+                        'display_compact',
+                        'ai_prompt',
+                        'conditional_logic',
+                        'response_format',
+                        'fallback_questions',
+                        'validation_rules',
+                        'logic_config',
+                        'ai_behavior',
+                        'exit_conditions',
+                        'min_confidence_threshold',
+                        'max_clarification_attempts',
+                        'max_messages_per_block',
+                    ] as $optional) {
                         if (array_key_exists($optional, $item)) {
                             $payload[$optional] = $item[$optional];
                         }
@@ -172,15 +227,14 @@ class BulkAddTemplateBlocksTool implements ToolContract, ToolMetadataContract
                         'index' => $index,
                         'template_block_id' => $templateBlock->id,
                         'uuid' => $templateBlock->uuid,
-                        'block_definition_id' => $blockDefinitionId,
-                        'block_definition_name' => $blockDefinition->name,
+                        'block_type' => $templateBlock->block_type,
                         'group_uuid' => $templateBlock->group_uuid,
                         'sort_order' => (int)$templateBlock->sort_order,
                         'is_required' => (bool)$templateBlock->is_required,
                         'display_compact' => (bool)$templateBlock->display_compact,
                     ];
                 } catch (\Throwable $e) {
-                    $errors[] = ['index' => $index, 'block_definition_id' => $blockDefinitionId, 'error' => $e->getMessage()];
+                    $errors[] = ['index' => $index, 'block_type' => $blockType, 'error' => $e->getMessage()];
                 }
             }
 

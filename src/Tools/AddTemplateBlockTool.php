@@ -7,7 +7,7 @@ use Platform\Core\Contracts\ToolContext;
 use Platform\Core\Contracts\ToolMetadataContract;
 use Platform\Core\Contracts\ToolResult;
 use Platform\Core\Tools\Concerns\HasStandardizedWriteOperations;
-use Platform\Hatch\Models\HatchBlockDefinition;
+use Platform\Hatch\Enums\HatchBlockType;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Models\HatchTemplateBlock;
 use Platform\Hatch\Tools\Concerns\ResolvesHatchTeam;
@@ -24,7 +24,7 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/template_blocks - Fügt einen Block zu einem Template hinzu. ERFORDERLICH: template_id, block_definition_id. Optional: sort_order, is_required, name, description, group_uuid (Abfragen mit mehreren Feldern), visibility_rules (Conditional Logic). Tipp: Block-Definitionen sind wiederverwendbar und können in mehreren Templates genutzt werden. Für eine Multi-Feld-Abfrage: mehrere Blocks mit derselben group_uuid anlegen.';
+        return 'POST /hatch/template_blocks - Fügt einen Block zu einem Template hinzu. ERFORDERLICH: template_id, block_type. Optional: name, description, sort_order, is_required, group_uuid (Abfragen mit mehreren Feldern), visibility_rules (Conditional Logic), ai_prompt, conditional_logic, response_format, fallback_questions, validation_rules, logic_config, ai_behavior, exit_conditions, min_confidence_threshold, max_clarification_attempts, max_messages_per_block. Tipp: Für eine Multi-Feld-Abfrage: mehrere Blocks mit derselben group_uuid anlegen.';
     }
 
     public function getSchema(): array
@@ -39,13 +39,13 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                     'type' => 'integer',
                     'description' => 'ID des Templates (ERFORDERLICH). Nutze "hatch.templates.GET".',
                 ],
-                'block_definition_id' => [
-                    'type' => 'integer',
-                    'description' => 'ID der Block-Definition (ERFORDERLICH). Nutze "hatch.block_definitions.GET".',
+                'block_type' => [
+                    'type' => 'string',
+                    'description' => 'Block-Typ (ERFORDERLICH). Erlaubt: text, long_text, email, phone, url, select, multi_select, number, scale, date, boolean, file, rating, location, info, custom, matrix, ranking, nps, dropdown, datetime, time, slider, image_choice, consent, section, hidden, address, color, lookup, signature, date_range, calculated, repeater.',
                 ],
                 'name' => [
                     'type' => 'string',
-                    'description' => 'Optional: Feld-Label (überschreibt den Default-Namen aus der BlockDefinition). Bei einer Multi-Feld-Abfrage: der erste Block (niedrigster sort_order in der Gruppe) dient als Abfrage-Header, sein name = Name der Abfrage.',
+                    'description' => 'Optional: Feld-Label. Bei einer Multi-Feld-Abfrage: der erste Block (niedrigster sort_order in der Gruppe) dient als Abfrage-Header, sein name = Name der Abfrage.',
                 ],
                 'description' => [
                     'type' => 'string',
@@ -71,8 +71,52 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                     'type' => 'boolean',
                     'description' => 'Optional: Wirkt nur wenn das Template flow_mode = "overview" hat. true = Gruppe wird als kompakte Tabellenzeile gerendert. Default: false.',
                 ],
+                'ai_prompt' => [
+                    'type' => 'string',
+                    'description' => 'Optional: AI-Prompt für diesen Block.',
+                ],
+                'conditional_logic' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Bedingte Logik (AI-Gesprächsführung) als JSON.',
+                ],
+                'response_format' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Erwartetes Antwortformat als JSON.',
+                ],
+                'fallback_questions' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Fallback-Fragen als JSON.',
+                ],
+                'validation_rules' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Validierungsregeln als JSON.',
+                ],
+                'logic_config' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Typ-spezifische Konfiguration als JSON (z. B. options bei select/dropdown, min/max bei scale/rating). Siehe "hatch.block_definitions.POST" für die vollständige Referenz je block_type.',
+                ],
+                'ai_behavior' => [
+                    'type' => 'object',
+                    'description' => 'Optional: AI-Verhaltenskonfiguration als JSON.',
+                ],
+                'exit_conditions' => [
+                    'type' => 'object',
+                    'description' => 'Optional: Abbruch-/Exit-Bedingungen für die AI-Konversation als JSON.',
+                ],
+                'min_confidence_threshold' => [
+                    'type' => 'number',
+                    'description' => 'Optional: Mindest-Konfidenz (0.00-1.00), ab der eine AI-Antwort akzeptiert wird.',
+                ],
+                'max_clarification_attempts' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: Maximale Anzahl an Nachfragen der AI bei Unklarheit.',
+                ],
+                'max_messages_per_block' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: Maximale Anzahl an Nachrichten für diesen Block in der AI-Konversation.',
+                ],
             ],
-            'required' => ['template_id', 'block_definition_id'],
+            'required' => ['template_id', 'block_type'],
         ]);
     }
 
@@ -94,9 +138,10 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'template_id ist erforderlich.');
             }
 
-            $blockDefinitionId = (int)($arguments['block_definition_id'] ?? 0);
-            if ($blockDefinitionId <= 0) {
-                return ToolResult::error('VALIDATION_ERROR', 'block_definition_id ist erforderlich.');
+            $blockType = trim((string)($arguments['block_type'] ?? ''));
+            $validTypes = HatchBlockType::values();
+            if (!in_array($blockType, $validTypes)) {
+                return ToolResult::error('VALIDATION_ERROR', 'Ungültiger block_type. Erlaubt: ' . implode(', ', $validTypes));
             }
 
             $template = HatchProjectTemplate::query()
@@ -104,13 +149,6 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 ->find($templateId);
             if (!$template) {
                 return ToolResult::error('NOT_FOUND', 'Template nicht gefunden (oder kein Zugriff).');
-            }
-
-            $blockDefinition = HatchBlockDefinition::query()
-                ->where('team_id', $teamId)
-                ->find($blockDefinitionId);
-            if (!$blockDefinition) {
-                return ToolResult::error('NOT_FOUND', 'Block-Definition nicht gefunden (oder kein Zugriff).');
             }
 
             // Sort-Order: wenn nicht angegeben, ans Ende setzen
@@ -124,7 +162,7 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
 
             $payload = [
                 'project_template_id' => $templateId,
-                'block_definition_id' => $blockDefinitionId,
+                'block_type' => $blockType,
                 'sort_order' => (int)$sortOrder,
                 'is_required' => (bool)($arguments['is_required'] ?? true),
                 'is_active' => true,
@@ -132,7 +170,24 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'team_id' => $teamId,
             ];
 
-            foreach (['name', 'description', 'group_uuid', 'visibility_rules', 'display_compact'] as $optional) {
+            foreach ([
+                'name',
+                'description',
+                'group_uuid',
+                'visibility_rules',
+                'display_compact',
+                'ai_prompt',
+                'conditional_logic',
+                'response_format',
+                'fallback_questions',
+                'validation_rules',
+                'logic_config',
+                'ai_behavior',
+                'exit_conditions',
+                'min_confidence_threshold',
+                'max_clarification_attempts',
+                'max_messages_per_block',
+            ] as $optional) {
                 if (array_key_exists($optional, $arguments)) {
                     $payload[$optional] = $arguments[$optional];
                 }
@@ -145,15 +200,13 @@ class AddTemplateBlockTool implements ToolContract, ToolMetadataContract
                 'uuid' => $templateBlock->uuid,
                 'template_id' => $templateId,
                 'template_name' => $template->name,
-                'block_definition_id' => $blockDefinitionId,
-                'block_definition_name' => $blockDefinition->name,
-                'block_type' => $blockDefinition->block_type,
+                'block_type' => $templateBlock->block_type,
                 'name' => $templateBlock->name,
                 'group_uuid' => $templateBlock->group_uuid,
                 'sort_order' => (int)$templateBlock->sort_order,
                 'is_required' => (bool)$templateBlock->is_required,
                 'display_compact' => (bool)$templateBlock->display_compact,
-                'message' => "Block \"{$blockDefinition->name}\" zum Template \"{$template->name}\" hinzugefügt.",
+                'message' => 'Block "' . ($templateBlock->name ?? HatchBlockType::from($blockType)->label()) . "\" zum Template \"{$template->name}\" hinzugefügt.",
             ]);
         } catch (\Throwable $e) {
             return ToolResult::error('EXECUTION_ERROR', 'Fehler beim Hinzufügen des Blocks: ' . $e->getMessage());
