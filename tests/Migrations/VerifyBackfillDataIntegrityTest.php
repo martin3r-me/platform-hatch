@@ -107,23 +107,33 @@ class VerifyBackfillDataIntegrityTest extends TestCase
         $this->runMigration();
     }
 
-    public function test_migration_throws_for_orphaned_answer_key(): void
+    public function test_migration_passes_for_orphaned_answer_key(): void
     {
+        // Verwaiste answer-Keys (Block wurde gelöscht) sind Normalzustand und
+        // KEIN Gate mehr – die Migration läuft durch, ohne zu werfen.
         $intake = $this->makeIntake();
 
-        $intake->sessions()->create([
+        $session = $intake->sessions()->create([
             'answers' => ['block_999999' => 'Antwort ohne Block'],
         ]);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Datenintegritätsprüfung fehlgeschlagen/');
-
         $this->runMigration();
+
+        // Trockenlauf: Altdaten bleiben unangetastet.
+        $this->assertSame(
+            ['block_999999' => 'Antwort ohne Block'],
+            $session->fresh()->answers
+        );
     }
 
     public function test_migration_does_not_persist_any_change_even_on_failure(): void
     {
+        // Scheitert über ein hartes Gate (ungültiger block_type). Zusätzlich ein
+        // verwaister answer-Key, um zu belegen, dass auch der Rollback nichts
+        // an den Session-Daten verändert.
         $intake = $this->makeIntake();
+        $block = $this->makeBlock();
+        DB::table('hatch_template_blocks')->where('id', $block->id)->update(['block_type' => null]);
 
         $session = HatchIntakeSession::create([
             'project_intake_id' => $intake->id,

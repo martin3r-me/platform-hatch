@@ -14,12 +14,22 @@ use Platform\Hatch\Models\HatchIntakeSession;
  * Trockenlauf #18" in #02). Prüft rein lesend:
  *
  *  (a) jeder hatch_template_blocks-Datensatz hat einen gültigen block_type
- *      (NOT NULL, Wert aus HatchBlockType::values())
- *  (b) keine hatch_intake_sessions.answers-Keys "block_{id}" zeigen auf eine
- *      nicht (mehr) existierende hatch_template_blocks-Zeile
+ *      (NOT NULL, Wert aus HatchBlockType::values()) – HARTES Gate
  *  (c) jede hatch_project_intake_steps-Zeile hat weiterhin ein gültiges
  *      template_block_id (Referenz besteht; wird zusätzlich durch die FK mit
- *      onDelete('cascade') auf hatch_template_blocks erzwungen)
+ *      onDelete('cascade') auf hatch_template_blocks erzwungen) – HARTES Gate
+ *
+ * Nur als Metrik (KEIN Gate):
+ *  (b) hatch_intake_sessions.answers-Keys "block_{id}", die auf eine nicht
+ *      (mehr) existierende hatch_template_blocks-Zeile zeigen. Solche Orphans
+ *      sind Normalzustand, nicht Datenverlust: Template\Show::deleteBlock()
+ *      löscht nur den Block, putzt aber die answers-Keys der bereits erfassten
+ *      Sessions bewusst nicht mit. Beim Rendern (IntakeSession\Show::render)
+ *      werden ausschließlich die existierenden Blöcke iteriert – verwaiste Keys
+ *      werden nie gelesen. Zudem hängen sie an hatch_template_blocks, nicht an
+ *      hatch_block_definitions, und sind damit für #04–#06 (Drop von
+ *      block_definition_id / hatch_block_definitions) irrelevant. Der Wert wird
+ *      geloggt, blockiert die Freigabe aber nicht.
  *
  * answers liegt verschlüsselt (EncryptedJson-Cast, siehe Encryptable-Trait)
  * in der DB – daher über das Eloquent-Model gelesen statt per Query Builder
@@ -27,9 +37,9 @@ use Platform\Hatch\Models\HatchIntakeSession;
  *
  * Trockenlauf-Garantie: sämtliche Prüfungen laufen in einer Transaktion, die
  * danach IMMER zurückgerollt wird – es findet kein Schreibzugriff statt,
- * unabhängig vom Ergebnis. Das Ergebnis wird geloggt. Schlägt eine der drei
- * Prüfungen fehl, wirft die Migration eine Exception – #04–#06 dürfen dann
- * NICHT freigegeben werden.
+ * unabhängig vom Ergebnis. Das Ergebnis wird geloggt. Schlägt eines der harten
+ * Gates (a) oder (c) fehl, wirft die Migration eine Exception – #04–#06 dürfen
+ * dann NICHT freigegeben werden.
  */
 return new class extends Migration
 {
@@ -45,7 +55,15 @@ return new class extends Migration
 
         Log::info('[hatch #18] Verifikation Backfill-Trockenlauf + Datenintegrität', $report);
 
-        if ($report['blocks_invalid_type'] > 0 || $report['orphaned_answer_keys'] > 0 || $report['steps_orphaned'] > 0) {
+        if ($report['orphaned_answer_keys'] > 0) {
+            Log::warning(
+                '[hatch #18] Verwaiste answer-Keys (block_{id} ohne Template-Block) – '
+                . 'Normalzustand nach gelöschten Blöcken, kein Gate für #04–#06.',
+                ['orphaned_answer_keys' => $report['orphaned_answer_keys']]
+            );
+        }
+
+        if ($report['blocks_invalid_type'] > 0 || $report['steps_orphaned'] > 0) {
             throw new \RuntimeException(
                 '[hatch #18] Datenintegritätsprüfung fehlgeschlagen – #04–#06 NICHT freigegeben: '
                 . json_encode($report)
