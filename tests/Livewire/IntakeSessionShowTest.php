@@ -39,7 +39,6 @@ class IntakeSessionShowTest extends TestCase
             'is_required' => true,
             'team_id' => $team->id,
             'created_by_user_id' => $user->id,
-            'block_definition_id' => null,
             'block_type' => 'scale',
             'logic_config' => ['min' => 1, 'max' => 5],
             'group_uuid' => (string) UuidV7::generate(),

@@ -41,7 +41,6 @@ class HatchTemplateBlock extends Model
     protected $fillable = [
         'uuid',
         'project_template_id',
-        'block_definition_id',
         'group_uuid',
         'name',
         'description',

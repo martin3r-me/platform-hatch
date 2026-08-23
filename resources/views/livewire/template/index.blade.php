@@ -40,14 +40,14 @@
 
     <x-ui-page-container>
         <div class="mb-6">
-            <p class="text-sm text-[color:var(--ui-muted)]">Templates legen die Struktur einer Erhebung fest. Ein Template besteht aus mehreren Blöcken (BlockDefinitionen) in einer bestimmten Reihenfolge. Konfiguriere hier Komplexität, KI-Persönlichkeit und Branchenkontext, um den Ablauf der Erhebung zu steuern.</p>
+            <p class="text-sm text-[color:var(--ui-muted)]">Templates legen die Struktur einer Erhebung fest. Ein Template besteht aus mehreren Blöcken in einer bestimmten Reihenfolge. Konfiguriere hier Komplexität, KI-Persönlichkeit und Branchenkontext, um den Ablauf der Erhebung zu steuern.</p>
         </div>
 
         @if($templates->count() === 0)
             <div class="rounded-lg border border-dashed border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] p-8 text-center">
                 @svg('heroicon-o-document-text', 'w-12 h-12 mx-auto mb-3 text-[color:var(--ui-muted)]')
                 <h3 class="text-lg font-medium text-[color:var(--ui-secondary)] mb-1">Keine Templates vorhanden</h3>
-                <p class="text-sm text-[color:var(--ui-muted)] max-w-md mx-auto">Templates legen die Struktur einer Erhebung fest. Erstelle ein Template und füge BlockDefinitionen als Blöcke hinzu.</p>
+                <p class="text-sm text-[color:var(--ui-muted)] max-w-md mx-auto">Templates legen die Struktur einer Erhebung fest. Erstelle ein Template und füge Blöcke hinzu.</p>
             </div>
         @else
             <x-ui-table compact="true">

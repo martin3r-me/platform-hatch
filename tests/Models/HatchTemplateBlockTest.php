@@ -32,7 +32,6 @@ class HatchTemplateBlockTest extends TestCase
             'is_required' => false,
             'team_id' => $team->id,
             'created_by_user_id' => $user->id,
-            'block_definition_id' => null,
             'group_uuid' => (string) UuidV7::generate(),
             'block_type' => 'ai_chat',
             'logic_config' => ['foo' => 'bar'],
