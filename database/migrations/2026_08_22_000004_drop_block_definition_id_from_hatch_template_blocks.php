@@ -31,13 +31,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('hatch_template_blocks', function (Blueprint $table) {
-            try {
+        // Der Unique-Constraint wurde regulär bereits in 2026_04_21_000001
+        // entfernt – auf manchen Beständen kann er aber noch existieren.
+        // WICHTIG: try/catch MUSS den Schema::table()-Aufruf umschließen, nicht
+        // nur die Blueprint-Command. Der Drop wird erst beim Ausführen der
+        // Blueprint (nach der Closure) als SQL abgesetzt; eine Exception fliegt
+        // daher AUSSERHALB der Closure. Steht das try/catch innen, greift es
+        // nicht und die Migration bricht mit SQLSTATE 1091 ab.
+        try {
+            Schema::table('hatch_template_blocks', function (Blueprint $table) {
                 $table->dropUnique('hatch_tb_template_block_unique');
-            } catch (\Throwable $e) {
-                // Bereits in 2026_04_21_000001 entfernt – ignorieren.
-            }
-        });
+            });
+        } catch (\Throwable $e) {
+            // Constraint existiert nicht mehr – erwarteter Normalfall.
+        }
 
         Schema::table('hatch_template_blocks', function (Blueprint $table) {
             $table->dropForeign(['block_definition_id']);
