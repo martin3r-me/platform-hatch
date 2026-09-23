@@ -8,200 +8,137 @@
             ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Erhebungen'],
         ]">
-            <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
+            <x-nx-button variant="primary" wire:click="openCreateModal">
                 @svg('heroicon-o-plus', 'w-4 h-4')
                 <span>Neue Erhebung</span>
-            </x-ui-button>
+            </x-nx-button>
         </x-ui-page-actionbar>
     </x-slot>
 
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Filter" width="w-80" :defaultOpen="true" side="left">
-            <div class="p-6 space-y-6">
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Suche</h3>
-                    <x-ui-input-text
-                        name="search"
-                        placeholder="Erhebungen suchen..."
-                        class="w-full"
-                        size="sm"
-                        wire:model.live.debounce.300ms="search"
-                    />
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Filter</h3>
-                    <div class="space-y-3">
-                        <x-ui-input-select
-                            name="statusFilter"
-                            label="Status"
-                            hint="Liste filtern"
-                            :options="collect($statuses)->map(function($label, $value) {
-                                return ['value' => $value, 'label' => $label];
-                            })->values()"
-                            optionValue="value"
-                            optionLabel="label"
-                            :nullable="true"
-                            nullLabel="– Alle –"
-                            size="sm"
-                            wire:model.live="statusFilter"
-                        />
-                        <x-ui-input-select
-                            name="templateFilter"
-                            label="Template"
-                            hint="Liste filtern"
-                            :options="collect($templates)->map(function($template) {
-                                return ['value' => $template->id, 'label' => $template->name];
-                            })->values()"
-                            optionValue="value"
-                            optionLabel="label"
-                            :nullable="true"
-                            nullLabel="– Alle –"
-                            size="sm"
-                            wire:model.live="templateFilter"
-                        />
-                    </div>
-                </div>
-            </div>
-        </x-ui-page-sidebar>
-    </x-slot>
-
     <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-6 text-sm text-[var(--ui-muted)]">Keine Aktivitäten verfügbar</div>
+        <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <x-nx-empty icon="heroicon-o-bolt">Keine Aktivitäten verfügbar</x-nx-empty>
         </x-ui-page-sidebar>
     </x-slot>
 
     <x-ui-page-container>
-        {{-- Stat-Karten --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <button wire:click="setStatusFilter('')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === '' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Gesamt</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['total'] }}</div>
+    <div class="space-y-5">
+
+    @php
+        $statusVariants = ['draft' => 'neutral', 'published' => 'success', 'closed' => 'warning'];
+        $renderer = app(\Platform\Hatch\Support\IntakeStringRenderer::class);
+        $filterAktiv = $search !== '' || $statusFilter !== '' || $templateFilter !== '';
+    @endphp
+
+    {{-- Kennzahlen: klickbar als Status-Filter --}}
+    <x-nx-stat-grid>
+        @foreach (['' => ['Gesamt', 'heroicon-o-rocket-launch', 'var(--nx-accent)', $stats['total']],
+                   'draft' => ['Entwurf', 'heroicon-o-pencil-square', 'var(--nx-muted)', $stats['draft']],
+                   'published' => ['Veröffentlicht', 'heroicon-o-signal', 'var(--nx-success)', $stats['published']],
+                   'closed' => ['Geschlossen', 'heroicon-o-lock-closed', 'var(--nx-warning)', $stats['closed']]] as $key => [$label, $icon, $accent, $count])
+            <button type="button" wire:click="setStatusFilter('{{ $key }}')" class="text-left">
+                <x-nx-stat :label="$label" :value="(string) $count" :icon="$icon"
+                    :accent="$count > 0 ? $accent : 'var(--nx-muted)'"
+                    :class="\Illuminate\Support\Arr::toCssClasses([
+                        'transition-colors hover:bg-[color:var(--nx-hover)]',
+                        'ring-1 ring-[color:var(--nx-line-strong)] !bg-[color:var(--nx-active)]' => $statusFilter === $key,
+                    ])" />
             </button>
-            <button wire:click="setStatusFilter('draft')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'draft' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Entwurf</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['draft'] }}</div>
-            </button>
-            <button wire:click="setStatusFilter('published')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'published' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Veröffentlicht</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['published'] }}</div>
-            </button>
-            <button wire:click="setStatusFilter('closed')"
-                class="p-4 rounded-lg border text-left transition-colors {{ $statusFilter === 'closed' ? 'border-[var(--ui-primary)] bg-[var(--ui-primary)]/5' : 'border-[var(--ui-border)] bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/50' }}">
-                <div class="text-xs font-medium text-[var(--ui-muted)] uppercase tracking-wider">Geschlossen</div>
-                <div class="text-2xl font-bold text-[var(--ui-secondary)] mt-1">{{ $stats['closed'] }}</div>
-            </button>
+        @endforeach
+    </x-nx-stat-grid>
+
+    {{-- Filter + Suche direkt über der Liste --}}
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+        <div class="flex flex-wrap items-center gap-1">
+            <button type="button" wire:click="$set('templateFilter', '')"
+                class="rounded-full px-2.5 py-1 transition-colors {{ $templateFilter === '' ? 'bg-[color:var(--nx-active)] font-medium text-[color:var(--nx-text)]' : 'text-[color:var(--nx-muted)] hover:bg-[color:var(--nx-hover)]' }}">Alle Vorlagen</button>
+            @foreach ($templates as $template)
+                <button type="button" wire:click="$set('templateFilter', '{{ $template->id }}')"
+                    class="rounded-full px-2.5 py-1 transition-colors {{ (string) $templateFilter === (string) $template->id ? 'bg-[color:var(--nx-active)] font-medium text-[color:var(--nx-text)]' : 'text-[color:var(--nx-muted)] hover:bg-[color:var(--nx-hover)]' }}">{{ $template->name }}</button>
+            @endforeach
         </div>
+        <div class="ml-auto flex items-center gap-2">
+            @if($filterAktiv)
+                <button type="button" wire:click="clearFilters" class="text-[color:var(--nx-muted)] transition-colors hover:text-[color:var(--nx-text)]">Zurücksetzen</button>
+            @endif
+            <div class="w-64">
+                <x-nx-input-text name="search" size="sm" wire:model.live.debounce.300ms="search" placeholder="Erhebungen suchen…" />
+            </div>
+        </div>
+    </div>
 
+    <x-nx-card flush>
         @if($projectIntakes->count() === 0)
-            <div class="rounded-lg border border-dashed border-[var(--ui-border)] bg-[var(--ui-surface)] p-12 text-center">
-                @svg('heroicon-o-rocket-launch', 'w-16 h-16 mx-auto mb-4 text-[var(--ui-muted)]/60')
-                <h3 class="text-lg font-semibold text-[var(--ui-secondary)] mb-2">Keine Erhebungen vorhanden</h3>
-                <p class="text-sm text-[var(--ui-muted)] max-w-md mx-auto mb-5">Erhebungen sammeln Informationen basierend auf einem Template. Wähle ein Template und starte die erste Erhebung.</p>
-                <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
-                    <span class="flex items-center gap-2">
-                        @svg('heroicon-o-plus', 'w-4 h-4')
-                        Neue Erhebung anlegen
-                    </span>
-                </x-ui-button>
-            </div>
+            <x-nx-empty icon="heroicon-o-rocket-launch">
+                @if($filterAktiv)
+                    Keine Erhebung passt zu Suche oder Filter
+                @else
+                    Noch keine Erhebungen
+                    <x-slot name="action">
+                        <x-nx-button variant="primary" wire:click="openCreateModal">
+                            @svg('heroicon-o-plus', 'w-4 h-4')
+                            <span>Erste Erhebung anlegen</span>
+                        </x-nx-button>
+                    </x-slot>
+                @endif
+            </x-nx-empty>
         @else
-            <x-ui-table compact="true">
-                <x-ui-table-header>
-                    <x-ui-table-header-cell compact="true">Name</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Template</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Status</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Sessions</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Erstellt von</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Erstellt am</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true" align="right"></x-ui-table-header-cell>
-                </x-ui-table-header>
-
-                <x-ui-table-body>
+            <x-nx-table>
+                <x-nx-table-header>
+                    <x-nx-table-header-cell>Name</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Vorlage</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Status</x-nx-table-header-cell>
+                    <x-nx-table-header-cell align="right">Antworten</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Erstellt</x-nx-table-header-cell>
+                    <x-nx-table-header-cell align="right"><span class="sr-only">Aktionen</span></x-nx-table-header-cell>
+                </x-nx-table-header>
+                <x-nx-table-body>
                     @foreach($projectIntakes as $projectIntake)
-                        @php
-                            $statusVariants = [
-                                'draft' => 'secondary',
-                                'published' => 'success',
-                                'closed' => 'warning',
-                            ];
-                            $statusColors = [
-                                'draft' => 'bg-gray-400',
-                                'published' => 'bg-green-500',
-                                'closed' => 'bg-amber-500',
-                            ];
-                        @endphp
-                        <x-ui-table-row
-                            compact="true"
-                            clickable="true"
-                            :href="route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id])"
-                            wire:key="project-intake-{{ $projectIntake->id }}"
-                        >
-                            <x-ui-table-cell compact="true">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-1 h-8 rounded-full {{ $statusColors[$projectIntake->status] ?? 'bg-gray-400' }} flex-shrink-0"></div>
-                                    <div>
-                                        <div class="font-medium text-[var(--ui-secondary)]">{{ $projectIntake->name }}</div>
-                                        @if($projectIntake->description)
-                                            <div class="text-xs text-[var(--ui-muted)]">{{ Str::limit($projectIntake->description, 80) }}</div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                @if($projectIntake->projectTemplate)
-                                    <x-ui-badge variant="secondary" size="sm">{{ $projectIntake->projectTemplate->name }}</x-ui-badge>
-                                @else
-                                    <span class="text-[var(--ui-muted)]">–</span>
+                        @php $showUrl = route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id]); @endphp
+                        <x-nx-table-row wire:key="project-intake-{{ $projectIntake->id }}" clickable :href="$showUrl">
+                            <x-nx-table-cell class="max-w-md">
+                                <a href="{{ $showUrl }}" wire:navigate class="block truncate font-medium text-[color:var(--nx-text)] hover:underline"
+                                   title="{{ $projectIntake->name }}">{{ $renderer->render($projectIntake->name, $projectIntake) }}</a>
+                                @if($projectIntake->description)
+                                    <div class="truncate text-xs text-[color:var(--nx-faint)]" title="{{ $projectIntake->description }}">{{ $renderer->render($projectIntake->description, $projectIntake) }}</div>
                                 @endif
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <x-ui-badge variant="{{ $statusVariants[$projectIntake->status] ?? 'secondary' }}" size="sm">
+                            </x-nx-table-cell>
+                            <x-nx-table-cell class="whitespace-nowrap text-[color:var(--nx-muted)]">
+                                {{ $projectIntake->projectTemplate->name ?? '–' }}
+                            </x-nx-table-cell>
+                            <x-nx-table-cell>
+                                <x-nx-badge :variant="$statusVariants[$projectIntake->status] ?? 'neutral'" dot class="whitespace-nowrap">
                                     {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
-                                </x-ui-badge>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <x-ui-badge variant="secondary" size="sm">{{ $projectIntake->sessions_count }}</x-ui-badge>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <span class="text-sm">{{ $projectIntake->createdByUser->name ?? 'Unbekannt' }}</span>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <span class="text-sm text-[var(--ui-muted)]">{{ $projectIntake->created_at->format('d.m.Y H:i') }}</span>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true" align="right">
-                                <div class="flex items-center gap-2 justify-end">
-                                    <button
-                                        type="button"
-                                        wire:click.stop="deleteProjectIntake('{{ $projectIntake->id }}')"
-                                        wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-                                        class="text-[var(--ui-muted)] hover:text-red-500 transition-colors"
-                                        title="Erhebung löschen"
-                                    >
-                                        @svg('heroicon-o-trash', 'w-4 h-4')
-                                    </button>
-                                    <a
-                                        href="{{ route('hatch.project-intakes.show', ['projectIntake' => $projectIntake->id]) }}"
-                                        wire:navigate
-                                        class="text-[var(--ui-muted)] hover:text-[var(--ui-primary)] transition-colors"
-                                        title="Anzeigen"
-                                    >
-                                        @svg('heroicon-o-chevron-right', 'w-5 h-5')
-                                    </a>
-                                </div>
-                            </x-ui-table-cell>
-                        </x-ui-table-row>
+                                </x-nx-badge>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell align="right" class="tabular-nums text-[color:var(--nx-muted)]">{{ $projectIntake->sessions_count }}</x-nx-table-cell>
+                            <x-nx-table-cell class="whitespace-nowrap">
+                                <div class="tabular-nums text-[color:var(--nx-muted)]">{{ $projectIntake->created_at->format('d.m.Y') }}</div>
+                                <div class="text-xs text-[color:var(--nx-faint)]">{{ $projectIntake->createdByUser->name ?? 'Unbekannt' }}</div>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell align="right">
+                                <x-nx-button icon variant="ghost" type="button" title="Erhebung löschen"
+                                    onclick="event.stopPropagation()"
+                                    wire:click="deleteProjectIntake('{{ $projectIntake->id }}')"
+                                    wire:confirm="Erhebung wirklich löschen? Alle zugehörigen Sessions werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.">
+                                    @svg('heroicon-o-trash', 'w-4 h-4 text-[color:var(--nx-danger)]')
+                                </x-nx-button>
+                            </x-nx-table-cell>
+                        </x-nx-table-row>
                     @endforeach
-                </x-ui-table-body>
-            </x-ui-table>
-
-            <div class="mt-4">
-                {{ $projectIntakes->links() }}
-            </div>
+                </x-nx-table-body>
+            </x-nx-table>
         @endif
+    </x-nx-card>
+
+    @if($projectIntakes->hasPages())
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--nx-faint)]">
+            <span class="tabular-nums">{{ $projectIntakes->firstItem() }}–{{ $projectIntakes->lastItem() }} von {{ $projectIntakes->total() }} Erhebungen</span>
+            {{ $projectIntakes->links() }}
+        </div>
+    @endif
+
+    </div>
     </x-ui-page-container>
 
     <!-- Create Modal -->
@@ -245,8 +182,8 @@
         </div>
         <x-slot name="footer">
             <div class="flex justify-end gap-2">
-                <x-ui-button type="button" variant="secondary-outline" wire:click="closeCreateModal">Abbrechen</x-ui-button>
-                <x-ui-button type="button" variant="primary" wire:click="createProjectIntake">Erhebung anlegen</x-ui-button>
+                <x-nx-button type="button" wire:click="closeCreateModal">Abbrechen</x-nx-button>
+                <x-nx-button type="button" variant="primary" wire:click="createProjectIntake">Erhebung anlegen</x-nx-button>
             </div>
         </x-slot>
     </x-ui-modal>
