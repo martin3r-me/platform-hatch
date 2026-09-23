@@ -1,94 +1,112 @@
 <x-ui-page>
     <x-slot name="navbar">
-        <x-ui-page-navbar title="" />
+        <x-ui-page-navbar title="Formulare" icon="heroicon-o-rocket-launch" />
     </x-slot>
 
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Formulare', 'icon' => 'rocket-launch'],
-        ]" />
-    </x-slot>
-
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Übersicht" width="w-80" :defaultOpen="true" side="left">
-            <div class="p-6 space-y-6">
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Statistiken</h3>
-                    <div class="space-y-3">
-                        <div class="py-3 px-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 flex items-center justify-between">
-                            <span class="text-xs text-[var(--ui-muted)]">Templates (aktiv)</span>
-                            <span class="text-lg font-bold text-[var(--ui-secondary)]">{{ $activeTemplates }}</span>
-                        </div>
-                        <div class="py-3 px-4 bg-[var(--ui-muted-5)] rounded-lg border border-[var(--ui-border)]/40 flex items-center justify-between">
-                            <span class="text-xs text-[var(--ui-muted)]">Abschlussrate</span>
-                            <span class="text-lg font-bold text-[var(--ui-secondary)]">{{ $completionRate }}%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </x-ui-page-sidebar>
+            ['label' => 'Dashboard'],
+        ]">
+            <x-nx-button :href="route('hatch.templates.index')" wire:navigate>
+                @svg('heroicon-o-document-text', 'w-4 h-4')
+                <span>Vorlagen</span>
+            </x-nx-button>
+            <x-nx-button variant="primary" :href="route('hatch.project-intakes.index')" wire:navigate>
+                @svg('heroicon-o-rocket-launch', 'w-4 h-4')
+                <span>Erhebungen</span>
+            </x-nx-button>
+        </x-ui-page-actionbar>
     </x-slot>
 
     <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-6 text-sm text-[var(--ui-muted)]">Keine Aktivitäten verfügbar</div>
+        <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <x-nx-empty icon="heroicon-o-bolt">Keine Aktivitäten verfügbar</x-nx-empty>
         </x-ui-page-sidebar>
     </x-slot>
 
     <x-ui-page-container>
-        <!-- Haupt-Statistiken -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <x-ui-dashboard-tile title="Templates" :count="$activeTemplates" icon="document-text" variant="secondary" size="lg" :href="route('hatch.templates.index')" />
-            <x-ui-dashboard-tile title="Erhebungen" :count="$totalIntakes" icon="rocket-launch" variant="secondary" size="lg" :href="route('hatch.project-intakes.index')" />
-            <x-ui-dashboard-tile title="Abgeschlossen" :count="$completedIntakes" icon="check-circle" variant="secondary" size="lg" />
+    <div class="space-y-6">
+
+    @php
+        $published = $intakesByStatus['published'] ?? 0;
+        $drafts = $intakesByStatus['draft'] ?? 0;
+        $closed = $intakesByStatus['closed'] ?? 0;
+        $sessionRate = $totalSessions > 0 ? round($completedSessions / $totalSessions * 100) : 0;
+    @endphp
+
+    {{-- Kennzahlen --}}
+    <x-nx-stat-grid>
+        <x-nx-stat label="Vorlagen" :value="$activeTemplates . ' / ' . $totalTemplates"
+            hint="aktiv" icon="heroicon-o-document-text" accent="var(--nx-accent)"
+            :href="route('hatch.templates.index')" wire:navigate />
+        <x-nx-stat label="Erhebungen" :value="(string) $totalIntakes"
+            :hint="$published . ' live · ' . $drafts . ' Entwurf'"
+            icon="heroicon-o-rocket-launch" accent="var(--nx-accent)"
+            :href="route('hatch.project-intakes.index')" wire:navigate />
+        <x-nx-stat label="Antworten" :value="(string) $totalSessions"
+            :hint="$completedSessions . ' vollständig ausgefüllt'"
+            icon="heroicon-o-chat-bubble-left-right" accent="var(--nx-info)" />
+        <x-nx-stat label="Abschlussquote" :value="$sessionRate . ' %'"
+            hint="der begonnenen Antworten"
+            icon="heroicon-o-check-circle"
+            :accent="$totalSessions > 0 ? 'var(--nx-success)' : 'var(--nx-muted)'" />
+    </x-nx-stat-grid>
+
+    {{-- Erhebungen nach Status --}}
+    <x-nx-section icon="heroicon-o-signal" title="Erhebungen nach Status">
+        <x-nx-stat-grid cols="3">
+            <x-nx-stat label="Entwurf" :value="(string) $drafts" icon="heroicon-o-pencil-square" accent="var(--nx-muted)" />
+            <x-nx-stat label="Veröffentlicht" :value="(string) $published" icon="heroicon-o-play-circle"
+                :accent="$published > 0 ? 'var(--nx-success)' : 'var(--nx-muted)'" />
+            <x-nx-stat label="Geschlossen" :value="(string) $closed" icon="heroicon-o-lock-closed"
+                :accent="$closed > 0 ? 'var(--nx-warning)' : 'var(--nx-muted)'" />
+        </x-nx-stat-grid>
+    </x-nx-section>
+
+    {{-- Letzte Erhebungen --}}
+    <x-nx-card flush>
+        <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
+            @svg('heroicon-o-queue-list', 'w-4 h-4 text-[color:var(--nx-muted)]')
+            <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Letzte Erhebungen</h2>
+            <span class="text-xs text-[color:var(--nx-faint)]">zuletzt bearbeitet</span>
+            <a href="{{ route('hatch.project-intakes.index') }}" wire:navigate class="ml-auto text-xs text-[color:var(--nx-muted)] transition-colors hover:text-[color:var(--nx-text)]">Alle</a>
         </div>
 
-        <!-- Panels -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <x-ui-panel title="Erhebungen nach Status">
-                @php
-                    $statusLabels = [
-                        'draft' => ['label' => 'Entwurf', 'variant' => 'secondary'],
-                        'published' => ['label' => 'Veröffentlicht', 'variant' => 'success'],
-                        'closed' => ['label' => 'Geschlossen', 'variant' => 'warning'],
-                    ];
-                @endphp
-                @if($totalIntakes > 0)
-                    <div class="space-y-2">
-                        @foreach($statusLabels as $status => $meta)
-                            @php $count = $intakesByStatus[$status] ?? 0; @endphp
-                            <div class="flex items-center justify-between p-3 rounded-lg border border-[var(--ui-border)]/60 bg-[var(--ui-surface)]">
-                                <x-ui-badge variant="{{ $meta['variant'] }}" size="sm">{{ $meta['label'] }}</x-ui-badge>
-                                <span class="text-sm font-bold text-[var(--ui-secondary)]">{{ $count }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-sm text-[var(--ui-muted)] p-4 text-center">Noch keine Erhebungen vorhanden.</div>
-                @endif
-            </x-ui-panel>
+        @if($recentIntakes->isNotEmpty())
+            <div class="divide-y divide-[color:var(--nx-line)]">
+                @foreach($recentIntakes as $intake)
+                    @php
+                        $variant = match($intake->status) {
+                            'published' => 'success',
+                            'closed' => 'warning',
+                            default => 'neutral',
+                        };
+                    @endphp
+                    <x-nx-list-item
+                        wire:key="dash-intake-{{ $intake->id }}"
+                        icon="heroicon-o-rocket-launch"
+                        :title="$intake->display_name"
+                        :subtitle="($intake->projectTemplate->name ?? '–') . ' · ' . optional($intake->updated_at)->diffForHumans()"
+                        :href="route('hatch.project-intakes.show', $intake)"
+                    >
+                        <x-slot name="trailing">
+                            <span class="text-xs tabular-nums text-[color:var(--nx-faint)]">{{ $intake->sessions_count }} {{ $intake->sessions_count === 1 ? 'Antwort' : 'Antworten' }}</span>
+                            <x-nx-badge :variant="$variant">{{ ['draft' => 'Entwurf', 'published' => 'Veröffentlicht', 'closed' => 'Geschlossen'][$intake->status] ?? $intake->status }}</x-nx-badge>
+                        </x-slot>
+                    </x-nx-list-item>
+                @endforeach
+            </div>
+        @else
+            <x-nx-empty icon="heroicon-o-rocket-launch">
+                Noch keine Erhebungen
+                <x-slot name="action">
+                    <span class="text-xs text-[color:var(--nx-faint)]">Lege eine Erhebung aus einer Vorlage an, dann erscheint sie hier.</span>
+                </x-slot>
+            </x-nx-empty>
+        @endif
+    </x-nx-card>
 
-            <x-ui-panel title="Letzte Erhebungen" subtitle="Top 5">
-                <div class="space-y-2">
-                    @forelse(($recentIntakes ?? collect())->take(5) as $intake)
-                        <a href="{{ route('hatch.project-intakes.show', $intake) }}" wire:navigate
-                           class="group flex items-center justify-between p-3 rounded-lg border border-[var(--ui-border)]/60 bg-[var(--ui-surface)] hover:border-[var(--ui-primary)]/60 hover:bg-[var(--ui-primary-5)] transition-colors">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-8 h-8 rounded-full bg-[var(--ui-muted-5)] border border-[var(--ui-border)]/60 flex items-center justify-center text-xs font-semibold text-[var(--ui-secondary)]">
-                                    {{ strtoupper(substr($intake->name ?? 'E', 0, 1)) }}
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="font-medium text-[var(--ui-secondary)] truncate">{{ $intake->name }}</div>
-                                    <div class="text-xs text-[var(--ui-muted)]">{{ $intake->projectTemplate->name ?? '–' }} · {{ optional($intake->updated_at)->diffForHumans() }}</div>
-                                </div>
-                            </div>
-                            @svg('heroicon-o-arrow-right', 'w-4 h-4 text-[var(--ui-muted)] group-hover:text-[var(--ui-primary)]')
-                        </a>
-                    @empty
-                        <div class="text-sm text-[var(--ui-muted)] p-4 text-center">Noch keine Erhebungen vorhanden.</div>
-                    @endforelse
-                </div>
-            </x-ui-panel>
-        </div>
+    </div>
     </x-ui-page-container>
 </x-ui-page>

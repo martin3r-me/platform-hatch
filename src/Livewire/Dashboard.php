@@ -5,7 +5,9 @@ namespace Platform\Hatch\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Platform\Hatch\Models\HatchProjectTemplate;
+use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
+use Platform\Hatch\Support\IntakeStringRenderer;
 
 class Dashboard extends Component
 {
@@ -27,11 +29,22 @@ class Dashboard extends Component
         $completedIntakes = $intakesByStatus['closed'] ?? 0;
         $completionRate = $totalIntakes > 0 ? round(($completedIntakes / $totalIntakes) * 100, 1) : 0;
 
+        $sessions = HatchIntakeSession::whereHas('projectIntake', fn ($q) => $q->where('team_id', $teamId));
+        $totalSessions = (clone $sessions)->count();
+        $completedSessions = (clone $sessions)->where('status', 'completed')->count();
+
         $recentIntakes = HatchProjectIntake::where('team_id', $teamId)
             ->with(['projectTemplate', 'createdByUser'])
+            ->withCount('sessions')
             ->orderByDesc('updated_at')
             ->limit(5)
             ->get();
+
+        // Platzhalter wie {{iso_week}} so anzeigen, wie Respondenten sie sehen
+        $renderer = app(IntakeStringRenderer::class);
+        foreach ($recentIntakes as $intake) {
+            $intake->display_name = $renderer->render($intake->name, $intake);
+        }
 
         return view('hatch::livewire.dashboard', [
             'totalTemplates' => $totalTemplates,
@@ -41,6 +54,8 @@ class Dashboard extends Component
             'completedIntakes' => $completedIntakes,
             'completionRate' => $completionRate,
             'recentIntakes' => $recentIntakes,
+            'totalSessions' => $totalSessions,
+            'completedSessions' => $completedSessions,
         ])->layout('platform::layouts.app');
     }
 }
