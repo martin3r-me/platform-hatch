@@ -49,7 +49,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                         'table' => 'hatch_template_blocks',
                         'key_fields' => ['id', 'uuid', 'project_template_id', 'name', 'block_type', 'ai_prompt', 'logic_config', 'is_active', 'team_id'],
                         'note' => 'Bausteine (Frage-Typen) eines Templates. Self-contained: Typ und Konfiguration (logic_config JSON) liegen direkt am Block, keine separate Definition.',
-                        'block_types' => [
+                        'block_types' => \Platform\Hatch\Support\BlockTypes::mergeDescriptions([
                             'text' => ['label' => 'Text-Eingabe', 'config' => 'placeholder, min_length, max_length (255)'],
                             'long_text' => ['label' => 'Langer Text', 'config' => 'placeholder, min_length, max_length (5000), rows (6)'],
                             'email' => ['label' => 'E-Mail', 'config' => 'placeholder'],
@@ -84,7 +84,7 @@ class HatchOverviewTool implements ToolContract, ToolMetadataContract
                             'date_range' => ['label' => 'Datumsbereich', 'config' => 'min_date, max_date, format', 'storage' => 'JSON {start, end}'],
                             'calculated' => ['label' => 'Berechnetes Feld (read-only)', 'config' => 'formula: "{block_ID} + {block_ID}", source_blocks, display_format: "{result} kg", operation: custom|sum|avg|min|max'],
                             'repeater' => ['label' => 'Wiederholung / Repeater', 'config' => 'fields: [{key, label, type, options?}], min_entries (0), max_entries (10), add_label', 'field_types' => 'text, long_text, email, url, phone, number, date, time, select, color', 'storage' => 'JSON array of objects'],
-                        ],
+                        ]),
                     ],
                     'project_intakes' => [
                         'model' => 'Platform\\Hatch\\Models\\HatchProjectIntake',
