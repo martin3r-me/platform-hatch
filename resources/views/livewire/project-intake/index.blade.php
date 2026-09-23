@@ -62,7 +62,7 @@
                 <button type="button" wire:click="clearFilters" class="text-[color:var(--nx-muted)] transition-colors hover:text-[color:var(--nx-text)]">Zurücksetzen</button>
             @endif
             <div class="w-64">
-                <x-nx-input-text name="search" size="sm" wire:model.live.debounce.300ms="search" placeholder="Erhebungen suchen…" />
+                <x-nx-input-text name="search" size="sm" wire:model.live.debounce.300ms="search" placeholder="Name, Beschreibung, VA-Nr.…" />
             </div>
         </div>
     </div>
@@ -99,6 +99,9 @@
                             <x-nx-table-cell class="max-w-md">
                                 <a href="{{ $showUrl }}" wire:navigate class="block truncate font-medium text-[color:var(--nx-text)] hover:underline"
                                    title="{{ $projectIntake->name }}">{{ $renderer->render($projectIntake->name, $projectIntake) }}</a>
+                                @if($projectIntake->event_reference)
+                                    <div class="flex items-center gap-1 truncate text-xs text-[color:var(--nx-muted)]" title="Veranstaltungsnummer (intern)">@svg('heroicon-o-tag', 'w-3 h-3 shrink-0'){{ $projectIntake->event_reference }}</div>
+                                @endif
                                 @if($projectIntake->description)
                                     <div class="truncate text-xs text-[color:var(--nx-faint)]" title="{{ $projectIntake->description }}">{{ $renderer->render($projectIntake->description, $projectIntake) }}</div>
                                 @endif

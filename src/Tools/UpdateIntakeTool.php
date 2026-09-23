@@ -45,6 +45,10 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Neue Beschreibung. Unterstützt die gleichen Platzhalter wie name.',
                 ],
+                'event_reference' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
+                ],
                 'status' => [
                     'type' => 'string',
                     'enum' => ['draft', 'published', 'closed'],
@@ -106,7 +110,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
             }
 
             // Einfache Felder aktualisieren
-            foreach (['name', 'description'] as $field) {
+            foreach (['name', 'description', 'event_reference'] as $field) {
                 if (array_key_exists($field, $arguments)) {
                     $intake->{$field} = $arguments[$field] === '' ? null : $arguments[$field];
                 }

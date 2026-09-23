@@ -52,6 +52,10 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                                 'type' => 'string',
                                 'description' => 'Optional: Beschreibung. Gleiche Platzhalter wie name.',
                             ],
+                            'event_reference' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
+                            ],
                             'intake_settings' => [
                                 'type' => 'object',
                                 'description' => 'Optional: Owner-Konfiguration (z.B. week_cutoff). Schema siehe hatch.intakes.POST.',
@@ -132,6 +136,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'project_template_id' => $template->id,
                         'name' => $name,
                         'description' => $item['description'] ?? null,
+                        'event_reference' => ($item['event_reference'] ?? '') !== '' ? $item['event_reference'] : null,
                         'status' => 'draft',
                         'is_active' => false,
                         'intake_settings' => $intakeSettings,

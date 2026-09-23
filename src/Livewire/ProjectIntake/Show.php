@@ -27,6 +27,7 @@ class Show extends Component
     // Bearbeitbare Stammdaten (Name/Beschreibung werden im Public-View angezeigt)
     public string $name = '';
     public string $description = '';
+    public string $eventReference = '';
 
     // Werte eigener Platzhalter für diese Erhebung (intake_settings.placeholder_values)
     public array $placeholderValues = [];
@@ -48,6 +49,7 @@ class Show extends Component
         $this->projectIntake = $projectIntake;
         $this->name = (string) $projectIntake->name;
         $this->description = (string) $projectIntake->description;
+        $this->eventReference = (string) $projectIntake->event_reference;
         $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
         $this->loadTemplateBlocks();
         $this->determineCurrentBlock();
@@ -64,6 +66,13 @@ class Show extends Component
         $this->validateOnly('description', ['description' => 'nullable|string|max:2000']);
         $description = trim($this->description);
         $this->projectIntake->update(['description' => $description === '' ? null : $description]);
+    }
+
+    public function updatedEventReference()
+    {
+        $this->validateOnly('eventReference', ['eventReference' => 'nullable|string|max:100']);
+        $value = trim($this->eventReference);
+        $this->projectIntake->update(['event_reference' => $value === '' ? null : $value]);
     }
 
     public function updatedPlaceholderValues($value, $key)

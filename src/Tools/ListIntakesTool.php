@@ -76,7 +76,7 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                 'project_template_id',
                 'created_at',
             ]);
-            $this->applyStandardSearch($query, $arguments, ['name', 'description']);
+            $this->applyStandardSearch($query, $arguments, ['name', 'description', 'event_reference']);
             $this->applyStandardSort($query, $arguments, [
                 'name',
                 'status',
@@ -92,6 +92,7 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                     'uuid' => $i->uuid,
                     'name' => $i->name,
                     'description' => $i->description,
+                    'event_reference' => $i->event_reference,
                     'status' => $i->status,
                     'intake_settings' => $i->intake_settings,
                     'project_template_id' => $i->project_template_id,

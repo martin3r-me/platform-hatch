@@ -46,6 +46,10 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Beschreibung. Gleiche Platzhalter wie name.',
                 ],
+                'event_reference' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
+                ],
                 'intake_settings' => [
                     'type' => 'object',
                     'description' => 'Optional: Owner-Konfiguration. Beispiel: {"week_cutoff": {"rollover_weekday": "saturday", "rollover_time": "12:00"}} – Antworten ab Samstag 12 Uhr werden der kommenden ISO-KW zugeordnet. Ohne Setting gilt ISO-Standard (Montag 00:00).',
@@ -95,6 +99,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'project_template_id' => $template->id,
                 'name' => $name,
                 'description' => $arguments['description'] ?? null,
+                'event_reference' => ($arguments['event_reference'] ?? '') !== '' ? $arguments['event_reference'] : null,
                 'status' => 'draft',
                 'is_active' => false,
                 'intake_settings' => $intakeSettings,

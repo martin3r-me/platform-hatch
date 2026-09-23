@@ -51,6 +51,10 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                                 'type' => 'string',
                                 'description' => 'Optional: Neue Beschreibung. Gleiche Platzhalter wie name.',
                             ],
+                            'event_reference' => [
+                                'type' => 'string',
+                                'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
+                            ],
                             'status' => [
                                 'type' => 'string',
                                 'enum' => ['draft', 'published', 'closed'],
@@ -109,7 +113,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                     }
 
                     // Einfache Felder aktualisieren
-                    foreach (['name', 'description'] as $field) {
+                    foreach (['name', 'description', 'event_reference'] as $field) {
                         if (array_key_exists($field, $item)) {
                             $intake->{$field} = $item[$field] === '' ? null : $item[$field];
                         }

@@ -78,6 +78,7 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                 'name' => $intake->name,
                 'name_rendered' => $renderer->render($intake->name, $intake),
                 'description' => $intake->description,
+                'event_reference' => $intake->event_reference,
                 'description_rendered' => $renderer->render($intake->description, $intake),
                 'status' => $intake->status,
                 'intake_settings' => $intake->intake_settings,

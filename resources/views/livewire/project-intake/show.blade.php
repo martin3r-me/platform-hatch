@@ -89,6 +89,26 @@
                 />
             </div>
 
+            {{-- Intern: nur für das Team, erscheint nirgends öffentlich --}}
+            <div class="{{ $gruppe }}">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="{{ $ueberschrift }}">Intern</span>
+                    <span class="inline-flex items-center gap-1 text-xs text-[color:var(--nx-faint)]">
+                        @svg('heroicon-o-eye-slash', 'w-3.5 h-3.5')
+                        nicht öffentlich
+                    </span>
+                </div>
+                <x-nx-input-text
+                    name="eventReference"
+                    label="Veranstaltungsnummer"
+                    hint="optional"
+                    size="sm"
+                    wire:model.live.debounce.500ms="eventReference"
+                    placeholder="z.B. VA-2026-0412"
+                    :errorKey="'eventReference'"
+                />
+            </div>
+
             {{-- Werte eigener Platzhalter für diese Erhebung --}}
             @if(!empty($customPlaceholders))
                 <div class="{{ $gruppe }}">
