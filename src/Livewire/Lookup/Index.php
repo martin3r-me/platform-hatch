@@ -133,7 +133,12 @@ class Index extends Component
 
     public function addValue()
     {
-        if (empty($this->newValueLabel) || empty($this->newValueValue)) return;
+        if (trim((string) $this->newValueLabel) === '') return;
+
+        // Wert ist optional: ohne Eingabe wird er aus der Anzeige abgeleitet ("Buchhaltung" → "buchhaltung")
+        if (trim((string) $this->newValueValue) === '') {
+            $this->newValueValue = \Illuminate\Support\Str::slug($this->newValueLabel, '_');
+        }
 
         $maxOrder = collect($this->editingValues)->max('order') ?? -1;
 

@@ -69,19 +69,21 @@
             {{-- Was Respondenten sehen --}}
             <div class="{{ $gruppe }}">
                 <span class="{{ $ueberschrift }}">Öffentliche Anzeige</span>
-                <x-nx-input-text
+                <x-hatch::placeholder-input
                     name="name"
                     label="Name"
+                    :catalog="$placeholderCatalog"
                     wire:model.live.debounce.500ms="name"
                     required
                     :errorKey="'name'"
                 />
-                <x-nx-input-textarea
+                <x-hatch::placeholder-input
                     name="description"
                     label="Beschreibung"
                     hint="optional"
+                    :catalog="$placeholderCatalog"
+                    multiline
                     wire:model.live.debounce.500ms="description"
-                    rows="3"
                     placeholder="z.B. Wie hat Ihnen das Catering gefallen?"
                     :errorKey="'description'"
                 />
@@ -214,8 +216,9 @@
     <div class="space-y-6">
 
         @php
-            $isRecurring = str_contains((string) $projectIntake->name, '{{iso_')
-                || str_contains((string) $projectIntake->description, '{{iso_');
+            $placeholders = app(\Platform\Hatch\Support\IntakePlaceholders::class);
+            $usesPlaceholders = $placeholders->keysIn($projectIntake->name, $projectIntake->description) !== [];
+            $isRecurring = $placeholders->recurrence($projectIntake->name, $projectIntake->description) === \Platform\Hatch\Support\IntakePlaceholders::RECURRENCE_WEEKLY;
             $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
             $sessionTotal = $sessions->count();
             $sessionDone = $sessions->where('status', 'completed')->count();
@@ -239,14 +242,13 @@
             </x-nx-callout>
         @endif
 
-        {{-- Live-Vorschau: wenn name/description Platzhalter wie {{iso_week}} nutzen,
+        {{-- Live-Vorschau: wenn name/description Platzhalter nutzen,
              zeigen wir hier den gerenderten Wert. Damit ist sofort sichtbar, was
              Respondenten gerade sehen würden. --}}
-        @if($isRecurring)
+        @if($usesPlaceholders)
             @php
-                $renderer = app(\Platform\Hatch\Support\IntakeStringRenderer::class);
-                $renderedName = $renderer->render($projectIntake->name, $projectIntake);
-                $renderedDescription = $renderer->render($projectIntake->description, $projectIntake);
+                $renderedName = $placeholders->render($projectIntake->name, $projectIntake);
+                $renderedDescription = $placeholders->render($projectIntake->description, $projectIntake);
             @endphp
             <x-nx-card>
                 <div class="flex items-center gap-2 text-xs font-medium text-[color:var(--nx-muted)]">
@@ -258,7 +260,7 @@
                     <div class="mt-0.5 text-sm text-[color:var(--nx-muted)]">{{ $renderedDescription }}</div>
                 @endif
                 <div class="mt-2 text-xs text-[color:var(--nx-faint)]">
-                    Platzhalter (@{{iso_week}} etc.) werden bei jedem Aufruf neu ausgewertet — der Link bleibt derselbe.
+                    Platzhalter werden bei jedem Aufruf neu gefüllt, der Link bleibt derselbe.
                 </div>
             </x-nx-card>
         @endif

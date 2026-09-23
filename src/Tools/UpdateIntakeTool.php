@@ -22,7 +22,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'PUT /hatch/intakes/{id} - Aktualisiert einen Project Intake. Parameter: intake_id (required). Status-Modell: draft → published → closed. Beim Wechsel auf "published" wird started_at automatisch gesetzt, beim Wechsel auf "closed" wird completed_at gesetzt. name/description unterstützen Platzhalter {{iso_week}}, {{iso_week2}}, {{iso_year}}, {{iso_year2}} — werden im Public-View durch die aktuelle Kalenderwoche ersetzt.';
+        return 'PUT /hatch/intakes/{id} - Aktualisiert einen Project Intake. Parameter: intake_id (required). Status-Modell: draft → published → closed. Beim Wechsel auf "published" wird started_at automatisch gesetzt, beim Wechsel auf "closed" wird completed_at gesetzt. name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . ' — werden im Public-View durch den aktuellen Wert ersetzt.';
     }
 
     public function getSchema(): array
@@ -39,7 +39,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 ],
                 'name' => [
                     'type' => 'string',
-                    'description' => 'Optional: Neuer Name. Unterstützt Platzhalter {{iso_week}} / {{iso_year}} (z. B. "Wochenfeedback – KW {{iso_week}}/{{iso_year}}").',
+                    'description' => 'Optional: Neuer Name. Unterstützt Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . ' (z. B. "Wochenfeedback – KW {{iso_week}}/{{iso_year}}").',
                 ],
                 'description' => [
                     'type' => 'string',

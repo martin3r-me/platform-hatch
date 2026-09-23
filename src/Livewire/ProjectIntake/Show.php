@@ -9,6 +9,7 @@ use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectIntakeStep;
+use Platform\Hatch\Support\IntakePlaceholders;
 use Platform\Hatch\Support\QrCodeRenderer;
 
 class Show extends Component
@@ -393,6 +394,7 @@ class Show extends Component
             'currentBlock' => $this->currentBlock,
             'currentBlockIndex' => $this->currentBlockIndex,
             'templateBlocks' => $this->templateBlocks,
+            'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
         ])->layout('platform::layouts.app');
     }
 }

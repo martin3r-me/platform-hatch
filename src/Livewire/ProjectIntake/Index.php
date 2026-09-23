@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
+use Platform\Hatch\Support\IntakePlaceholders;
 
 class Index extends Component
 {
@@ -198,6 +199,7 @@ class Index extends Component
             'templates' => $this->templates,
             'statuses' => $this->statuses,
             'stats' => $stats,
+            'placeholderCatalog' => app(IntakePlaceholders::class)->catalog(null),
         ])->layout('platform::layouts.app');
     }
 }

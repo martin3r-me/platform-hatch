@@ -6,164 +6,162 @@
     <x-slot name="actionbar">
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
-            ['label' => 'Lookups'],
+            ['label' => 'Auswahllisten'],
         ]">
-            <x-ui-button variant="primary" size="sm" wire:click="openCreateModal">
+            <x-nx-button variant="primary" wire:click="openCreateModal">
                 @svg('heroicon-o-plus', 'w-4 h-4')
-                <span>Neuer Lookup</span>
-            </x-ui-button>
+                <span>Neue Auswahlliste</span>
+            </x-nx-button>
         </x-ui-page-actionbar>
     </x-slot>
 
-    <x-slot name="sidebar">
-        <x-ui-page-sidebar title="Suche" width="w-80" :defaultOpen="true" side="left">
-            <div class="p-6 space-y-6">
-                <div>
-                    <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Suche</h3>
-                    <x-ui-input-text
-                        name="search"
-                        placeholder="Lookups suchen..."
-                        class="w-full"
-                        size="sm"
-                        wire:model.live.debounce.300ms="search"
-                    />
-                </div>
-            </div>
-        </x-ui-page-sidebar>
-    </x-slot>
-
     <x-slot name="activity">
-        <x-ui-page-sidebar title="Aktivitäten" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
-            <div class="p-6 text-sm text-[var(--ui-muted)]">Keine Aktivitäten verfügbar</div>
+        <x-ui-page-sidebar title="Aktivitäten" icon="heroicon-o-bolt" width="w-80" :defaultOpen="false" storeKey="activityOpen" side="right">
+            <x-nx-empty icon="heroicon-o-bolt">Keine Aktivitäten verfügbar</x-nx-empty>
         </x-ui-page-sidebar>
     </x-slot>
 
     <x-ui-page-container>
-        <div class="mb-6">
-            <p class="text-sm text-[color:var(--ui-muted)]">Lookups sind vordefinierte Auswahllisten (z.B. Länder, Sprachen, benutzerdefinierte Listen), die in Block-Definitionen vom Typ "Lookup" verwendet werden können.</p>
-        </div>
+    <div class="space-y-5">
 
-        {{-- Values Editor Modal --}}
-        @if($editingValuesLookupId)
-            @php $valLookup = \Platform\Hatch\Models\HatchLookup::find($editingValuesLookupId); @endphp
-            <div class="mb-6 p-4 border border-[var(--ui-border)] rounded-lg bg-[var(--ui-surface)]">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="text-lg font-semibold text-[var(--ui-secondary)]">Werte: {{ $valLookup->label ?? '' }}</h3>
-                        <p class="text-xs text-[var(--ui-muted)]">{{ count($editingValues) }} Einträge</p>
-                    </div>
-                    <x-ui-button variant="secondary" size="sm" wire:click="closeValues">Schliessen</x-ui-button>
-                </div>
+    <p class="text-sm text-[color:var(--nx-muted)]">
+        Auswahllisten sind vordefinierte Antwortmöglichkeiten (z.&nbsp;B. Länder, Sprachen, Abteilungen),
+        die in Bausteinen vom Typ „Auswahlliste“ verwendet werden.
+    </p>
 
-                {{-- Add new value --}}
-                <div class="flex items-center gap-2 mb-4">
-                    <x-ui-input-text name="newValueLabel" wire:model="newValueLabel" placeholder="Label" size="sm" class="flex-grow" />
-                    <x-ui-input-text name="newValueValue" wire:model="newValueValue" placeholder="Wert (Schlüssel)" size="sm" class="flex-grow" />
-                    <x-ui-button variant="primary" size="sm" wire:click="addValue">
-                        @svg('heroicon-o-plus', 'w-4 h-4')
-                    </x-ui-button>
-                </div>
-
-                {{-- Values list --}}
-                @if(count($editingValues) > 0)
-                    <div class="max-h-96 overflow-y-auto space-y-1">
-                        @foreach($editingValues as $ev)
-                            <div class="flex items-center gap-2 p-2 rounded {{ $ev['is_active'] ? 'bg-[var(--ui-muted-5)]' : 'bg-red-50/50 opacity-60' }}">
-                                <span class="text-xs text-[var(--ui-muted)] w-8 text-right">{{ $ev['order'] }}</span>
-                                <span class="text-sm font-medium text-[var(--ui-secondary)] flex-grow">{{ $ev['label'] }}</span>
-                                <span class="text-xs font-mono text-[var(--ui-muted)]">{{ $ev['value'] }}</span>
-                                <button type="button" wire:click="toggleValueActive({{ $ev['id'] }})" class="text-xs {{ $ev['is_active'] ? 'text-emerald-600' : 'text-gray-400' }} hover:underline">
-                                    {{ $ev['is_active'] ? 'Aktiv' : 'Inaktiv' }}
-                                </button>
-                                <button type="button" wire:click="deleteValue({{ $ev['id'] }})" class="text-red-400 hover:text-red-600">
-                                    @svg('heroicon-o-trash', 'w-4 h-4')
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
+    {{-- Anlegen / Bearbeiten --}}
+    @if($modalShow)
+        @php $isSystem = $editingLookupId && \Platform\Hatch\Models\HatchLookup::find($editingLookupId)?->is_system; @endphp
+        <x-nx-panel :title="$editingLookupId ? 'Auswahlliste bearbeiten' : 'Neue Auswahlliste'">
+            <x-slot name="actions">
+                <x-nx-button icon variant="ghost" wire:click="$set('modalShow', false)" title="Schließen">
+                    @svg('heroicon-o-x-mark', 'w-4 h-4')
+                </x-nx-button>
+            </x-slot>
+            <div class="grid gap-3 md:grid-cols-3">
+                <x-nx-input-text name="lookupLabel" label="Anzeigename" wire:model="lookupLabel" placeholder="z.B. Abteilungen" required />
+                @if($isSystem)
+                    <x-nx-input-text name="lookupName" label="Kürzel" hint="System, nicht änderbar" wire:model="lookupName" disabled />
                 @else
-                    <div class="text-center text-[var(--ui-muted)] p-4 border border-dashed border-[var(--ui-border)]/60 rounded text-sm">Keine Werte vorhanden. Füge oben einen neuen Wert hinzu.</div>
+                    <x-nx-input-text name="lookupName" label="Kürzel" hint="eindeutig" wire:model="lookupName" placeholder="z.B. abteilungen" />
                 @endif
+                <x-nx-input-text name="lookupDescription" label="Beschreibung" hint="optional" wire:model="lookupDescription" placeholder="Kurze Beschreibung der Liste" />
             </div>
-        @endif
+            <div class="mt-4 flex justify-end gap-2">
+                <x-nx-button wire:click="$set('modalShow', false)">Abbrechen</x-nx-button>
+                <x-nx-button variant="primary" wire:click="saveLookup">Speichern</x-nx-button>
+            </div>
+        </x-nx-panel>
+    @endif
 
-        {{-- Create/Edit Modal --}}
-        @if($modalShow)
-            <div class="mb-6 p-4 border border-[var(--ui-border)] rounded-lg bg-[var(--ui-surface)]">
-                <h3 class="text-lg font-semibold text-[var(--ui-secondary)] mb-4">{{ $editingLookupId ? 'Lookup bearbeiten' : 'Neuer Lookup' }}</h3>
-                <div class="space-y-3">
-                    <x-ui-input-text name="lookupName" label="Slug (Name)" hint="Eindeutiger Bezeichner" wire:model="lookupName" placeholder="z.B. abteilungen" size="sm" @if($editingLookupId && \Platform\Hatch\Models\HatchLookup::find($editingLookupId)?->is_system) disabled @endif />
-                    <x-ui-input-text name="lookupLabel" label="Anzeigename" wire:model="lookupLabel" placeholder="z.B. Abteilungen" size="sm" />
-                    <x-ui-input-text name="lookupDescription" label="Beschreibung" hint="Optional" wire:model="lookupDescription" placeholder="Kurze Beschreibung der Liste" size="sm" />
-                    <div class="flex gap-2">
-                        <x-ui-button variant="primary" size="sm" wire:click="saveLookup">Speichern</x-ui-button>
-                        <x-ui-button variant="secondary" size="sm" wire:click="$set('modalShow', false)">Abbrechen</x-ui-button>
-                    </div>
+    {{-- Werte einer Liste --}}
+    @if($editingValuesLookupId)
+        @php $valLookup = \Platform\Hatch\Models\HatchLookup::find($editingValuesLookupId); @endphp
+        <x-nx-panel :title="'Werte: ' . ($valLookup->label ?? '')" :subtitle="count($editingValues) . ' Einträge'" flush>
+            <x-slot name="actions">
+                <x-nx-button icon variant="ghost" wire:click="closeValues" title="Schließen">
+                    @svg('heroicon-o-x-mark', 'w-4 h-4')
+                </x-nx-button>
+            </x-slot>
+
+            <div class="flex items-end gap-2 border-b border-[color:var(--nx-line)] p-4">
+                <div class="flex-1"><x-nx-input-text name="newValueLabel" label="Anzeige" size="sm" wire:model="newValueLabel" wire:keydown.enter="addValue" placeholder="z.B. Buchhaltung" /></div>
+                <div class="flex-1"><x-nx-input-text name="newValueValue" label="Wert" hint="optional" size="sm" wire:model="newValueValue" wire:keydown.enter="addValue" placeholder="z.B. buchhaltung" /></div>
+                <x-nx-button variant="primary" wire:click="addValue">
+                    @svg('heroicon-o-plus', 'w-4 h-4')
+                    <span>Hinzufügen</span>
+                </x-nx-button>
+            </div>
+
+            @if(count($editingValues) > 0)
+                <div class="max-h-96 divide-y divide-[color:var(--nx-line)] overflow-y-auto">
+                    @foreach($editingValues as $ev)
+                        <div wire:key="lookup-value-{{ $ev['id'] }}" class="flex items-center gap-3 px-4 py-2 {{ $ev['is_active'] ? '' : 'opacity-50' }}">
+                            <span class="w-6 shrink-0 text-right text-xs tabular-nums text-[color:var(--nx-faint)]">{{ $ev['order'] }}</span>
+                            <span class="min-w-0 flex-1 truncate text-sm text-[color:var(--nx-text)]">{{ $ev['label'] }}</span>
+                            <span class="shrink-0 font-mono text-xs text-[color:var(--nx-faint)]">{{ $ev['value'] }}</span>
+                            <button type="button" wire:click="toggleValueActive({{ $ev['id'] }})" title="Aktiv/Inaktiv umschalten">
+                                <x-nx-badge :variant="$ev['is_active'] ? 'success' : 'neutral'" dot>{{ $ev['is_active'] ? 'Aktiv' : 'Inaktiv' }}</x-nx-badge>
+                            </button>
+                            <x-nx-button icon variant="ghost" wire:click="deleteValue({{ $ev['id'] }})" title="Wert löschen">
+                                @svg('heroicon-o-trash', 'w-4 h-4 text-[color:var(--nx-danger)]')
+                            </x-nx-button>
+                        </div>
+                    @endforeach
                 </div>
-            </div>
-        @endif
+            @else
+                <x-nx-empty icon="heroicon-o-list-bullet">Noch keine Werte. Oben den ersten hinzufügen.</x-nx-empty>
+            @endif
+        </x-nx-panel>
+    @endif
 
-        {{-- Lookups Table --}}
+    {{-- Suche direkt über der Liste --}}
+    <div class="flex items-center justify-end">
+        <div class="w-64">
+            <x-nx-input-text name="search" size="sm" wire:model.live.debounce.300ms="search" placeholder="Auswahllisten suchen…" />
+        </div>
+    </div>
+
+    <x-nx-card flush>
         @if($lookups->count() === 0)
-            <div class="rounded-lg border border-dashed border-[color:var(--ui-border)] bg-[color:var(--ui-surface)] p-8 text-center">
-                @svg('heroicon-o-list-bullet', 'w-12 h-12 mx-auto mb-3 text-[color:var(--ui-muted)]')
-                <h3 class="text-lg font-medium text-[color:var(--ui-secondary)] mb-1">Keine Lookups vorhanden</h3>
-                <p class="text-sm text-[color:var(--ui-muted)] max-w-md mx-auto">Erstelle einen Lookup oder führe den Seeder aus, um Länder und Sprachen vorzuladen.</p>
-            </div>
+            <x-nx-empty icon="heroicon-o-list-bullet">
+                @if($search !== '')
+                    Keine Auswahlliste passt zur Suche
+                @else
+                    Noch keine Auswahllisten
+                    <x-slot name="action">
+                        <x-nx-button variant="primary" wire:click="openCreateModal">
+                            @svg('heroicon-o-plus', 'w-4 h-4')
+                            <span>Erste Auswahlliste anlegen</span>
+                        </x-nx-button>
+                    </x-slot>
+                @endif
+            </x-nx-empty>
         @else
-            <x-ui-table compact="true">
-                <x-ui-table-header>
-                    <x-ui-table-header-cell compact="true">Name</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Anzeigename</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Beschreibung</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">Werte</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true">System</x-ui-table-header-cell>
-                    <x-ui-table-header-cell compact="true" align="right">Aktionen</x-ui-table-header-cell>
-                </x-ui-table-header>
-
-                <x-ui-table-body>
+            <x-nx-table>
+                <x-nx-table-header>
+                    <x-nx-table-header-cell>Name</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Kürzel</x-nx-table-header-cell>
+                    <x-nx-table-header-cell align="right">Werte</x-nx-table-header-cell>
+                    <x-nx-table-header-cell>Typ</x-nx-table-header-cell>
+                    <x-nx-table-header-cell align="right"><span class="sr-only">Aktionen</span></x-nx-table-header-cell>
+                </x-nx-table-header>
+                <x-nx-table-body>
                     @foreach($lookups as $lookup)
-                        <x-ui-table-row compact="true">
-                            <x-ui-table-cell compact="true">
-                                <span class="font-mono text-sm">{{ $lookup->name }}</span>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <div class="font-medium">{{ $lookup->label }}</div>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <div class="text-sm text-[color:var(--ui-muted)]">
-                                    {{ Str::limit($lookup->description, 50) ?: '–' }}
-                                </div>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                <x-ui-badge variant="secondary" size="sm">{{ $lookup->values_count }}</x-ui-badge>
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true">
-                                @if($lookup->is_system)
-                                    <x-ui-badge variant="primary" size="sm">System</x-ui-badge>
-                                @else
-                                    <span class="text-sm text-[color:var(--ui-muted)]">–</span>
+                        <x-nx-table-row wire:key="lookup-{{ $lookup->id }}">
+                            <x-nx-table-cell class="max-w-md">
+                                <button type="button" wire:click="openValues({{ $lookup->id }})" class="block max-w-full truncate text-left font-medium text-[color:var(--nx-text)] hover:underline">{{ $lookup->label }}</button>
+                                @if($lookup->description)
+                                    <div class="truncate text-xs text-[color:var(--nx-faint)]" title="{{ $lookup->description }}">{{ $lookup->description }}</div>
                                 @endif
-                            </x-ui-table-cell>
-                            <x-ui-table-cell compact="true" align="right">
-                                <div class="flex gap-1 justify-end">
-                                    <x-ui-button variant="secondary" size="sm" wire:click="openValues({{ $lookup->id }})">
-                                        Werte
-                                    </x-ui-button>
-                                    <x-ui-button variant="secondary" size="sm" wire:click="openEditModal({{ $lookup->id }})">
-                                        Bearbeiten
-                                    </x-ui-button>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell class="font-mono text-xs text-[color:var(--nx-muted)]">{{ $lookup->name }}</x-nx-table-cell>
+                            <x-nx-table-cell align="right" class="tabular-nums text-[color:var(--nx-muted)]">{{ $lookup->values_count }}</x-nx-table-cell>
+                            <x-nx-table-cell>
+                                <x-nx-badge :variant="$lookup->is_system ? 'info' : 'neutral'">{{ $lookup->is_system ? 'System' : 'Eigene' }}</x-nx-badge>
+                            </x-nx-table-cell>
+                            <x-nx-table-cell align="right">
+                                <div class="inline-flex items-center gap-0.5">
+                                    <x-nx-button icon variant="ghost" wire:click="openValues({{ $lookup->id }})" title="Werte bearbeiten">
+                                        @svg('heroicon-o-queue-list', 'w-4 h-4')
+                                    </x-nx-button>
+                                    <x-nx-button icon variant="ghost" wire:click="openEditModal({{ $lookup->id }})" title="Bearbeiten">
+                                        @svg('heroicon-o-pencil-square', 'w-4 h-4')
+                                    </x-nx-button>
                                     @if(!$lookup->is_system)
-                                        <x-ui-button variant="danger-outline" size="sm" wire:click="deleteLookup({{ $lookup->id }})" wire:confirm="Diesen Lookup wirklich löschen?">
-                                            @svg('heroicon-o-trash', 'w-4 h-4')
-                                        </x-ui-button>
+                                        <x-nx-button icon variant="ghost" wire:click="deleteLookup({{ $lookup->id }})" wire:confirm="Diese Auswahlliste wirklich löschen?" title="Löschen">
+                                            @svg('heroicon-o-trash', 'w-4 h-4 text-[color:var(--nx-danger)]')
+                                        </x-nx-button>
                                     @endif
                                 </div>
-                            </x-ui-table-cell>
-                        </x-ui-table-row>
+                            </x-nx-table-cell>
+                        </x-nx-table-row>
                     @endforeach
-                </x-ui-table-body>
-            </x-ui-table>
+                </x-nx-table-body>
+            </x-nx-table>
         @endif
+    </x-nx-card>
+
+    </div>
     </x-ui-page-container>
 </x-ui-page>

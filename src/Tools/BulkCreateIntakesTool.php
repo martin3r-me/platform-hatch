@@ -23,7 +23,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Optional pro Item: description, intake_settings. name/description unterstützen Platzhalter {{iso_week}} / {{iso_year}}. Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
+        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Optional pro Item: description, intake_settings. name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '. Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -46,7 +46,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'Name des Intakes (ERFORDERLICH). Unterstützt {{iso_week}} / {{iso_year}}.',
+                                'description' => 'Name des Intakes (ERFORDERLICH). Unterstützt Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '.',
                             ],
                             'description' => [
                                 'type' => 'string',

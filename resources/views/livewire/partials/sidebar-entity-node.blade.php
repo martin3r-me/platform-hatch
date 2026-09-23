@@ -23,10 +23,10 @@
             <a wire:key="entity-{{ $node['entity_id'] }}-intake-{{ $intake->id }}"
                href="{{ route('hatch.project-intakes.show', ['projectIntake' => $intake]) }}"
                wire:navigate
-               title="{{ $intake->name }}"
+               title="{{ app(\Platform\Hatch\Support\IntakePlaceholders::class)->render($intake->name, $intake) }}"
                class="flex items-center gap-1.5 py-0.5 pl-3 pr-2 text-[var(--ui-secondary)] hover:text-[var(--ui-primary)] transition truncate">
                 <span class="w-1 h-1 rounded-full flex-shrink-0 bg-[var(--ui-muted)] opacity-40"></span>
-                <span class="truncate text-[11px]">{{ $intake->name }}</span>
+                <span class="truncate text-[11px]">{{ app(\Platform\Hatch\Support\IntakePlaceholders::class)->render($intake->name, $intake) }}</span>
             </a>
         @endforeach
 

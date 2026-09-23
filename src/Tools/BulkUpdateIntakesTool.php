@@ -45,7 +45,7 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                             ],
                             'name' => [
                                 'type' => 'string',
-                                'description' => 'Optional: Neuer Name. Unterstützt {{iso_week}} / {{iso_year}} Platzhalter.',
+                                'description' => 'Optional: Neuer Name. Unterstützt Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '.',
                             ],
                             'description' => [
                                 'type' => 'string',

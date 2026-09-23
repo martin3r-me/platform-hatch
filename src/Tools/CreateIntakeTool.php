@@ -23,7 +23,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake im Status "draft". ERFORDERLICH: project_template_id, name. Optional: description, intake_settings. name/description unterstützen Platzhalter {{iso_week}} / {{iso_year}} (z. B. für wiederkehrende Erhebungen). Nutze hatch.intakes.PUT mit status="published" um zu veröffentlichen.';
+        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake im Status "draft". ERFORDERLICH: project_template_id, name. Optional: description, intake_settings. name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . ' (z. B. für wiederkehrende Erhebungen). Nutze hatch.intakes.PUT mit status="published" um zu veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -40,7 +40,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 ],
                 'name' => [
                     'type' => 'string',
-                    'description' => 'Name des Intakes (ERFORDERLICH). Unterstützt Platzhalter {{iso_week}}, {{iso_week2}}, {{iso_year}}, {{iso_year2}}.',
+                    'description' => 'Name des Intakes (ERFORDERLICH). Unterstützt Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '.',
                 ],
                 'description' => [
                     'type' => 'string',

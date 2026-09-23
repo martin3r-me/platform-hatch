@@ -1,4 +1,5 @@
 {{-- Sidebar für das Formulare-Modul --}}
+@php $placeholders = app(\Platform\Hatch\Support\IntakePlaceholders::class); @endphp
 <div
     x-data="{
         init() {
@@ -20,6 +21,10 @@
             @svg('heroicon-o-home', 'w-4 h-4 text-[var(--ui-secondary)]')
             <span class="ml-2 text-sm">Dashboard</span>
         </x-ui-sidebar-item>
+        <x-ui-sidebar-item :href="route('hatch.project-intakes.index')">
+            @svg('heroicon-o-rocket-launch', 'w-4 h-4 text-[var(--ui-secondary)]')
+            <span class="ml-2 text-sm">Erhebungen</span>
+        </x-ui-sidebar-item>
         <x-ui-sidebar-item :href="route('hatch.templates.index')">
             @svg('heroicon-o-document-text', 'w-4 h-4 text-[var(--ui-secondary)]')
             <span class="ml-2 text-sm">Vorlagen</span>
@@ -35,6 +40,9 @@
         <div class="flex flex-col gap-2">
             <a href="{{ route('hatch.dashboard') }}" wire:navigate class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
                 @svg('heroicon-o-home', 'w-5 h-5')
+            </a>
+            <a href="{{ route('hatch.project-intakes.index') }}" wire:navigate title="Erhebungen" class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
+                @svg('heroicon-o-rocket-launch', 'w-5 h-5')
             </a>
             <a href="{{ route('hatch.templates.index') }}" wire:navigate class="flex items-center justify-center p-2 rounded-md text-[var(--ui-secondary)] hover:bg-[var(--ui-muted-5)]">
                 @svg('heroicon-o-document-text', 'w-5 h-5')
@@ -67,10 +75,10 @@
                         <a wire:key="unlinked-intake-{{ $intake->id }}"
                            href="{{ route('hatch.project-intakes.show', ['projectIntake' => $intake]) }}"
                            wire:navigate
-                           title="{{ $intake->name }}"
+                           title="{{ $placeholders->render($intake->name, $intake) }}"
                            class="flex items-center gap-1.5 py-0.5 pl-3 pr-2 text-[var(--ui-secondary)] hover:text-[var(--ui-primary)] transition truncate">
                             <span class="w-1 h-1 rounded-full flex-shrink-0 bg-[var(--ui-muted)] opacity-40"></span>
-                            <span class="truncate text-[11px]">{{ $intake->name }}</span>
+                            <span class="truncate text-[11px]">{{ $placeholders->render($intake->name, $intake) }}</span>
                         </a>
                     @endforeach
                 </x-ui-sidebar-list>

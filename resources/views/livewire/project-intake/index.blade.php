@@ -147,13 +147,14 @@
         <div class="space-y-4">
             <p class="text-sm text-[var(--ui-muted)]">Eine Erhebung führt einen Nutzer durch die Blöcke eines Templates und sammelt die Antworten. Wähle ein Template als Grundlage.</p>
             <form wire:submit.prevent="createProjectIntake" class="space-y-4">
-                <x-ui-input-text
+                <x-hatch::placeholder-input
                     name="name"
                     label="Name"
                     hint="Pflichtfeld"
+                    :catalog="$placeholderCatalog"
                     wire:model.live="name"
                     required
-                    placeholder="z.B. Projekt Alpha – Ersterhebung"
+                    placeholder="z.B. Wochenfeedback WCCB"
                 />
 
                 <x-ui-input-select
@@ -170,13 +171,14 @@
                     placeholder="Template auswählen"
                 />
 
-                <x-ui-input-textarea
+                <x-hatch::placeholder-input
                     name="description"
                     label="Beschreibung"
-                    hint="Optional"
+                    hint="Optional, erscheint auf der Startseite"
+                    :catalog="$placeholderCatalog"
+                    multiline
                     wire:model.live="description"
-                    placeholder="Zusätzliche Notizen oder Kontext zur Erhebung"
-                    rows="3"
+                    placeholder="z.B. Wie hat Ihnen das Catering gefallen?"
                 />
             </form>
         </div>
