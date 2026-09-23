@@ -295,7 +295,7 @@ class Show extends Component
 
         $renderer = app(QrCodeRenderer::class);
         $content = $format === 'svg' ? $renderer->svg($url) : $renderer->png($url);
-        $filename = 'qr-' . Str::slug($this->projectIntake->name ?: 'erhebung') . '.' . $format;
+        $filename = 'qr-' . Str::slug(app(IntakePlaceholders::class)->render($this->projectIntake->name, $this->projectIntake) ?: 'erhebung') . '.' . $format;
 
         return response()->streamDownload(
             fn () => print($content),

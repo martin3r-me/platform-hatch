@@ -7,7 +7,7 @@
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Erhebungen', 'href' => route('hatch.project-intakes.index')],
-            ['label' => $projectIntake->name ?? 'Erhebung'],
+            ['label' => app(\Platform\Hatch\Support\IntakePlaceholders::class)->render($projectIntake->name, $projectIntake) ?: 'Erhebung'],
         ]">
             @if($projectIntake->status === 'draft')
                 <x-nx-button variant="primary" wire:click="publishIntake">

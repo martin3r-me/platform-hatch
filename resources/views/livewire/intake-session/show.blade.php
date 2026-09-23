@@ -7,7 +7,7 @@
         <x-ui-page-actionbar :breadcrumbs="[
             ['label' => 'Formulare', 'href' => route('hatch.dashboard'), 'icon' => 'rocket-launch'],
             ['label' => 'Erhebungen', 'href' => route('hatch.project-intakes.index')],
-            ['label' => $intakeSession->projectIntake->name ?? 'Erhebung', 'href' => route('hatch.project-intakes.show', $intakeSession->projectIntake)],
+            ['label' => ($intakeSession->projectIntake ? app(\Platform\Hatch\Support\IntakePlaceholders::class)->render($intakeSession->projectIntake->name, $intakeSession->projectIntake) : null) ?: 'Erhebung', 'href' => route('hatch.project-intakes.show', $intakeSession->projectIntake)],
             ['label' => 'Session'],
         ]" />
     </x-slot>
@@ -141,7 +141,7 @@
                     <div class="space-y-2 text-sm">
                         <div>
                             <label class="block text-xs text-[var(--ui-muted)]">Erhebung</label>
-                            <div class="text-[var(--ui-secondary)]">{{ $intakeSession->projectIntake->name ?? '–' }}</div>
+                            <div class="text-[var(--ui-secondary)]">{{ $intakeSession->projectIntake ? app(\Platform\Hatch\Support\IntakePlaceholders::class)->render($intakeSession->projectIntake->name, $intakeSession->projectIntake) : '–' }}</div>
                         </div>
                         @if($intakeSession->projectIntake->projectTemplate)
                             <div>

@@ -58,7 +58,7 @@ class IntakeStart extends Component
             } else {
                 $this->state = 'notActive';
             }
-            $this->intakeName = $intake?->name ?? $this->intakeName;
+            $this->intakeName = $intake ? app(IntakeStringRenderer::class)->render($intake->name, $intake) : $this->intakeName;
             return;
         }
 
@@ -108,7 +108,7 @@ class IntakeStart extends Component
             } else {
                 $this->state = 'notActive';
             }
-            $this->intakeName = $intake->name ?? $this->intakeName;
+            $this->intakeName = app(IntakeStringRenderer::class)->render($intake->name, $intake) ?? $this->intakeName;
             return;
         }
 
