@@ -58,7 +58,7 @@
                         class="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors"
                     >
                         <span wire:loading.remove wire:target="startNew">Umfrage starten</span>
-                        <span wire:loading wire:target="startNew" class="inline-flex items-center gap-2">
+                        <span wire:loading.inline-flex wire:target="startNew" class="items-center justify-center gap-2">
                             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                             Wird gestartet...
                         </span>
@@ -90,7 +90,7 @@
                             class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
                         >
                             <span wire:loading.remove wire:target="resumeSession">Fortfahren</span>
-                            <span wire:loading wire:target="resumeSession" class="inline-flex items-center gap-2">
+                            <span wire:loading.inline-flex wire:target="resumeSession" class="items-center justify-center gap-2">
                                 <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                                 Laden...
                             </span>
