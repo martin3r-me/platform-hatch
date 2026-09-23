@@ -14,6 +14,21 @@
                     @svg('heroicon-o-rocket-launch', 'w-4 h-4')
                     <span>Veröffentlichen</span>
                 </x-nx-button>
+            @elseif($projectIntake->status === 'published')
+                <x-nx-button wire:click="closeIntake"
+                    wire:confirm="Erhebung schließen? Danach werden keine neuen Antworten mehr angenommen.">
+                    @svg('heroicon-o-lock-closed', 'w-4 h-4')
+                    <span>Schließen</span>
+                </x-nx-button>
+            @elseif($projectIntake->status === 'closed')
+                <x-nx-button wire:click="unpublishIntake">
+                    @svg('heroicon-o-pencil', 'w-4 h-4')
+                    <span>Zurück zu Entwurf</span>
+                </x-nx-button>
+                <x-nx-button variant="primary" wire:click="reopenIntake">
+                    @svg('heroicon-o-arrow-path', 'w-4 h-4')
+                    <span>Wieder öffnen</span>
+                </x-nx-button>
             @endif
             <x-nx-button
                 icon
@@ -43,34 +58,12 @@
                 $zeileLabel = 'shrink-0 text-xs text-[color:var(--nx-muted)]';
             @endphp
 
-            {{-- Status + die eine Aktion, die gerade Sinn ergibt --}}
+            {{-- Status (Aktionen stehen oben in der Aktionsleiste) --}}
             <div class="flex flex-col gap-3 p-4">
                 <div class="flex items-center justify-between gap-2">
                     <span class="{{ $ueberschrift }}">Status</span>
                     <x-nx-badge :variant="$statusVariant" dot>{{ $statuses[$projectIntake->status] ?? $projectIntake->status }}</x-nx-badge>
                 </div>
-                @if($projectIntake->status === 'draft')
-                    <x-nx-button variant="primary" wire:click="publishIntake" class="w-full">
-                        @svg('heroicon-o-rocket-launch', 'w-4 h-4')
-                        <span>Veröffentlichen</span>
-                    </x-nx-button>
-                @elseif($projectIntake->status === 'published')
-                    <x-nx-button wire:click="closeIntake" class="w-full">
-                        @svg('heroicon-o-lock-closed', 'w-4 h-4')
-                        <span>Schließen</span>
-                    </x-nx-button>
-                @elseif($projectIntake->status === 'closed')
-                    <div class="grid grid-cols-2 gap-2">
-                        <x-nx-button variant="primary" wire:click="reopenIntake">
-                            @svg('heroicon-o-arrow-path', 'w-4 h-4')
-                            <span>Wieder öffnen</span>
-                        </x-nx-button>
-                        <x-nx-button wire:click="unpublishIntake">
-                            @svg('heroicon-o-pencil', 'w-4 h-4')
-                            <span>Entwurf</span>
-                        </x-nx-button>
-                    </div>
-                @endif
             </div>
 
             {{-- Was Respondenten sehen --}}
