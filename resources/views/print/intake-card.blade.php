@@ -101,8 +101,6 @@
         }
         .scan svg { width: 5.5mm; height: 5.5mm; color: var(--accent); }
 
-        .url { margin-top: 1.5mm; font-size: 8pt; color: var(--faint); word-break: break-all; max-width: 110mm; }
-
         .footer {
             margin-top: 8mm; padding-top: 4mm; width: 100%;
             border-top: 1px solid var(--line);
@@ -155,7 +153,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg>
                 QR-Code mit der Handykamera scannen
             </div>
-            <div class="url">{{ $displayUrl }}</div>
 
             <div class="footer">Dauert nur wenige Minuten · Ihre Antworten werden vertraulich behandelt</div>
         </div>

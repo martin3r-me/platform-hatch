@@ -27,7 +27,6 @@ class IntakePrintCardController
             'title' => $placeholders->render($projectIntake->name, $projectIntake),
             'description' => $placeholders->render($projectIntake->description, $projectIntake),
             'url' => $url,
-            'displayUrl' => preg_replace('#^https?://#', '', $url),
             'qrSvg' => app(QrCodeRenderer::class)->svg($url),
             'logoUrl' => $logo ? asset($logo) : null,
             'appName' => config('app.name'),
