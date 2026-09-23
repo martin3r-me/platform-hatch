@@ -11,8 +11,9 @@ class Index extends Component
 {
     use WithPagination;
 
-    // Search
+    // Search / Filter
     public $search = '';
+    public $statusFilter = 'all';
 
     // Modal State
     public $modalShow = false;
@@ -43,10 +44,20 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatedStatusFilter()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
+        $teamId = auth()->user()->current_team_id;
+
         $templates = HatchProjectTemplate::with(['createdByUser'])
-            ->where('team_id', auth()->user()->current_team_id)
+            ->withCount(['templateBlocks', 'projectIntakes'])
+            ->where('team_id', $teamId)
+            ->when($this->statusFilter === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($this->statusFilter === 'inactive', fn ($q) => $q->where('is_active', false))
             ->when(!empty($this->search), function ($query) {
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
@@ -64,9 +75,15 @@ class Index extends Component
 
         $complexityLevels = HatchComplexityLevel::all();
 
+        $stats = [
+            'total' => HatchProjectTemplate::where('team_id', $teamId)->count(),
+            'active' => HatchProjectTemplate::where('team_id', $teamId)->where('is_active', true)->count(),
+        ];
+
         return view('hatch::livewire.template.index', [
             'templates' => $templates,
             'complexityLevels' => $complexityLevels,
+            'stats' => $stats,
         ])->layout('platform::layouts.app');
     }
 
@@ -112,6 +129,10 @@ class Index extends Component
 
     public function sortBy($field)
     {
+        if (!in_array($field, ['name', 'updated_at'], true)) {
+            return;
+        }
+
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
         } else {
