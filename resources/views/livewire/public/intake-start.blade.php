@@ -75,19 +75,21 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
                         Geben Sie Ihren Code ein, um dort weiterzumachen, wo Sie aufgehört haben.
                     </p>
-                    <div class="flex gap-2">
+                    <div class="flex flex-col gap-2 sm:flex-row">
                         <input
                             type="text"
                             wire:model="resumeToken"
                             wire:keydown.enter="resumeSession"
                             placeholder="XXXX-XXXX"
                             maxlength="9"
-                            class="flex-1 px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-mono uppercase tracking-widest text-center text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                            autocomplete="off"
+                            autocapitalize="characters"
+                            class="w-full min-w-0 flex-1 text-base px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-mono uppercase tracking-widest text-center text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                         />
                         <button
                             wire:click="resumeSession"
                             wire:loading.attr="disabled"
-                            class="px-4 py-2.5 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+                            class="w-full shrink-0 px-5 py-2.5 sm:w-auto bg-gray-700 hover:bg-gray-800 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
                         >
                             <span wire:loading.remove wire:target="resumeSession">Fortfahren</span>
                             <span wire:loading.inline-flex wire:target="resumeSession" class="items-center justify-center gap-2">
