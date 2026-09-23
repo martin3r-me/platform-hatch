@@ -60,21 +60,6 @@
                 </div>
             </div>
 
-            {{-- KI (nur für den Gesprächs-Modus relevant, deshalb eingeklappt) --}}
-            <details class="group border-t border-[color:var(--nx-line)]">
-                <summary class="flex cursor-pointer list-none items-center justify-between gap-2 p-4 {{ $ueberschrift }}">
-                    <span>KI-Einstellungen</span>
-                    @svg('heroicon-o-chevron-down', 'w-4 h-4 transition-transform group-open:rotate-180')
-                </summary>
-                <div class="flex flex-col gap-3 px-4 pb-4">
-                    <x-nx-input-select name="template.complexity_level" label="Komplexität" :options="$complexityLevels"
-                        optionValue="name" optionLabel="display_name" wire:model.live="template.complexity_level" />
-                    <x-nx-input-text name="template.ai_personality" label="Persönlichkeit" hint="Ton der KI"
-                        wire:model.live.debounce.500ms="template.ai_personality" placeholder="z.B. freundlich und knapp" />
-                    <x-nx-input-text name="template.industry_context" label="Branchenkontext"
-                        wire:model.live.debounce.500ms="template.industry_context" placeholder="z.B. Catering" />
-                </div>
-            </details>
 
             {{-- Details --}}
             <div class="{{ $gruppe }}">

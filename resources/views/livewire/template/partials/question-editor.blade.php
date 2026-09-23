@@ -169,8 +169,6 @@
                                     @error("draft.fields.$i.config_json")<p class="mt-1 text-xs text-[color:var(--nx-danger)]">{{ $message }}</p>@enderror
                                     <p class="mt-1 text-xs text-[color:var(--nx-faint)]">Für Einstellungen ohne eigenes Feld. „Übernehmen“ ersetzt die Einstellungen oben.</p>
                                 </div>
-                                <x-nx-input-textarea name="draft.fields.{{ $i }}.ai_prompt" label="KI-Hinweis" hint="nur Schritt-für-Schritt mit KI" rows="2"
-                                    wire:model.live.debounce.400ms="draft.fields.{{ $i }}.ai_prompt" placeholder="z.B. Frage freundlich nach dem Budget." />
                             </div>
                         </details>
                     </div>

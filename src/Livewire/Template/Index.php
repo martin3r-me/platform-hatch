@@ -94,8 +94,6 @@ class Index extends Component
         $template = HatchProjectTemplate::create([
             'name' => $this->name,
             'description' => $this->description,
-            'ai_personality' => $this->ai_personality,
-            'industry_context' => $this->industry_context,
             'complexity_level' => $this->complexity_level,
             'ai_instructions' => $this->ai_instructions ?: null,
             'team_id' => auth()->user()->current_team_id,

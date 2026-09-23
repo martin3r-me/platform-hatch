@@ -4,7 +4,6 @@ namespace Platform\Hatch\Livewire\Template;
 
 use Illuminate\Support\Str;
 use Livewire\Component;
-use Platform\Hatch\Models\HatchComplexityLevel;
 use Platform\Hatch\Models\HatchLookup;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
@@ -32,9 +31,6 @@ class Show extends Component
     protected $rules = [
         'template.name' => 'required|string|max:255',
         'template.description' => 'nullable|string',
-        'template.ai_personality' => 'nullable|string|max:255',
-        'template.industry_context' => 'nullable|string|max:255',
-        'template.complexity_level' => 'required|in:simple,medium,complex',
         'template.flow_mode' => 'required|in:block_flow,overview',
         'template.is_active' => 'boolean',
     ];
@@ -719,7 +715,6 @@ class Show extends Component
         return view('hatch::livewire.template.show', [
             'template' => $this->template,
             'groups' => $this->groups(),
-            'complexityLevels' => HatchComplexityLevel::all(),
             'typeGroups' => BlockTypes::grouped(),
             'previewBlocks' => $previewBlocks,
             'sourceOptions' => $sourceOptions,

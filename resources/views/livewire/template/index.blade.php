@@ -109,52 +109,23 @@
     <x-ui-modal wire:model="modalShow" size="lg">
         <x-slot name="header">Vorlage anlegen</x-slot>
         <div class="space-y-4">
-            <p class="text-sm text-[var(--ui-muted)]">Ein Template definiert den Ablauf einer Erhebung. Du kannst nach dem Anlegen Blöcke hinzufügen und die Reihenfolge anpassen.</p>
+            <p class="text-sm text-[var(--ui-muted)]">Eine Vorlage legt fest, welche Fragen eine Erhebung stellt. Nach dem Anlegen fügst du die Fragen hinzu.</p>
             <form wire:submit.prevent="createTemplate" class="space-y-4">
                 <x-ui-input-text
                     name="name"
-                    label="Template-Name"
+                    label="Name"
                     hint="Pflichtfeld"
                     wire:model.live="name"
                     required
-                    placeholder="z.B. Standard-Projekterhebung"
+                    placeholder="z.B. Catering-Feedback"
                 />
-
-                <x-ui-input-select
-                    name="complexity_level"
-                    label="Komplexität"
-                    hint="Steuert KI-Gesprächstiefe"
-                    :options="$complexityLevels"
-                    optionValue="name"
-                    optionLabel="display_name"
-                    wire:model.live="complexity_level"
-                    required
-                />
-
-                <div class="grid grid-cols-2 gap-4">
-                    <x-ui-input-text
-                        name="ai_personality"
-                        label="KI-Persönlichkeit"
-                        hint="Optional"
-                        wire:model.live="ai_personality"
-                        placeholder="z.B. freundlich, professionell"
-                    />
-
-                    <x-ui-input-text
-                        name="industry_context"
-                        label="Branchenkontext"
-                        hint="Optional"
-                        wire:model.live="industry_context"
-                        placeholder="z.B. Software-Entwicklung"
-                    />
-                </div>
 
                 <x-ui-input-textarea
                     name="description"
                     label="Beschreibung"
                     hint="Optional"
                     wire:model.live="description"
-                    placeholder="Wofür wird dieses Template eingesetzt? Welche Art von Projekten?"
+                    placeholder="Wofür wird diese Vorlage verwendet?"
                     rows="3"
                 />
             </form>
