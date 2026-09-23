@@ -258,6 +258,16 @@
     </x-slot>
 
     <x-ui-page-container>
+    <x-nx-tabs>
+        <x-nx-tab :active="$tab === 'overview'" wire:click="setTab('overview')">Übersicht</x-nx-tab>
+        <x-nx-tab :active="$tab === 'analysis'" wire:click="setTab('analysis')">
+            <span class="inline-flex items-center gap-1.5">@svg('heroicon-o-chart-bar', 'w-4 h-4') Auswertung</span>
+        </x-nx-tab>
+    </x-nx-tabs>
+
+    @if($tab === 'analysis')
+        @include('hatch::livewire.project-intake.partials.analysis')
+    @else
     <div class="space-y-6">
 
         @php
@@ -490,6 +500,7 @@
         </x-nx-card>
 
     </div>
+    @endif
     </x-ui-page-container>
 
     {{-- Modal: Personalisierte Session erstellen --}}

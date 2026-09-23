@@ -3,12 +3,14 @@
 namespace Platform\Hatch\Livewire\ProjectIntake;
 
 use Illuminate\Support\Str;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectIntakeStep;
+use Platform\Hatch\Support\IntakeAnalytics;
 use Platform\Hatch\Support\IntakePlaceholders;
 use Platform\Hatch\Support\QrCodeRenderer;
 
@@ -23,6 +25,19 @@ class Show extends Component
     ];
 
     public $showActivities = false;
+
+    // Hauptbereich: 'overview' | 'analysis'
+    #[Url(as: 'ansicht', except: 'overview')]
+    public string $tab = 'overview';
+
+    // Filter der Auswertung
+    #[Url(as: 'kw', except: '')]
+    public string $analysisWeek = '';       // "2026-39"
+    #[Url(as: 'zeitraum', except: 'all')]
+    public string $analysisPeriod = 'all';  // all | 7 | 30
+    #[Url(as: 'vollstaendig', except: false)]
+    public bool $analysisCompletedOnly = false;
+    public array $expandedTexts = [];       // block ids mit ausgeklappter Freitext-Liste
 
     // Bearbeitbare Stammdaten (Name/Beschreibung werden im Public-View angezeigt)
     public string $name = '';
@@ -66,6 +81,29 @@ class Show extends Component
         $this->validateOnly('description', ['description' => 'nullable|string|max:2000']);
         $description = trim($this->description);
         $this->projectIntake->update(['description' => $description === '' ? null : $description]);
+    }
+
+    public function setTab(string $tab): void
+    {
+        $this->tab = in_array($tab, ['overview', 'analysis'], true) ? $tab : 'overview';
+    }
+
+    public function toggleTexts(int $blockId): void
+    {
+        $this->expandedTexts[$blockId] = !($this->expandedTexts[$blockId] ?? false);
+    }
+
+    /** Filter der Auswertung – auch für den CSV-Export (gleiche Auswahl). */
+    public function analysisFilters(): array
+    {
+        [$year, $week] = array_pad(array_map('intval', explode('-', $this->analysisWeek)), 2, null);
+
+        return [
+            'completed_only' => $this->analysisCompletedOnly,
+            'iso_year' => $this->analysisWeek !== '' ? $year : null,
+            'iso_week' => $this->analysisWeek !== '' ? $week : null,
+            'since' => in_array($this->analysisPeriod, ['7', '30'], true) ? now()->subDays((int) $this->analysisPeriod)->startOfDay()->toDateTimeString() : null,
+        ];
     }
 
     public function updatedEventReference()
@@ -435,6 +473,8 @@ class Show extends Component
             'templateBlocks' => $this->templateBlocks,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
+            'analysis' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->build($this->projectIntake, $this->analysisFilters()) : null,
+            'analysisWeeks' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->weeks($this->projectIntake) : [],
         ])->layout('platform::layouts.app');
     }
 }
