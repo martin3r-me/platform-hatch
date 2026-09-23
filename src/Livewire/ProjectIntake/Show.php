@@ -2,12 +2,14 @@
 
 namespace Platform\Hatch\Livewire\ProjectIntake;
 
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectIntakeStep;
+use Platform\Hatch\Support\QrCodeRenderer;
 
 class Show extends Component
 {
@@ -231,6 +233,25 @@ class Show extends Component
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
+    }
+
+    public function downloadQrCode(string $format = 'png')
+    {
+        $url = $this->projectIntake->getPublicUrl();
+
+        if (!$url || !in_array($format, QrCodeRenderer::FORMATS, true)) {
+            return null;
+        }
+
+        $renderer = app(QrCodeRenderer::class);
+        $content = $format === 'svg' ? $renderer->svg($url) : $renderer->png($url);
+        $filename = 'qr-' . Str::slug($this->projectIntake->name ?: 'erhebung') . '.' . $format;
+
+        return response()->streamDownload(
+            fn () => print($content),
+            $filename,
+            ['Content-Type' => $format === 'svg' ? 'image/svg+xml' : 'image/png']
+        );
     }
 
     public function openPersonalizedSessionModal()

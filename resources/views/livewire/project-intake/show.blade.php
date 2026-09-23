@@ -140,6 +140,41 @@
                             <p class="text-xs text-[var(--ui-muted)]">
                                 {{ $projectIntake->sessions()->count() }} Session(s) bisher
                             </p>
+
+                            {{-- QR-Code zum Link --}}
+                            <div x-data="{ qrOpen: false }" class="pt-1">
+                                <x-ui-button variant="secondary" size="sm" class="w-full" x-on:click="qrOpen = !qrOpen">
+                                    <span class="flex items-center gap-2">
+                                        @svg('heroicon-o-qr-code', 'w-4 h-4')
+                                        <span x-text="qrOpen ? 'QR-Code ausblenden' : 'QR-Code generieren'">QR-Code generieren</span>
+                                    </span>
+                                </x-ui-button>
+
+                                <div x-show="qrOpen" x-cloak class="mt-2 space-y-2">
+                                    <div class="p-3 bg-white rounded border border-[var(--ui-border)]/40">
+                                        <img
+                                            src="data:image/svg+xml;base64,{{ base64_encode(app(\Platform\Hatch\Support\QrCodeRenderer::class)->svg($projectIntake->getPublicUrl())) }}"
+                                            alt="QR-Code für den öffentlichen Link"
+                                            class="w-full h-auto"
+                                        />
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <x-ui-button variant="secondary" size="sm" wire:click="downloadQrCode('png')">
+                                            <span class="flex items-center gap-1">
+                                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                                                PNG
+                                            </span>
+                                        </x-ui-button>
+                                        <x-ui-button variant="secondary" size="sm" wire:click="downloadQrCode('svg')">
+                                            <span class="flex items-center gap-1">
+                                                @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
+                                                SVG
+                                            </span>
+                                        </x-ui-button>
+                                    </div>
+                                    <p class="text-xs text-[var(--ui-muted)]">SVG für Druck (verlustfrei skalierbar), PNG für E-Mail &amp; Office.</p>
+                                </div>
+                            </div>
                         </div>
                     @else
                         <x-ui-button variant="secondary" size="sm" wire:click="generatePublicLink" class="w-full">
