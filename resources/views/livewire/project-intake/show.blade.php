@@ -108,7 +108,8 @@
                         <div class="flex items-center gap-1 rounded-[6px] border border-[color:var(--nx-line-strong)] bg-[color:var(--nx-surface)] py-1 pl-2.5 pr-1">
                             <span class="min-w-0 flex-1 truncate font-mono text-xs text-[color:var(--nx-muted)]" title="{{ $publicUrl }}">{{ $publicUrl }}</span>
                             <x-nx-button icon variant="ghost" type="button" title="Link kopieren"
-                                x-on:click="navigator.clipboard.writeText(@js($publicUrl)).then(() => { kopiert = true; setTimeout(() => kopiert = false, 1500) })">
+                                data-url="{{ $publicUrl }}"
+                                x-on:click="navigator.clipboard.writeText($el.dataset.url).then(() => { kopiert = true; setTimeout(() => kopiert = false, 1500) })">
                                 <span x-show="!kopiert">@svg('heroicon-o-clipboard-document', 'w-4 h-4')</span>
                                 <span x-show="kopiert" x-cloak style="color: var(--nx-success);">@svg('heroicon-o-check', 'w-4 h-4')</span>
                             </x-nx-button>
@@ -422,7 +423,8 @@
                                 <x-nx-table-cell align="right">
                                     <div class="inline-flex items-center gap-0.5" x-data="{ kopiert: false }">
                                         <x-nx-button icon variant="ghost" type="button" title="Link zu dieser Session kopieren"
-                                            x-on:click="navigator.clipboard.writeText(@js($sessionUrl)).then(() => { kopiert = true; setTimeout(() => kopiert = false, 1500) })">
+                                            data-url="{{ $sessionUrl }}"
+                                x-on:click="navigator.clipboard.writeText($el.dataset.url).then(() => { kopiert = true; setTimeout(() => kopiert = false, 1500) })">
                                             <span x-show="!kopiert">@svg('heroicon-o-link', 'w-4 h-4')</span>
                                             <span x-show="kopiert" x-cloak style="color: var(--nx-success);">@svg('heroicon-o-check', 'w-4 h-4')</span>
                                         </x-nx-button>
