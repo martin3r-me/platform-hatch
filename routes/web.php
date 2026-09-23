@@ -12,3 +12,5 @@ Route::get('/project-intakes/{projectIntake}', Platform\Hatch\Livewire\ProjectIn
 Route::get('/intake-sessions/{intakeSession}', Platform\Hatch\Livewire\IntakeSession\Show::class)->name('hatch.intake-sessions.show');
 
 Route::get('/lookups', Platform\Hatch\Livewire\Lookup\Index::class)->name('hatch.lookups.index');
+Route::get('/placeholders', \Platform\Hatch\Livewire\Placeholder\Index::class)->name('hatch.placeholders.index');
+Route::get('/project-intakes/{projectIntake}/print', \Platform\Hatch\Http\Controllers\IntakePrintCardController::class)->name('hatch.project-intakes.print');

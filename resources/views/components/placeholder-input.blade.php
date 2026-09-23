@@ -30,6 +30,10 @@
 <div
     x-data="hatchPlaceholderInput({ catalog: {{ \Illuminate\Support\Js::from(array_values($catalog)) }}, multiline: {{ $multiline ? 'true' : 'false' }} })"
     x-modelable="value"
+    x-on:hatch-placeholder-catalog.window="catalog = $event.detail.catalog; renderFromValue()"
+    {{-- Wurzel-Attribute nicht morphen: eine geänderte x-data (neuer Katalog) würde Alpine neu
+         initialisieren und den Inhalt verlieren. Neue Werte kommen per Event. --}}
+    wire:ignore.self
     {{ $attributes->whereStartsWith('wire:model') }}
     class="relative"
 >

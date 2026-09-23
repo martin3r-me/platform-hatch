@@ -28,6 +28,9 @@ class Show extends Component
     public string $name = '';
     public string $description = '';
 
+    // Werte eigener Platzhalter für diese Erhebung (intake_settings.placeholder_values)
+    public array $placeholderValues = [];
+
     // Personalisierte Session
     public bool $showPersonalizedSessionModal = false;
     public string $contactSearch = '';
@@ -45,6 +48,7 @@ class Show extends Component
         $this->projectIntake = $projectIntake;
         $this->name = (string) $projectIntake->name;
         $this->description = (string) $projectIntake->description;
+        $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
         $this->loadTemplateBlocks();
         $this->determineCurrentBlock();
     }
@@ -60,6 +64,32 @@ class Show extends Component
         $this->validateOnly('description', ['description' => 'nullable|string|max:2000']);
         $description = trim($this->description);
         $this->projectIntake->update(['description' => $description === '' ? null : $description]);
+    }
+
+    public function updatedPlaceholderValues($value, $key)
+    {
+        $customs = app(IntakePlaceholders::class)->customs($this->projectIntake->team_id);
+        if (!array_key_exists($key, $customs)) {
+            unset($this->placeholderValues[$key]);
+            return;
+        }
+
+        $value = trim((string) $value);
+        $settings = $this->projectIntake->intake_settings ?? [];
+        if ($value === '') {
+            unset($settings['placeholder_values'][$key]);
+            unset($this->placeholderValues[$key]);
+        } else {
+            $settings['placeholder_values'][$key] = mb_substr($value, 0, 500);
+        }
+        if (empty($settings['placeholder_values'])) {
+            unset($settings['placeholder_values']);
+        }
+
+        $this->projectIntake->update(['intake_settings' => $settings ?: null]);
+
+        // Vorschau/Einfügen-Menü der Baustein-Felder mit dem neuen Wert auffrischen
+        $this->dispatch('hatch-placeholder-catalog', catalog: app(IntakePlaceholders::class)->catalog($this->projectIntake));
     }
 
     public function loadTemplateBlocks()
@@ -395,6 +425,7 @@ class Show extends Component
             'currentBlockIndex' => $this->currentBlockIndex,
             'templateBlocks' => $this->templateBlocks,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
+            'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
         ])->layout('platform::layouts.app');
     }
 }

@@ -89,6 +89,27 @@
                 />
             </div>
 
+            {{-- Werte eigener Platzhalter für diese Erhebung --}}
+            @if(!empty($customPlaceholders))
+                <div class="{{ $gruppe }}">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="{{ $ueberschrift }}">Platzhalter-Werte</span>
+                        <a href="{{ route('hatch.placeholders.index') }}" wire:navigate class="text-xs text-[color:var(--nx-faint)] hover:text-[color:var(--nx-text)]">Verwalten</a>
+                    </div>
+                    @foreach($customPlaceholders as $key => $def)
+                        <x-nx-input-text
+                            wire:key="phv-{{ $key }}"
+                            name="placeholderValues.{{ $key }}"
+                            :label="$def['label']"
+                            :hint="$def['default'] !== '' ? 'Standard: ' . $def['default'] : 'kein Standard'"
+                            size="sm"
+                            wire:model.live.debounce.500ms="placeholderValues.{{ $key }}"
+                            :placeholder="$def['default'] !== '' ? $def['default'] : 'Wert für diese Erhebung'"
+                        />
+                    @endforeach
+                </div>
+            @endif
+
             {{-- Teilen: Link + QR-Code --}}
             <div class="{{ $gruppe }}">
                 <div class="flex items-center justify-between gap-2">
@@ -116,6 +137,10 @@
                         <x-nx-button type="button" class="w-full" x-on:click="qrOpen = !qrOpen">
                             @svg('heroicon-o-qr-code', 'w-4 h-4')
                             <span x-text="qrOpen ? 'QR-Code ausblenden' : 'QR-Code anzeigen'">QR-Code anzeigen</span>
+                        </x-nx-button>
+                        <x-nx-button :href="route('hatch.project-intakes.print', $projectIntake)" target="_blank" rel="noopener" class="w-full" title="Tischaufsteller mit Titel, Beschreibung, QR-Code und Logo">
+                            @svg('heroicon-o-printer', 'w-4 h-4')
+                            <span>A5-Aufsteller drucken</span>
                         </x-nx-button>
 
                         <div x-show="qrOpen" x-cloak class="flex flex-col gap-2">
@@ -217,8 +242,8 @@
 
         @php
             $placeholders = app(\Platform\Hatch\Support\IntakePlaceholders::class);
-            $usesPlaceholders = $placeholders->keysIn($projectIntake->name, $projectIntake->description) !== [];
-            $isRecurring = $placeholders->recurrence($projectIntake->name, $projectIntake->description) === \Platform\Hatch\Support\IntakePlaceholders::RECURRENCE_WEEKLY;
+            $usesPlaceholders = $placeholders->keysIn($projectIntake, $projectIntake->name, $projectIntake->description) !== [];
+            $isRecurring = $placeholders->recurrence($projectIntake, $projectIntake->name, $projectIntake->description) === \Platform\Hatch\Support\IntakePlaceholders::RECURRENCE_WEEKLY;
             $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
             $sessionTotal = $sessions->count();
             $sessionDone = $sessions->where('status', 'completed')->count();

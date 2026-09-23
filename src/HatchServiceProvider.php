@@ -16,9 +16,8 @@ class HatchServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Falls in Zukunft Artisan Commands o.ä. nötig sind, hier rein
-        
-        // Keine Services in Hatch vorhanden
+        // Pro Request eine Instanz: cached die Team-Platzhalter, die Sidebar rendert viele Intakes
+        $this->app->scoped(\Platform\Hatch\Support\IntakePlaceholders::class);
     }
 
     public function boot(): void
