@@ -719,11 +719,12 @@
                                                                         $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
                                                                         $itemLabel = is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item;
                                                                         $itemRequired = is_array($item) && !empty($item['is_required']);
-                                                                        $rowMissing = in_array($currentStep, $missingRequiredBlocks ?? []) && $requiredMode === 'per_row' && $itemRequired && !isset($matrixAnswers[$itemValue]);
+                                                                        $rowMissing = in_array($itemValue, $missingMatrixItems ?? [], true);
                                                                     @endphp
-                                                                    <tr class="border-t border-gray-100 {{ $rowMissing ? 'bg-rose-50/40' : '' }}">
+                                                                    <tr class="border-t border-gray-100" @if($rowMissing) data-missing style="background:#fff1f2" @endif>
                                                                         <td class="p-3 text-gray-700">
                                                                             {{ $itemLabel }}
+                                                                            @if($rowMissing)<span class="block text-xs" style="color:#e11d48">Bitte bewerten</span>@endif
                                                                             @if($requiredMode === 'per_row' && $itemRequired)
                                                                                 <span class="text-rose-500 ml-1" title="Pflichtangabe">*</span>
                                                                             @endif
@@ -755,10 +756,12 @@
                                                                 $itemValue = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
                                                                 $itemLabel = is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item;
                                                                 $itemRequired = is_array($item) && !empty($item['is_required']);
+                                                                $rowMissing = in_array($itemValue, $missingMatrixItems ?? [], true);
                                                             @endphp
-                                                            <div class="p-3 border border-gray-100 rounded-lg">
+                                                            <div class="p-3 border border-gray-100 rounded-lg" @if($rowMissing) data-missing style="border-color:#fda4af;background:#fff1f2" @endif>
                                                                 <div class="text-sm font-medium text-gray-800 mb-2">
                                                                     {{ $itemLabel }}
+                                                                    @if($rowMissing)<span class="ml-1 text-xs font-normal" style="color:#e11d48">· Bitte bewerten</span>@endif
                                                                     @if($requiredMode === 'per_row' && $itemRequired)
                                                                         <span class="text-rose-500 ml-1">*</span>
                                                                     @endif
@@ -1482,8 +1485,22 @@
                                 @endswitch
                             </div>
 
+                            {{-- Hinweis direkt über „Weiter“: oben steht er bei langen Fragen außer Sicht --}}
+                            @if($validationError)
+                                <div data-validation-hint role="alert" class="mx-8 mb-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style="background:#fff1f2;color:#be123c">
+                                    <svg class="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                                    <span>{{ $validationError }}</span>
+                                </div>
+                            @endif
+
                             {{-- Navigation --}}
-                            <div class="px-8 pb-8 flex items-center justify-between">
+                            <div class="px-8 pb-8 flex items-center justify-between"
+                                x-data
+                                x-on:hatch-scroll-to-missing.window="requestAnimationFrame(() => {
+                                    const target = [...document.querySelectorAll('[data-missing]')].find(el => el.offsetParent !== null)
+                                        || document.querySelector('[data-validation-hint]');
+                                    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                })">
                                 <button
                                     wire:click="previousBlock"
                                     wire:loading.attr="disabled"

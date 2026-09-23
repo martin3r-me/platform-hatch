@@ -24,6 +24,9 @@ class IntakeSession extends Component
     public array $missingRequiredBlocks = [];
     public ?string $validationError = null;
 
+    /** Matrix-Zeilen (item values), die beim letzten „Weiter“ gefehlt haben – für Markierung + Scroll. */
+    public array $missingMatrixItems = [];
+
     // Compound type properties
     public array $matrixAnswers = [];
     public array $addressFields = [];
@@ -168,6 +171,7 @@ class IntakeSession extends Component
 
     public function loadCurrentAnswer(): void
     {
+        $this->missingMatrixItems = [];
         if (!isset($this->blocks[$this->currentStep])) {
             $this->currentAnswer = '';
             $this->selectedOptions = [];
@@ -790,6 +794,39 @@ class IntakeSession extends Component
     {
         if ($this->state === 'completed') return;
         $this->matrixAnswers[$item] = $value;
+
+        // Markierung abbauen, sobald die fehlende Zeile beantwortet ist
+        if (!empty($this->missingMatrixItems)) {
+            $this->missingMatrixItems = array_values(array_diff($this->missingMatrixItems, [$item]));
+            if (empty($this->missingMatrixItems)) {
+                $this->validationError = null;
+            }
+        }
+    }
+
+    /** Fehlende Pflicht-Zeilen der aktuellen Matrix (je nach required_mode). */
+    private function missingMatrixItemsForCurrentBlock(): array
+    {
+        $block = $this->blocks[$this->currentStep] ?? null;
+        if (!$block || $block['type'] !== 'matrix') {
+            return [];
+        }
+
+        $config = $block['logic_config'] ?? [];
+        $perRow = ($config['required_mode'] ?? 'matrix') === 'per_row';
+        $missing = [];
+
+        foreach ($config['items'] ?? [] as $item) {
+            $value = is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item;
+            if ($value === '' || ($perRow && (!is_array($item) || empty($item['is_required'])))) {
+                continue;
+            }
+            if (!isset($this->matrixAnswers[$value]) || $this->matrixAnswers[$value] === '') {
+                $missing[] = $value;
+            }
+        }
+
+        return $missing;
     }
 
     // Ranking: reorder items
@@ -896,9 +933,25 @@ class IntakeSession extends Component
 
             if (($requiredByBlock || $requiredByMatrixRow) && !$this->isCurrentBlockAnswered()) {
                 $this->validationError = 'Dieses Feld ist ein Pflichtfeld. Bitte fülle es aus, bevor du weitergehst.';
+
+                // Matrix: konkret sagen, welche Zeilen fehlen, und dorthin scrollen –
+                // bei langen Matrizen steht der Hinweis sonst außer Sicht.
+                if ($block['type'] === 'matrix') {
+                    $this->missingMatrixItems = $this->missingMatrixItemsForCurrentBlock();
+                    $labels = collect($block['logic_config']['items'] ?? [])
+                        ->filter(fn ($item) => in_array(is_array($item) ? ($item['value'] ?? $item['label'] ?? '') : $item, $this->missingMatrixItems, true))
+                        ->map(fn ($item) => is_array($item) ? ($item['label'] ?? $item['value'] ?? '') : $item)
+                        ->values();
+                    if ($labels->isNotEmpty()) {
+                        $this->validationError = 'Bitte noch bewerten: ' . $labels->take(3)->implode(', ')
+                            . ($labels->count() > 3 ? ' und ' . ($labels->count() - 3) . ' weitere' : '') . '.';
+                    }
+                }
+
                 if (!in_array($this->currentStep, $this->missingRequiredBlocks, true)) {
                     $this->missingRequiredBlocks[] = $this->currentStep;
                 }
+                $this->dispatch('hatch-scroll-to-missing');
                 return;
             }
 

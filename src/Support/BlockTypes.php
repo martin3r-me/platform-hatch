@@ -90,7 +90,7 @@ class BlockTypes
                     ['key' => 'scale_max', 'kind' => 'number', 'label' => 'Skala bis', 'placeholder' => '5'],
                     ['key' => 'scale_labels.min_label', 'kind' => 'text', 'label' => 'Beschriftung links', 'placeholder' => 'z.B. schlecht'],
                     ['key' => 'scale_labels.max_label', 'kind' => 'text', 'label' => 'Beschriftung rechts', 'placeholder' => 'z.B. sehr gut'],
-                    ['key' => 'required_mode', 'kind' => 'select', 'label' => 'Pflicht gilt für', 'choices' => ['matrix' => 'die ganze Matrix (mind. eine Zeile)', 'per_row' => 'einzelne Zeilen (je Zeile festlegen)']],
+                    ['key' => 'required_mode', 'kind' => 'select', 'label' => 'Pflicht gilt für', 'choices' => ['matrix' => 'alle Zeilen', 'per_row' => 'nur markierte Zeilen (je Zeile festlegen)']],
                 ]],
             'slider' => ['group' => 'rating', 'icon' => 'heroicon-o-arrows-right-left', 'hint' => 'Wert per Schieberegler',
                 'defaults' => ['min' => 0, 'max' => 100, 'step' => 1], 'settings' => [['key' => 'min', 'kind' => 'number', 'label' => 'Von', 'placeholder' => '0'], ['key' => 'max', 'kind' => 'number', 'label' => 'Bis', 'placeholder' => '100'], ['key' => 'step', 'kind' => 'number', 'label' => 'Schrittweite', 'placeholder' => '1'], ['key' => 'unit', 'kind' => 'text', 'label' => 'Einheit'], ['key' => 'show_value', 'kind' => 'toggle', 'label' => 'Wert anzeigen']]],

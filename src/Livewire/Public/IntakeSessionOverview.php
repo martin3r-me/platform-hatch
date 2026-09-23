@@ -555,7 +555,12 @@ class IntakeSessionOverview extends Component
         $missing = $this->getUnansweredRequiredBlocks();
         if (!empty($missing)) {
             $this->missingRequiredBlocks = $missing;
-            $this->validationError = 'Bitte beantworten Sie alle Pflichtfragen, bevor Sie abschliessen.';
+            $count = count($missing);
+            $this->validationError = $count === 1
+                ? 'Eine Pflichtfrage ist noch offen – sie ist rot markiert.'
+                : $count . ' Pflichtfragen sind noch offen – sie sind rot markiert.';
+            // Hinweis oben ist bei langen Umfragen außer Sicht: zur ersten offenen Frage springen
+            $this->dispatch('hatch-scroll-to-missing');
             return;
         }
 

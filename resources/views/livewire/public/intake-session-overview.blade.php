@@ -217,7 +217,7 @@
                                             $blockIdx = $blockIndexById[$block['id']] ?? null;
                                             $isMissing = $blockIdx !== null && in_array($blockIdx, $missingRequiredBlocks ?? [], true);
                                         @endphp
-                                        <div class="{{ $isMissing ? 'rounded-xl ring-1 ring-rose-300/70 p-3 -m-1' : '' }}">
+                                        <div class="{{ $isMissing ? 'rounded-xl ring-1 ring-rose-300/70 p-3 -m-1' : '' }}" @if($isMissing) data-missing style="box-shadow:0 0 0 1px #fda4af;background:#fff1f2" @endif>
                                             @if($isMultiField && $idxInGroup > 0 && !empty($block['name']))
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                                     {{ $block['name'] }}
@@ -245,7 +245,20 @@
                 </div>
 
                 @if(!$isReadOnly && count($segments) > 0)
-                    <div class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    {{-- Hinweis direkt über „Abschliessen“ – oben steht er bei langen Umfragen außer Sicht --}}
+                    @if($validationError)
+                        <div data-validation-hint role="alert" class="mt-8 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style="background:#fff1f2;color:#be123c">
+                            <svg class="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            <span>{{ $validationError }}</span>
+                        </div>
+                    @endif
+                    <div class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                        x-data
+                        x-on:hatch-scroll-to-missing.window="requestAnimationFrame(() => {
+                            const target = [...document.querySelectorAll('[data-missing]')].find(el => el.offsetParent !== null)
+                                || document.querySelector('[data-validation-hint]');
+                            target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        })">
                         <button
                             wire:click="saveDraft"
                             wire:loading.attr="disabled"

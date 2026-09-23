@@ -67,7 +67,7 @@
                                 $blockIdx = $blockIndexById[$cellBlock['id']] ?? null;
                                 $isMissing = $blockIdx !== null && in_array($blockIdx, $missingRequiredBlocks ?? [], true);
                             @endphp
-                            <td class="{{ $isMissing ? 'bg-rose-50/60' : '' }}">
+                            <td class="{{ $isMissing ? 'bg-rose-50/60' : '' }}" @if($isMissing) data-missing style="background:#fff1f2" @endif>
                                 @if(!$this->isBlockVisible($cellBlock))
                                     <span class="text-xs text-gray-300">—</span>
                                 @else
