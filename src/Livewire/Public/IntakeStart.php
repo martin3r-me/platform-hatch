@@ -118,6 +118,7 @@ class IntakeStart extends Component
     public function render()
     {
         return view('hatch::livewire.public.intake-start')
-            ->layout('platform::layouts.guest');
+            ->layout('platform::layouts.guest')
+            ->title($this->intakeName ?: config('app.name'));
     }
 }

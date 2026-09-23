@@ -932,6 +932,7 @@ class IntakeSession extends Component
     public function render()
     {
         return view('hatch::livewire.public.intake-session')
-            ->layout('platform::layouts.guest');
+            ->layout('platform::layouts.guest')
+            ->title($this->intakeName ?: config('app.name'));
     }
 }
