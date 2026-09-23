@@ -36,39 +36,44 @@
                 <p class="text-gray-600 dark:text-gray-300">Die Erhebung <strong>{{ $intakeName }}</strong> wurde noch nicht gestartet. Bitte versuchen Sie es spaeter erneut.</p>
             </div>
         @elseif($state === 'ready')
-            {{-- Header --}}
+            {{-- Begrüßung --}}
             <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $intakeName }}</h1>
+                <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Herzlich willkommen zur Umfrage</p>
+                <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">„{{ $intakeName }}“</h1>
                 @if($intakeDescription)
-                    <p class="mt-2 text-gray-600 dark:text-gray-300">{{ $intakeDescription }}</p>
+                    <p class="mt-3 text-gray-600 dark:text-gray-300">{{ $intakeDescription }}</p>
                 @endif
             </div>
 
             <div class="space-y-4">
-                {{-- Card 1: Neue Erhebung starten --}}
+                {{-- Card 1: Umfrage starten --}}
                 <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-2xl rounded-2xl p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Neue Erhebung starten</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Starten Sie eine neue Erhebung. Sie erhalten einen Token, mit dem Sie spaeter fortfahren koennen.
+                    <p class="text-gray-700 dark:text-gray-200 mb-4">
+                        Vielen Dank, dass Sie sich einen Moment Zeit nehmen. Ihr Feedback hilft uns, besser zu werden.
+                        Klicken Sie auf <strong>„Umfrage starten“</strong>, um zu beginnen.
                     </p>
                     <button
                         wire:click="startNew"
                         wire:loading.attr="disabled"
-                        class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+                        class="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors"
                     >
-                        <span wire:loading.remove wire:target="startNew">Neue Erhebung starten</span>
+                        <span wire:loading.remove wire:target="startNew">Umfrage starten</span>
                         <span wire:loading wire:target="startNew" class="inline-flex items-center gap-2">
                             <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                            Wird erstellt...
+                            Wird gestartet...
                         </span>
                     </button>
+                    <p class="mt-4 flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <svg class="w-4 h-4 flex-shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <span>Ihre Antworten werden vertraulich behandelt. Nach dem Start erhalten Sie einen Code, mit dem Sie später an derselben Stelle weitermachen können.</span>
+                    </p>
                 </div>
 
                 {{-- Card 2: Mit Token fortfahren --}}
                 <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-2xl rounded-2xl p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Mit Token fortfahren</h2>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Schon begonnen?</h2>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Sie haben bereits begonnen? Geben Sie Ihren Token ein, um fortzufahren.
+                        Geben Sie Ihren Code ein, um dort weiterzumachen, wo Sie aufgehört haben.
                     </p>
                     <div class="flex gap-2">
                         <input

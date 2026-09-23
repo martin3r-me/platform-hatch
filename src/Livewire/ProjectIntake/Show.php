@@ -23,6 +23,10 @@ class Show extends Component
 
     public $showActivities = false;
 
+    // Bearbeitbare Stammdaten (Name/Beschreibung werden im Public-View angezeigt)
+    public string $name = '';
+    public string $description = '';
+
     // Personalisierte Session
     public bool $showPersonalizedSessionModal = false;
     public string $contactSearch = '';
@@ -38,8 +42,23 @@ class Show extends Component
     public function mount(HatchProjectIntake $projectIntake)
     {
         $this->projectIntake = $projectIntake;
+        $this->name = (string) $projectIntake->name;
+        $this->description = (string) $projectIntake->description;
         $this->loadTemplateBlocks();
         $this->determineCurrentBlock();
+    }
+
+    public function updatedName()
+    {
+        $this->validateOnly('name', ['name' => 'required|string|max:255']);
+        $this->projectIntake->update(['name' => trim($this->name)]);
+    }
+
+    public function updatedDescription()
+    {
+        $this->validateOnly('description', ['description' => 'nullable|string|max:2000']);
+        $description = trim($this->description);
+        $this->projectIntake->update(['description' => $description === '' ? null : $description]);
     }
 
     public function loadTemplateBlocks()

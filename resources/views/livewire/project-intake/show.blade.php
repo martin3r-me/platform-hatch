@@ -33,6 +33,23 @@
                 <div>
                     <h3 class="text-sm font-bold text-[var(--ui-secondary)] uppercase tracking-wider mb-3">Übersicht</h3>
                     <div class="space-y-3 text-sm">
+                        <x-ui-input-text
+                            name="name"
+                            label="Name"
+                            hint="Öffentlich sichtbar"
+                            wire:model.live.debounce.500ms="name"
+                            required
+                            :errorKey="'name'"
+                        />
+                        <x-ui-input-textarea
+                            name="description"
+                            label="Beschreibung"
+                            hint="Optional, erscheint unter dem Titel"
+                            wire:model.live.debounce.500ms="description"
+                            rows="3"
+                            placeholder="z.B. Wie hat Ihnen das Catering gefallen?"
+                            :errorKey="'description'"
+                        />
                         <div>
                             <label class="block text-xs text-[var(--ui-muted)]">UUID</label>
                             <div class="font-mono text-[var(--ui-secondary)]">{{ $projectIntake->uuid }}</div>
