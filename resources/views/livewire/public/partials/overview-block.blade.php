@@ -7,7 +7,7 @@
       - $compact      (bool) — wenn true: kompakte Tabellenzeilen-Darstellung,
                        z. B. innerhalb eines compact_table-Segments. Beeinflusst
                        v. a. Inputs (kleinere Buttons, Inline-Layout).
-    State wird ueber die indexed Properties der Komponente gelesen:
+    State wird über die indexed Properties der Komponente gelesen:
       $answersByBlock, $selectedOptionsByBlock, $matrixAnswersByBlock, ...
 --}}
 @php
@@ -111,8 +111,8 @@
                     @if(!$isReadOnly) wire:click="setAnswerFor('{{ $blockId }}', @js($optionValue))" @endif
                     @if($isReadOnly) disabled @endif
                     class="intake-option-card {{ $isChosen ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}">
-                    <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 {{ $isChosen ? 'border-violet-600' : 'border-gray-300' }}">
-                        @if($isChosen)<span class="w-2 h-2 rounded-full bg-violet-600"></span>@endif
+                    <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 {{ $isChosen ? 'border-indigo-600' : 'border-gray-300' }}">
+                        @if($isChosen)<span class="w-2 h-2 rounded-full bg-indigo-600"></span>@endif
                     </span>
                     <span class="text-sm {{ $isChosen ? 'text-gray-900' : 'text-gray-600' }}">{{ $optionLabel }}</span>
                 </button>
@@ -158,7 +158,7 @@
                     @if(!$optDisabled) wire:click="toggleOptionFor('{{ $blockId }}', @js($optionValue))" @endif
                     @if($optDisabled) disabled aria-disabled="true" @endif
                     class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }} {{ $maxReached ? 'opacity-40 cursor-not-allowed' : '' }}">
-                    <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">
+                    <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 {{ $isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300' }}">
                         @if($isSelected)
                             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
@@ -244,7 +244,7 @@
                         @if(!$isReadOnly) wire:click="setAnswerFor('{{ $blockId }}', '{{ $i }}')" @endif
                         @if($isReadOnly) disabled @endif
                         class="{{ $compact ? 'w-8 h-8 text-sm' : 'w-10 h-10 text-base' }} rounded-lg font-bold transition-all
-                            {{ $current === (string)$i ? 'bg-violet-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}
+                            {{ $current === (string)$i ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-500 hover:bg-gray-200' }}
                             {{ $isReadOnly ? 'cursor-default' : '' }}">
                         {{ $i }}
                     </button>
@@ -311,14 +311,14 @@
         <div class="space-y-3">
             @if($showValue)
                 <div class="text-center">
-                    <span class="text-2xl font-bold text-violet-600">{{ $answersByBlock[$blockId] ?? $sliderMin }}</span>
+                    <span class="text-2xl font-bold text-indigo-600">{{ $answersByBlock[$blockId] ?? $sliderMin }}</span>
                     @if($sliderUnit)<span class="text-base text-gray-400 ml-1">{{ $sliderUnit }}</span>@endif
                 </div>
             @endif
             <input type="range" wire:model.live="answersByBlock.{{ $blockId }}"
                 min="{{ $sliderMin }}" max="{{ $sliderMax }}" step="{{ $sliderStep }}"
                 @if($isReadOnly) disabled @endif
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-violet-600 {{ $isReadOnly ? 'opacity-60' : '' }}">
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 {{ $isReadOnly ? 'opacity-60' : '' }}">
             <div class="flex justify-between text-xs text-gray-400">
                 <span>{{ $sliderMin }}{{ $sliderUnit ? ' ' . $sliderUnit : '' }}</span>
                 <span>{{ $sliderMax }}{{ $sliderUnit ? ' ' . $sliderUnit : '' }}</span>
@@ -388,7 +388,7 @@
                                         <button type="button"
                                             @if(!$isReadOnly) wire:click="setMatrixAnswerFor('{{ $blockId }}', @js($itemValue), '{{ $s }}')" @endif
                                             @if($isReadOnly) disabled @endif
-                                            class="w-7 h-7 rounded-full border-2 transition-all {{ ($matrixState[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 hover:border-violet-400' }}">
+                                            class="w-7 h-7 rounded-full border-2 transition-all {{ ($matrixState[$itemValue] ?? '') === (string)$s ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 hover:border-indigo-400' }}">
                                             @if(($matrixState[$itemValue] ?? '') === (string)$s)
                                                 <svg class="w-3.5 h-3.5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                             @endif
@@ -415,16 +415,16 @@
                 <div class="text-sm text-gray-600 leading-relaxed whitespace-pre-line p-3 bg-gray-50 rounded-lg border border-gray-100">{{ $consentText }}</div>
             @endif
             @if($linkUrl)
-                <a href="{{ $linkUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-800">
+                <a href="{{ $linkUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800">
                     {{ $linkLabel }}
                 </a>
             @endif
-            <label class="flex items-center gap-3 p-3 rounded-lg border {{ $current === 'true' ? 'border-violet-300 bg-violet-50' : 'border-gray-200' }} {{ $isReadOnly ? 'cursor-default' : 'cursor-pointer' }}">
+            <label class="flex items-center gap-3 p-3 rounded-lg border {{ $current === 'true' ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200' }} {{ $isReadOnly ? 'cursor-default' : 'cursor-pointer' }}">
                 <input type="checkbox"
                     @if(!$isReadOnly) wire:click="setAnswerFor('{{ $blockId }}', '{{ $current === 'true' ? 'false' : 'true' }}')" @endif
                     {{ $current === 'true' ? 'checked' : '' }}
                     @if($isReadOnly) disabled @endif
-                    class="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500">
+                    class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                 <span class="text-sm {{ $current === 'true' ? 'text-gray-900 font-medium' : 'text-gray-600' }}">Ich stimme zu</span>
             </label>
         </div>
@@ -505,7 +505,7 @@
                         @if(!$isReadOnly) wire:click="toggleOptionFor('{{ $blockId }}', @js($val))" @endif
                         @if($isReadOnly) disabled @endif
                         class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }}">
-                        <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">
+                        <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 {{ $isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300' }}">
                             @if($isSelected)<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@endif
                         </span>
                         <span class="text-sm">{{ $lbl }}</span>
@@ -651,7 +651,7 @@
             @if(!$isReadOnly && count($entries) < $maxEntries)
                 <button type="button"
                     wire:click="addRepeaterEntryFor('{{ $blockId }}')"
-                    class="w-full py-2 text-sm text-violet-600 hover:bg-violet-50 border border-dashed border-violet-200 rounded-lg">
+                    class="w-full py-2 text-sm text-indigo-600 hover:bg-indigo-50 border border-dashed border-indigo-200 rounded-lg">
                     + Eintrag hinzufügen
                 </button>
             @endif
@@ -675,7 +675,7 @@
                 <button type="button"
                     @if(!$isReadOnly) wire:click="setAnswerFor('{{ $blockId }}', @js($val))" @endif
                     @if($isReadOnly) disabled @endif
-                    class="relative rounded-lg border-2 overflow-hidden transition-all {{ $isChosen ? 'border-violet-500 ring-2 ring-violet-200' : 'border-gray-200 hover:border-gray-300' }}">
+                    class="relative rounded-lg border-2 overflow-hidden transition-all {{ $isChosen ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200 hover:border-gray-300' }}">
                     <div class="aspect-square bg-gray-100 flex items-center justify-center">
                         @if($fileId)
                             <img src="{{ route('core.files.serve', $fileId) }}" alt="{{ $lbl }}" class="w-full h-full object-cover">
@@ -684,7 +684,7 @@
                         @endif
                     </div>
                     @if($lbl)
-                        <div class="p-1.5 text-center text-xs {{ $isChosen ? 'text-violet-700 font-medium' : 'text-gray-600' }}">{{ $lbl }}</div>
+                        <div class="p-1.5 text-center text-xs {{ $isChosen ? 'text-indigo-700 font-medium' : 'text-gray-600' }}">{{ $lbl }}</div>
                     @endif
                 </button>
             @endforeach
@@ -694,7 +694,7 @@
     @case('file')
     @case('signature')
         <div class="p-4 border-2 border-dashed border-gray-200 rounded-lg text-center">
-            <p class="text-sm text-gray-400">{{ $type === 'file' ? 'Datei-Upload' : 'Signatur' }} wird in einer spaeteren Version unterstuetzt.</p>
+            <p class="text-sm text-gray-400">{{ $type === 'file' ? 'Datei-Upload' : 'Signatur' }} wird in einer späteren Version unterstützt.</p>
         </div>
         @break
 

@@ -45,6 +45,10 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: AI-Persönlichkeit für dieses Template.',
                 ],
+                'completion_message' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Dank-Text nach dem Abschließen der Umfrage (unter „Vielen Dank!“). Leer = Standardtext. Platzhalter wie im Intake-Namen möglich.',
+                ],
                 'industry_context' => [
                     'type' => 'string',
                     'description' => 'Optional: Branchenkontext.',
@@ -103,6 +107,7 @@ class CreateTemplateTool implements ToolContract, ToolMetadataContract
                 'description' => $arguments['description'] ?? null,
                 'ai_personality' => $arguments['ai_personality'] ?? null,
                 'industry_context' => $arguments['industry_context'] ?? null,
+                'completion_message' => ($arguments['completion_message'] ?? '') !== '' ? $arguments['completion_message'] : null,
                 'complexity_level' => $complexityLevel,
                 'flow_mode' => $flowMode,
                 'ai_instructions' => $arguments['ai_instructions'] ?? null,

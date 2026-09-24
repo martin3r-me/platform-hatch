@@ -1,10 +1,10 @@
 {{--
-    Compact-Table Segment fuer Overview-Modus.
+    Compact-Table Segment für Overview-Modus.
 
     Erwartet:
       - $segment        ['kind' => 'compact_table', 'groups' => [...], 'columns' => [...]]
       - $isReadOnly     bool
-      - $blockIndexById id => array index, fuer missing-required-Highlighting
+      - $blockIndexById id => array index, für missing-required-Highlighting
 
     Layout:
       - Eine Tabelle pro Segment.

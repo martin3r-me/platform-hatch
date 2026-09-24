@@ -19,17 +19,14 @@ class IntakePrintCardController
 
         $placeholders = app(IntakePlaceholders::class);
 
-        // Logo der Anwendung: erst das große Logo, sonst das Favicon.
-        $logo = collect(['logo.png', 'logo.svg', 'logo_square.png', 'favicon/favicon.svg', 'favicon.ico'])
-            ->first(fn (string $file) => is_file(public_path($file)));
 
         return view('hatch::print.intake-card', [
             'title' => $placeholders->render($projectIntake->name, $projectIntake),
             'description' => $placeholders->render($projectIntake->description, $projectIntake),
             'url' => $url,
             'qrSvg' => app(QrCodeRenderer::class)->svg($url),
-            'logoUrl' => $logo ? asset($logo) : null,
-            'appName' => config('app.name'),
+            'logoUrl' => \Platform\Hatch\Support\PublicBranding::logoUrl(),
+            'appName' => \Platform\Hatch\Support\PublicBranding::appName(),
             'status' => $projectIntake->status,
         ]);
     }

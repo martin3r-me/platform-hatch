@@ -25,6 +25,7 @@ class IntakeSessionOverview extends Component
     public array $blocks = [];
     public int $totalBlocks = 0;
     public ?string $respondentName = null;
+    public ?string $completionMessage = null;
     public array $missingRequiredBlocks = [];
     public ?string $validationError = null;
 
@@ -69,6 +70,7 @@ class IntakeSessionOverview extends Component
         $this->intakeName = app(IntakeStringRenderer::class)->render($intake->name, $intake);
         $this->sessionToken = $this->session->session_token;
         $this->respondentName = $this->session->respondent_name;
+        $this->completionMessage = app(IntakeStringRenderer::class)->render($intake->projectTemplate?->completion_message, $intake);
 
         if ($intake->projectTemplate) {
             $this->blocks = $intake->projectTemplate->templateBlocks
@@ -636,7 +638,7 @@ class IntakeSessionOverview extends Component
         }
 
         if ($max !== null && $max > 0 && count($current) >= $max) {
-            $this->validationError = 'Du kannst im Feld „' . ($block['name'] ?? '')
+            $this->validationError = 'Sie können im Feld „' . ($block['name'] ?? '')
                 . '" maximal ' . $max . ' Option(en) auswählen.';
             return;
         }

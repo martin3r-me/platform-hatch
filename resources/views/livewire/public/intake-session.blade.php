@@ -1,20 +1,7 @@
 <div class="intake-wrap relative overflow-hidden">
 
-    {{-- Background Image --}}
-    @php
-        $bgFiles = glob(public_path('images/bg-images/*.{jpeg,jpg,png,webp}'), GLOB_BRACE);
-        $bgImage = !empty($bgFiles) ? basename($bgFiles[array_rand($bgFiles)]) : null;
-    @endphp
-    <div class="fixed inset-0 -z-10" aria-hidden="true">
-        <div class="intake-bg"></div>
-        @if($bgImage)
-            <img src="{{ asset('images/bg-images/' . $bgImage) }}"
-                 class="absolute inset-0 w-full h-full object-cover"
-                 alt="" loading="eager">
-        @endif
-        <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
-        <div class="absolute inset-0 backdrop-blur-[6px]"></div>
-    </div>
+    {{-- Hintergrund (hell) --}}
+    <div class="fixed inset-0 -z-10" aria-hidden="true"><div class="intake-bg"></div></div>
 
     @if($state === 'notFound')
         <div class="flex items-center justify-center intake-fullscreen p-4">
@@ -24,8 +11,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Session nicht gefunden</h1>
-                <p class="text-gray-500 text-lg mb-6">Diese Session ist ungueltig oder existiert nicht mehr.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage nicht gefunden</h1>
+                <p class="text-gray-500 text-lg mb-6">Dieser Link ist ungültig oder die Umfrage existiert nicht mehr.</p>
                 <a href="/"
                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,9 +31,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung nicht verfuegbar</h1>
-                <p class="text-gray-500 text-lg mb-4">Diese Erhebung ist derzeit nicht verfuegbar. Bitte versuchen Sie es spaeter erneut.</p>
-                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage nicht verfügbar</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Umfrage ist derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.</p>
+                <p class="text-sm text-gray-400">Ihr Code bleibt gültig &ndash; Sie können später weitermachen.</p>
             </div>
         </div>
 
@@ -58,9 +45,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung noch nicht gestartet</h1>
-                <p class="text-gray-500 text-lg mb-4">Diese Erhebung wurde noch nicht gestartet. Bitte versuchen Sie es spaeter erneut.</p>
-                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage noch nicht gestartet</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Umfrage wurde noch nicht gestartet. Bitte versuchen Sie es später erneut.</p>
+                <p class="text-sm text-gray-400">Ihr Code bleibt gültig &ndash; Sie können später weitermachen.</p>
             </div>
         </div>
 
@@ -68,77 +55,19 @@
         @php $isReadOnly = ($state === 'completed'); @endphp
 
         <div class="intake-shell">
-        {{-- Header --}}
-        <header class="intake-shell-header z-50">
-            <div class="intake-header-glass">
-                <div class="max-w-3xl lg:max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                        </div>
-                        <h1 class="text-base font-semibold text-white truncate">{{ $intakeName }}</h1>
-                    </div>
-                    <div class="flex items-center gap-4 flex-shrink-0 ml-4">
-                        {{-- Token Badge --}}
-                        <div
-                            x-data="{ copied: false }"
-                            class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-full cursor-pointer transition-colors"
-                            x-on:click="navigator.clipboard.writeText('{{ $sessionToken }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                            title="Token kopieren"
-                        >
-                            <span class="text-xs font-mono font-semibold text-white/90 tracking-widest">{{ $sessionToken }}</span>
-                            <svg x-show="!copied" class="w-3.5 h-3.5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                            </svg>
-                            <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-
-                        @if($totalBlocks > 0)
-                            <span class="text-sm font-medium text-white/50">
-                                {{ $currentStep + 1 }}<span class="text-white/30">/</span>{{ $totalBlocks }}
-                            </span>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Progress Bar --}}
-                @if($totalBlocks > 0)
-                    <div class="h-0.5 bg-white/5">
-                        <div
-                            class="h-full transition-all duration-700 ease-out {{ $isReadOnly ? 'intake-progress-done' : 'intake-progress' }}"
-                            style="width: {{ $isReadOnly ? 100 : ($totalBlocks > 0 ? (($currentStep) / $totalBlocks) * 100 : 0) }}%"
-                        ></div>
-                    </div>
-                @endif
-            </div>
-        </header>
+        @include('hatch::livewire.public.partials.shell-header', [
+            'stepLabel' => $totalBlocks > 0 ? ($currentStep + 1) . '/' . $totalBlocks : null,
+            'progress' => $totalBlocks > 0 ? ($isReadOnly ? 100 : round($currentStep / $totalBlocks * 100)) : null,
+            'done' => $isReadOnly,
+        ])
 
         {{-- Content --}}
         <main class="intake-shell-main">
 
-            {{-- Status Banner --}}
+            {{-- Abschluss: Dank-Karte, darunter die gegebenen Antworten (nur lesen) --}}
             @if($isReadOnly)
-                <div class="mb-6">
-                    <div class="intake-card flex items-center gap-3 px-5 py-4">
-                        <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                        <div class="text-sm text-gray-600">
-                            @if($respondentName)
-                                <p class="font-medium text-gray-800">Hallo {{ $respondentName }}!</p>
-                                <p>Vielen Dank fuer Ihre Teilnahme. Diese Erhebung wurde abgeschlossen &ndash; Ihre Antworten werden unten angezeigt.</p>
-                            @else
-                                <p>Diese Erhebung wurde abgeschlossen. Ihre Antworten werden unten angezeigt.</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+                @include('hatch::livewire.public.partials.completion')
+                <p class="mb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Ihre Antworten</p>
             @else
                 <div class="mb-6">
                     @if($respondentName)
@@ -149,13 +78,11 @@
                                 </svg>
                             </div>
                             <p class="text-sm text-gray-600">
-                                <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schoen, dass Sie da sind!
+                                <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schön, dass Sie da sind!
                             </p>
                         </div>
                     @endif
-                    <p class="text-xs text-white/30 text-center tracking-wide">
-                        Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
-                    </p>
+                    @include('hatch::livewire.public.partials.code-line')
                     @if($validationError)
                         <div class="mt-3 intake-card flex items-center gap-3 px-5 py-4">
                             <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
@@ -224,10 +151,10 @@
                             {{-- Progress header --}}
                             <div class="intake-sidebar-progress">
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[11px] font-semibold text-white/50 uppercase tracking-wider">Fortschritt</span>
-                                    <span class="text-[11px] font-bold text-white/70">{{ $answeredCount }}/{{ $answerableCount }}</span>
+                                    <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Fortschritt</span>
+                                    <span class="text-[11px] font-bold text-gray-700">{{ $answeredCount }}/{{ $answerableCount }}</span>
                                 </div>
-                                <div class="h-1 rounded-full bg-white/10 overflow-hidden">
+                                <div class="h-1 rounded-full bg-gray-200 overflow-hidden">
                                     <div class="h-full rounded-full transition-all duration-500 {{ $progressPct === 100 ? 'intake-progress-done' : 'intake-progress' }}" style="width: {{ $progressPct }}%"></div>
                                 </div>
                             </div>
@@ -257,25 +184,25 @@
                                         @if($isActive) data-active @endif
                                         @if(!empty($block['description'])) title="{{ $block['description'] }}" @endif
                                         class="intake-pill transition-all cursor-pointer
-                                            {{ $isFieldInGroup ? 'ml-4 border-l-2 border-white/10 pl-3' : '' }}
+                                            {{ $isFieldInGroup ? 'ml-4 border-l-2 border-gray-200 pl-3' : '' }}
                                             {{ $isActive
-                                                ? 'bg-white/20 text-white ring-1 ring-white/30'
+                                                ? 'bg-white text-gray-900 shadow-sm ring-1 ring-indigo-200'
                                                 : ($isMissing
-                                                    ? 'bg-white/[0.06] text-white/60 hover:bg-white/[0.12] ring-1 ring-rose-400/60'
+                                                    ? 'bg-white text-gray-700 ring-1 ring-rose-300'
                                                     : ($isAnswered
-                                                        ? 'bg-white/[0.06] text-white/60 hover:bg-white/[0.12]'
-                                                        : 'bg-white/[0.03] text-white/30 hover:bg-white/[0.08]'))
+                                                        ? 'bg-white/70 text-gray-600 hover:bg-white'
+                                                        : 'text-gray-400 hover:bg-white/70'))
                                             }}"
                                     >
                                         {{-- Status icon --}}
                                         <span class="w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold flex-shrink-0
                                             {{ $isActive
-                                                ? 'bg-white text-gray-900'
+                                                ? 'bg-indigo-600 text-white'
                                                 : ($isMissing
                                                     ? 'bg-rose-500 text-white'
                                                     : ($isAnswered
                                                         ? 'bg-emerald-500/80 text-white'
-                                                        : 'bg-white/10 text-white/40'))
+                                                        : 'bg-gray-200 text-gray-500'))
                                             }}">
                                             @if($isActive)
                                                 {{ $index + 1 }}
@@ -474,9 +401,9 @@
                                                     class="intake-option-card {{ $isChosen ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                                 >
                                                     <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
-                                                        {{ $isChosen ? 'border-violet-600' : 'border-gray-300' }}">
+                                                        {{ $isChosen ? 'border-indigo-600' : 'border-gray-300' }}">
                                                         @if($isChosen)
-                                                            <span class="w-2 h-2 rounded-full bg-violet-600"></span>
+                                                            <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
                                                         @endif
                                                     </span>
                                                     <span class="{{ $isChosen ? 'text-gray-900' : 'text-gray-600' }}">{{ $optionLabel }}</span>
@@ -536,7 +463,7 @@
                                                     class="intake-option-card {{ $isSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }} {{ $maxReached ? 'opacity-40 cursor-not-allowed pointer-events-none' : '' }}"
                                                 >
                                                     <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors
-                                                        {{ $isSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">
+                                                        {{ $isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300' }}">
                                                         @if($isSelected)
                                                             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
@@ -604,7 +531,7 @@
                                                         @if($isReadOnly) disabled @endif
                                                         class="w-12 h-12 rounded-xl font-bold text-lg transition-all
                                                             {{ $currentAnswer === (string)$i
-                                                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-200'
+                                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                                                                 : 'bg-gray-100 text-gray-500'
                                                             }}
                                                             {{ $isReadOnly ? 'cursor-default' : 'hover:bg-gray-200' }}"
@@ -656,7 +583,7 @@
                                             <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                             </svg>
-                                            <p class="text-sm text-gray-400">Datei-Upload wird in einer spaeteren Version unterstuetzt.</p>
+                                            <p class="text-sm text-gray-400">Datei-Upload wird in einer späteren Version unterstützt.</p>
                                         </div>
                                         @break
 
@@ -735,7 +662,7 @@
                                                                                     type="button"
                                                                                     @if(!$isReadOnly) wire:click="setMatrixAnswer('{{ $itemValue }}', '{{ $s }}')" @endif
                                                                                     @if($isReadOnly) disabled @endif
-                                                                                    class="w-8 h-8 rounded-full border-2 transition-all {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 hover:border-violet-400' }}"
+                                                                                    class="w-8 h-8 rounded-full border-2 transition-all {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 hover:border-indigo-400' }}"
                                                                                 >
                                                                                     @if(($matrixAnswers[$itemValue] ?? '') === (string)$s)
                                                                                         <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
@@ -772,7 +699,7 @@
                                                                             type="button"
                                                                             @if(!$isReadOnly) wire:click="setMatrixAnswer('{{ $itemValue }}', '{{ $s }}')" @endif
                                                                             @if($isReadOnly) disabled @endif
-                                                                            class="w-10 h-10 rounded-full border-2 transition-all text-sm font-medium {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-violet-600 border-violet-600 text-white' : 'border-gray-300 text-gray-600 hover:border-violet-400' }}"
+                                                                            class="w-10 h-10 rounded-full border-2 transition-all text-sm font-medium {{ ($matrixAnswers[$itemValue] ?? '') === (string)$s ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 text-gray-600 hover:border-indigo-400' }}"
                                                                         >
                                                                             {{ $s }}
                                                                         </button>
@@ -813,7 +740,7 @@
                                                     x-on:dragstart="startDrag(idx)"
                                                     x-on:dragover.prevent
                                                     x-on:drop.prevent="onDrop(idx)"
-                                                    class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl {{ $isReadOnly ? '' : 'cursor-grab active:cursor-grabbing hover:border-violet-300' }} transition-colors"
+                                                    class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl {{ $isReadOnly ? '' : 'cursor-grab active:cursor-grabbing hover:border-indigo-300' }} transition-colors"
                                                 >
                                                     <span class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500" x-text="idx + 1"></span>
                                                     <span class="text-gray-700" x-text="@js(collect($rankOptions)->mapWithKeys(fn($o) => [is_array($o) ? ($o['value'] ?? '') : $o => is_array($o) ? ($o['label'] ?? $o['value'] ?? '') : $o])->toArray())[val] || val"></span>
@@ -892,15 +819,15 @@
                                             <div x-show="open" x-cloak x-transition class="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                                 <template x-if="searchable">
                                                     <div class="p-2 border-b border-gray-100">
-                                                        <input type="text" x-model="search" placeholder="Suchen..." class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-violet-400 focus:ring-1 focus:ring-violet-200 outline-none">
+                                                        <input type="text" x-model="search" placeholder="Suchen..." class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
                                                     </div>
                                                 </template>
                                                 <template x-for="option in filteredOptions" :key="typeof option === 'string' ? option : option.value">
                                                     <button
                                                         type="button"
                                                         x-on:click="$wire.setAnswer(typeof option === 'string' ? option : option.value); open = false; search = '';"
-                                                        class="w-full text-left px-4 py-2.5 text-sm hover:bg-violet-50 transition-colors"
-                                                        :class="$wire.currentAnswer === (typeof option === 'string' ? option : option.value) ? 'bg-violet-50 text-violet-700 font-medium' : 'text-gray-700'"
+                                                        class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors"
+                                                        :class="$wire.currentAnswer === (typeof option === 'string' ? option : option.value) ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700'"
                                                     >
                                                         <span x-text="typeof option === 'string' ? option : option.label"></span>
                                                     </button>
@@ -946,7 +873,7 @@
                                         <div x-data="{ value: $wire.entangle('currentAnswer') }" class="space-y-4">
                                             @if($showValue)
                                                 <div class="text-center">
-                                                    <span class="text-3xl font-bold text-violet-600" x-text="value || '{{ $sliderMin }}'"></span>
+                                                    <span class="text-3xl font-bold text-indigo-600" x-text="value || '{{ $sliderMin }}'"></span>
                                                     @if($sliderUnit)
                                                         <span class="text-lg text-gray-400 ml-1">{{ $sliderUnit }}</span>
                                                     @endif
@@ -960,7 +887,7 @@
                                                 max="{{ $sliderMax }}"
                                                 step="{{ $sliderStep }}"
                                                 @if($isReadOnly) disabled @endif
-                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-violet-600 {{ $isReadOnly ? 'opacity-60' : '' }}"
+                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 {{ $isReadOnly ? 'opacity-60' : '' }}"
                                             >
                                             <div class="flex justify-between text-xs text-gray-400">
                                                 <span>{{ $sliderMin }}{{ $sliderUnit ? ' ' . $sliderUnit : '' }}</span>
@@ -984,7 +911,7 @@
                                                     type="button"
                                                     @if(!$isReadOnly) wire:click="setAnswer('{{ $imgValue }}')" @endif
                                                     @if($isReadOnly) disabled @endif
-                                                    class="relative rounded-xl border-2 overflow-hidden transition-all {{ $isChosen ? 'border-violet-500 ring-2 ring-violet-200' : 'border-gray-200 hover:border-gray-300' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
+                                                    class="relative rounded-xl border-2 overflow-hidden transition-all {{ $isChosen ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-gray-200 hover:border-gray-300' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                                 >
                                                     <div class="aspect-square bg-gray-100 flex items-center justify-center">
                                                         @if($imgFileId)
@@ -994,10 +921,10 @@
                                                         @endif
                                                     </div>
                                                     @if($imgLabel)
-                                                        <div class="p-2 text-center text-sm {{ $isChosen ? 'text-violet-700 font-medium' : 'text-gray-600' }}">{{ $imgLabel }}</div>
+                                                        <div class="p-2 text-center text-sm {{ $isChosen ? 'text-indigo-700 font-medium' : 'text-gray-600' }}">{{ $imgLabel }}</div>
                                                     @endif
                                                     @if($isChosen)
-                                                        <div class="absolute top-2 right-2 w-6 h-6 bg-violet-600 rounded-full flex items-center justify-center">
+                                                        <div class="absolute top-2 right-2 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
                                                             <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                                         </div>
                                                     @endif
@@ -1020,18 +947,18 @@
                                                 </div>
                                             @endif
                                             @if($consentLinkUrl)
-                                                <a href="{{ $consentLinkUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-800">
+                                                <a href="{{ $consentLinkUrl }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                     {{ $consentLinkLabel }}
                                                 </a>
                                             @endif
-                                            <label class="flex items-center gap-3 p-4 rounded-xl border transition-colors {{ $currentAnswer === 'true' ? 'border-violet-300 bg-violet-50' : 'border-gray-200' }} {{ $isReadOnly ? 'cursor-default' : 'cursor-pointer' }}">
+                                            <label class="flex items-center gap-3 p-4 rounded-xl border transition-colors {{ $currentAnswer === 'true' ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200' }} {{ $isReadOnly ? 'cursor-default' : 'cursor-pointer' }}">
                                                 <input
                                                     type="checkbox"
                                                     @if(!$isReadOnly) wire:click="setAnswer({{ $currentAnswer === 'true' ? '\'false\'' : '\'true\'' }})" @endif
                                                     {{ $currentAnswer === 'true' ? 'checked' : '' }}
                                                     @if($isReadOnly) disabled @endif
-                                                    class="w-5 h-5 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                                                    class="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                                 >
                                                 <span class="text-sm {{ $currentAnswer === 'true' ? 'text-gray-900 font-medium' : 'text-gray-600' }}">Ich stimme zu</span>
                                             </label>
@@ -1177,7 +1104,7 @@
                                                         @if($isReadOnly) disabled @endif
                                                         class="intake-option-card {{ $loSelected ? 'intake-option-active' : '' }} {{ $isReadOnly ? 'cursor-default' : '' }}"
                                                     >
-                                                        <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors {{ $loSelected ? 'border-violet-600 bg-violet-600' : 'border-gray-300' }}">
+                                                        <span class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors {{ $loSelected ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300' }}">
                                                             @if($loSelected)
                                                                 <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                                             @endif
@@ -1210,7 +1137,7 @@
                                                 <div x-show="open" x-cloak x-transition class="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                                     @if($lookupSearchable)
                                                         <div class="p-2 border-b border-gray-100 sticky top-0 bg-white">
-                                                            <input type="text" x-model="search" placeholder="Suchen..." class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-violet-400 focus:ring-1 focus:ring-violet-200 outline-none">
+                                                            <input type="text" x-model="search" placeholder="Suchen..." class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
                                                         </div>
                                                     @endif
                                                     @foreach($blockLookupOptions as $lo)
@@ -1218,7 +1145,7 @@
                                                             type="button"
                                                             x-show="!search || '{{ strtolower($lo['label']) }}'.includes(search.toLowerCase())"
                                                             x-on:click="$wire.setAnswer('{{ $lo['value'] }}'); open = false; search = '';"
-                                                            class="w-full text-left px-4 py-2.5 text-sm hover:bg-violet-50 transition-colors {{ $currentAnswer === $lo['value'] ? 'bg-violet-50 text-violet-700 font-medium' : 'text-gray-700' }}"
+                                                            class="w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors {{ $currentAnswer === $lo['value'] ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-700' }}"
                                                         >
                                                             @if(!empty($lo['meta']['flag'])) {{ $lo['meta']['flag'] }} @endif
                                                             {{ $lo['label'] }}
@@ -1487,14 +1414,14 @@
 
                             {{-- Hinweis direkt über „Weiter“: oben steht er bei langen Fragen außer Sicht --}}
                             @if($validationError)
-                                <div data-validation-hint role="alert" class="mx-8 mb-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style="background:#fff1f2;color:#be123c">
+                                <div data-validation-hint role="alert" class="mx-5 sm:mx-8 mb-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style="background:#fff1f2;color:#be123c">
                                     <svg class="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
                                     <span>{{ $validationError }}</span>
                                 </div>
                             @endif
 
                             {{-- Navigation --}}
-                            <div class="px-8 pb-8 flex items-center justify-between"
+                            <div class="intake-sticky-actions px-5 pb-5 sm:px-8 sm:pb-8 flex items-center justify-between gap-2"
                                 x-data
                                 x-on:hatch-scroll-to-missing.window="requestAnimationFrame(() => {
                                     const target = [...document.querySelectorAll('[data-missing]')].find(el => el.offsetParent !== null)
@@ -1505,13 +1432,13 @@
                                     wire:click="previousBlock"
                                     wire:loading.attr="disabled"
                                     @if($currentStep === 0) disabled @endif
-                                    class="px-5 py-2.5 text-sm font-medium rounded-xl transition-all
+                                    class="whitespace-nowrap px-3 py-2.5 text-sm font-medium rounded-xl transition-all sm:px-5
                                         {{ $currentStep === 0
                                             ? 'text-gray-300 cursor-not-allowed'
                                             : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                         }}"
                                 >
-                                    <span wire:loading.remove wire:target="previousBlock">&larr; Zurueck</span>
+                                    <span wire:loading.remove wire:target="previousBlock">&larr; Zurück</span>
                                     <span wire:loading wire:target="previousBlock">...</span>
                                 </button>
 
@@ -1520,7 +1447,8 @@
                                         <button
                                             wire:click="saveCurrentBlock"
                                             wire:loading.attr="disabled"
-                                            class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
+                                            title="Zwischenspeichern – Weiter speichert ebenfalls"
+                                            class="hidden sm:inline-block px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                                         >
                                             <span wire:loading.remove wire:target="saveCurrentBlock">Speichern</span>
                                             <span wire:loading wire:target="saveCurrentBlock">Wird gespeichert...</span>
@@ -1544,7 +1472,7 @@
                                             wire:loading.attr="disabled"
                                             class="intake-btn-submit"
                                         >
-                                            <span wire:loading.remove wire:target="submitIntake">Abschliessen</span>
+                                            <span wire:loading.remove wire:target="submitIntake">Abschließen</span>
                                             <span wire:loading.inline-flex wire:target="submitIntake" class="items-center justify-center gap-2">
                                                 <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                                             </span>
@@ -1554,7 +1482,7 @@
                             </div>
                         @else
                             <div class="p-12 text-center">
-                                <p class="text-gray-400">Keine Bloecke in dieser Erhebung konfiguriert.</p>
+                                <p class="text-gray-400">Diese Umfrage enthält noch keine Fragen.</p>
                             </div>
                         @endif
                     </div>
@@ -1564,7 +1492,7 @@
 
         {{-- Footer --}}
         <footer class="intake-shell-footer">
-            <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Formulare</p>
+            <p class="text-[11px] text-gray-400 tracking-wider uppercase">Powered by Formulare</p>
         </footer>
         </div>{{-- /.intake-shell --}}
     @endif
@@ -1682,8 +1610,8 @@
 
     /* ── Progress Bars ── */
     .intake-progress {
-        background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899);
-        box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
+        background: linear-gradient(90deg, #4f46e5, #6366f1, #ec4899);
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.5);
     }
 
     .intake-progress-done {
@@ -1709,8 +1637,8 @@
     }
 
     .intake-input:focus {
-        border-color: #7c3aed;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         background: white;
     }
 
@@ -1744,9 +1672,9 @@
     }
 
     .intake-option-active {
-        background: rgba(124, 58, 237, 0.05) !important;
-        border-color: rgba(124, 58, 237, 0.4) !important;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+        background: rgba(79, 70, 229, 0.05) !important;
+        border-color: rgba(79, 70, 229, 0.4) !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
     }
 
     /* ── Boolean Cards (inside white card) ── */
@@ -1771,7 +1699,7 @@
     /* ── Buttons ── */
     .intake-btn-primary {
         padding: 10px 24px;
-        background: #7c3aed;
+        background: #4f46e5;
         color: white;
         font-size: 14px;
         font-weight: 600;
@@ -1780,8 +1708,8 @@
     }
 
     .intake-btn-primary:hover {
-        background: #6d28d9;
-        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+        background: #4338ca;
+        box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
     }
 
     .intake-btn-primary:disabled {
@@ -1948,5 +1876,6 @@
             display: block;
         }
     }
+    @include('hatch::livewire.public.partials.light-theme')
 </style>
 </div>

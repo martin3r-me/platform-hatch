@@ -31,6 +31,7 @@ class Show extends Component
     protected $rules = [
         'template.name' => 'required|string|max:255',
         'template.description' => 'nullable|string',
+        'template.completion_message' => 'nullable|string|max:2000',
         'template.flow_mode' => 'required|in:block_flow,overview',
         'template.is_active' => 'boolean',
     ];
@@ -716,6 +717,7 @@ class Show extends Component
             'template' => $this->template,
             'groups' => $this->groups(),
             'typeGroups' => BlockTypes::grouped(),
+            'placeholderCatalog' => app(\Platform\Hatch\Support\IntakePlaceholders::class)->catalog(null),
             'previewBlocks' => $previewBlocks,
             'sourceOptions' => $sourceOptions,
             'lookups' => HatchLookup::where('team_id', $teamId)->orderBy('label')->get(['id', 'label']),

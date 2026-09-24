@@ -61,6 +61,21 @@
             </div>
 
 
+            {{-- Nach dem Abschließen --}}
+            <div class="{{ $gruppe }}">
+                <span class="{{ $ueberschrift }}">Nach dem Abschließen</span>
+                <x-hatch::placeholder-input
+                    name="template.completion_message"
+                    label="Dank-Text"
+                    hint="optional"
+                    :catalog="$placeholderCatalog"
+                    multiline
+                    wire:model.live.debounce.600ms="template.completion_message"
+                    placeholder="Ihre Antworten sind angekommen. Ihr Feedback hilft uns, noch besser zu werden."
+                />
+                <p class="-mt-1 text-xs text-[color:var(--nx-faint)]">Steht unter „Vielen Dank!“, wenn jemand die Umfrage abgeschlossen hat. Leer = Standardtext.</p>
+            </div>
+
             {{-- Details --}}
             <div class="{{ $gruppe }}">
                 <span class="{{ $ueberschrift }}">Details</span>

@@ -29,6 +29,7 @@ class HatchProjectTemplate extends Model
         'industry_context',
         'complexity_level',
         'flow_mode',
+        'completion_message',
         'ai_instructions',
         'is_active',
         'created_by_user_id',

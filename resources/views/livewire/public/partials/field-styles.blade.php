@@ -7,8 +7,8 @@
     }
     .intake-input::placeholder { color: #9ca3af; }
     .intake-input:focus {
-        border-color: #7c3aed;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
     .intake-input:disabled { cursor: not-allowed; background: #f9fafb; }
 
@@ -24,9 +24,9 @@
     }
     .intake-option-card:not(:disabled):hover { background: #f9fafb; border-color: #d1d5db; }
     .intake-option-active {
-        background: rgba(124, 58, 237, 0.05) !important;
-        border-color: rgba(124, 58, 237, 0.4) !important;
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08);
+        background: rgba(79, 70, 229, 0.05) !important;
+        border-color: rgba(79, 70, 229, 0.4) !important;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
     }
     .intake-bool-card {
         display: flex; flex-direction: column; align-items: center; justify-content: center;

@@ -49,6 +49,10 @@ class UpdateTemplateTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Neue AI-Persönlichkeit.',
                 ],
+                'completion_message' => [
+                    'type' => 'string',
+                    'description' => 'Optional: Dank-Text nach dem Abschließen der Umfrage (unter „Vielen Dank!“). Leer = Standardtext. Platzhalter wie im Intake-Namen möglich.',
+                ],
                 'industry_context' => [
                     'type' => 'string',
                     'description' => 'Optional: Neuer Branchenkontext.',
@@ -112,6 +116,7 @@ class UpdateTemplateTool implements ToolContract, ToolMetadataContract
             $fields = [
                 'name',
                 'description',
+                'completion_message',
                 'ai_personality',
                 'industry_context',
                 'complexity_level',

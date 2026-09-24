@@ -21,6 +21,7 @@ class IntakeSession extends Component
     public string $currentAnswer = '';
     public array $selectedOptions = [];
     public ?string $respondentName = null;
+    public ?string $completionMessage = null;
     public array $missingRequiredBlocks = [];
     public ?string $validationError = null;
 
@@ -66,6 +67,7 @@ class IntakeSession extends Component
         $this->sessionToken = $this->session->session_token;
         $this->currentStep = $this->session->current_step;
         $this->respondentName = $this->session->respondent_name;
+        $this->completionMessage = app(IntakeStringRenderer::class)->render($intake->projectTemplate?->completion_message, $intake);
 
         if ($intake->projectTemplate) {
             $this->blocks = $intake->projectTemplate->templateBlocks
@@ -596,7 +598,7 @@ class IntakeSession extends Component
         $missing = $this->getUnansweredRequiredBlocks();
         if (!empty($missing)) {
             $this->missingRequiredBlocks = $missing;
-            $this->validationError = 'Bitte beantworten Sie alle Pflichtfragen bevor Sie abschliessen.';
+            $this->validationError = 'Bitte beantworten Sie alle Pflichtfragen bevor Sie abschließen.';
             $this->currentStep = $missing[0];
             $this->loadCurrentAnswer();
             return;
@@ -653,7 +655,7 @@ class IntakeSession extends Component
         }
 
         if ($max !== null && $max > 0 && count($this->selectedOptions) >= $max) {
-            $this->validationError = 'Du kannst maximal ' . $max . ' Option(en) auswählen. Bitte zuerst eine andere Auswahl abwählen.';
+            $this->validationError = 'Sie können maximal ' . $max . ' Option(en) auswählen. Bitte wählen Sie zuerst eine andere ab.';
             return;
         }
 
@@ -771,9 +773,9 @@ class IntakeSession extends Component
         if (count($this->selectedOptions) > $max) {
             // Nicht automatisch trimmen — User muss selbst abwählen, damit
             // die Entscheidung bewusst bleibt. Wir blockieren die Navigation.
-            $this->validationError = 'Du hast ' . count($this->selectedOptions)
+            $this->validationError = 'Sie haben ' . count($this->selectedOptions)
                 . ' Optionen ausgewählt, erlaubt sind maximal ' . $max
-                . '. Bitte wähle einige Optionen ab, bevor du weitergehst.';
+                . '. Bitte wählen Sie einige ab, bevor Sie weitergehen.';
             return false;
         }
 
@@ -932,7 +934,7 @@ class IntakeSession extends Component
                 && (($block['logic_config']['required_mode'] ?? 'matrix') === 'per_row');
 
             if (($requiredByBlock || $requiredByMatrixRow) && !$this->isCurrentBlockAnswered()) {
-                $this->validationError = 'Dieses Feld ist ein Pflichtfeld. Bitte fülle es aus, bevor du weitergehst.';
+                $this->validationError = 'Dies ist eine Pflichtfrage. Bitte beantworten Sie sie, bevor Sie weitergehen.';
 
                 // Matrix: konkret sagen, welche Zeilen fehlen, und dorthin scrollen –
                 // bei langen Matrizen steht der Hinweis sonst außer Sicht.

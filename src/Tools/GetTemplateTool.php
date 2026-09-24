@@ -70,6 +70,7 @@ class GetTemplateTool implements ToolContract, ToolMetadataContract
                 'uuid' => $template->uuid,
                 'name' => $template->name,
                 'description' => $template->description,
+                'completion_message' => $template->completion_message,
                 'ai_personality' => $template->ai_personality,
                 'industry_context' => $template->industry_context,
                 'complexity_level' => $template->complexity_level,

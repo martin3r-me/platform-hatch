@@ -85,20 +85,20 @@ class IntakeStart extends Component
         }
 
         if (!preg_match('/^[A-Z0-9]{4}-[A-Z0-9]{4}$/', $token)) {
-            $this->resumeError = 'Bitte geben Sie einen gueltigen Token im Format XXXX-XXXX ein.';
+            $this->resumeError = 'Bitte geben Sie einen gültigen Code im Format XXXX-XXXX ein.';
             return;
         }
 
         $session = HatchIntakeSession::where('session_token', $token)->first();
 
         if (!$session) {
-            $this->resumeError = 'Keine Session mit diesem Token gefunden.';
+            $this->resumeError = 'Zu diesem Code wurde nichts gefunden.';
             return;
         }
 
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
         if (!$intake || $session->project_intake_id !== $intake->id) {
-            $this->resumeError = 'Dieser Token gehoert nicht zu dieser Erhebung.';
+            $this->resumeError = 'Dieser Code gehört nicht zu dieser Umfrage.';
             return;
         }
 

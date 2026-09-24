@@ -1,20 +1,7 @@
 <div class="intake-wrap relative overflow-hidden">
 
-    {{-- Background Image --}}
-    @php
-        $bgFiles = glob(public_path('images/bg-images/*.{jpeg,jpg,png,webp}'), GLOB_BRACE);
-        $bgImage = !empty($bgFiles) ? basename($bgFiles[array_rand($bgFiles)]) : null;
-    @endphp
-    <div class="fixed inset-0 -z-10" aria-hidden="true">
-        <div class="intake-bg"></div>
-        @if($bgImage)
-            <img src="{{ asset('images/bg-images/' . $bgImage) }}"
-                 class="absolute inset-0 w-full h-full object-cover"
-                 alt="" loading="eager">
-        @endif
-        <div class="absolute inset-0 bg-gradient-to-br from-black/50 via-black/30 to-black/50"></div>
-        <div class="absolute inset-0 backdrop-blur-[6px]"></div>
-    </div>
+    {{-- Hintergrund (hell) --}}
+    <div class="fixed inset-0 -z-10" aria-hidden="true"><div class="intake-bg"></div></div>
 
     @if($state === 'notFound')
         <div class="flex items-center justify-center intake-fullscreen p-4">
@@ -24,8 +11,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Session nicht gefunden</h1>
-                <p class="text-gray-500 text-lg mb-6">Diese Session ist ungueltig oder existiert nicht mehr.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage nicht gefunden</h1>
+                <p class="text-gray-500 text-lg mb-6">Dieser Link ist ungültig oder die Umfrage existiert nicht mehr.</p>
                 <a href="/" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
                     Zur Startseite
                 </a>
@@ -40,9 +27,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung nicht verfuegbar</h1>
-                <p class="text-gray-500 text-lg mb-4">Diese Erhebung ist derzeit nicht verfuegbar.</p>
-                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage nicht verfügbar</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Umfrage ist derzeit nicht verfügbar.</p>
+                <p class="text-sm text-gray-400">Ihr Code bleibt gültig &ndash; Sie können später weitermachen.</p>
             </div>
         </div>
 
@@ -54,9 +41,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-3">Erhebung noch nicht gestartet</h1>
-                <p class="text-gray-500 text-lg mb-4">Diese Erhebung wurde noch nicht gestartet.</p>
-                <p class="text-sm text-gray-400">Ihr Token bleibt gueltig &ndash; Sie koennen spaeter fortfahren.</p>
+                <h1 class="text-2xl font-bold text-gray-900 mb-3">Umfrage noch nicht gestartet</h1>
+                <p class="text-gray-500 text-lg mb-4">Diese Umfrage wurde noch nicht gestartet.</p>
+                <p class="text-sm text-gray-400">Ihr Code bleibt gültig &ndash; Sie können später weitermachen.</p>
             </div>
         </div>
 
@@ -64,7 +51,7 @@
         @php
             $isReadOnly = ($state === 'completed');
             $segments = $this->getRenderSegments();
-            // Index-Map fuer missingRequiredBlocks: block-id -> array index
+            // Index-Map für missingRequiredBlocks: block-id -> array index
             $blockIndexById = [];
             foreach ($blocks as $idx => $b) {
                 $blockIndexById[$b['id']] = $idx;
@@ -72,58 +59,14 @@
         @endphp
 
         <div class="intake-shell">
-            <header class="intake-shell-header z-50">
-                <div class="intake-header-glass">
-                    <div class="max-w-3xl lg:max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                            </div>
-                            <h1 class="text-base font-semibold text-white truncate">{{ $intakeName }}</h1>
-                        </div>
-                        <div class="flex items-center gap-4 flex-shrink-0 ml-4">
-                            <div
-                                x-data="{ copied: false }"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-full cursor-pointer transition-colors"
-                                x-on:click="navigator.clipboard.writeText('{{ $sessionToken }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                                title="Token kopieren"
-                            >
-                                <span class="text-xs font-mono font-semibold text-white/90 tracking-widest">{{ $sessionToken }}</span>
-                                <svg x-show="!copied" class="w-3.5 h-3.5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                </svg>
-                                <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            @include('hatch::livewire.public.partials.shell-header', ['stepLabel' => null])
 
             <main class="intake-shell-main">
 
-                {{-- Status Banner / Greeting --}}
+                {{-- Abschluss: Dank-Karte, darunter die gegebenen Antworten (nur lesen) --}}
                 @if($isReadOnly)
-                    <div class="mb-6">
-                        <div class="intake-card flex items-center gap-3 px-5 py-4">
-                            <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm text-gray-600">
-                                @if($respondentName)
-                                    <p class="font-medium text-gray-800">Hallo {{ $respondentName }}!</p>
-                                    <p>Vielen Dank fuer Ihre Teilnahme.</p>
-                                @else
-                                    <p>Diese Erhebung wurde abgeschlossen.</p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                    @include('hatch::livewire.public.partials.completion')
+                    <p class="mb-3 text-center text-xs font-medium uppercase tracking-wider text-gray-400">Ihre Antworten</p>
                 @else
                     @if($respondentName)
                         <div class="mb-4">
@@ -134,14 +77,12 @@
                                     </svg>
                                 </div>
                                 <p class="text-sm text-gray-600">
-                                    <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schoen, dass Sie da sind!
+                                    <span class="font-medium text-gray-800">Hallo {{ $respondentName }}</span> &ndash; schön, dass Sie da sind!
                                 </p>
                             </div>
                         </div>
                     @endif
-                    <p class="text-xs text-white/30 text-center tracking-wide mb-4">
-                        Speichern Sie Ihren Token <span class="font-mono font-semibold text-white/50">{{ $sessionToken }}</span>, um spaeter fortzufahren.
-                    </p>
+                    @include('hatch::livewire.public.partials.code-line')
                 @endif
 
                 @if($validationError)
@@ -158,7 +99,7 @@
                 {{-- Render alle Segmente nacheinander. --}}
                 @if(count($segments) === 0)
                     <div class="intake-card p-10 text-center">
-                        <p class="text-gray-400">Keine Bloecke in dieser Erhebung konfiguriert.</p>
+                        <p class="text-gray-400">Diese Umfrage enthält noch keine Fragen.</p>
                     </div>
                 @endif
 
@@ -245,14 +186,14 @@
                 </div>
 
                 @if(!$isReadOnly && count($segments) > 0)
-                    {{-- Hinweis direkt über „Abschliessen“ – oben steht er bei langen Umfragen außer Sicht --}}
+                    {{-- Hinweis direkt über „Abschließen“ – oben steht er bei langen Umfragen außer Sicht --}}
                     @if($validationError)
                         <div data-validation-hint role="alert" class="mt-8 flex items-start gap-2 rounded-xl px-4 py-3 text-sm" style="background:#fff1f2;color:#be123c">
                             <svg class="mt-0.5 h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
                             <span>{{ $validationError }}</span>
                         </div>
                     @endif
-                    <div class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                    <div class="intake-sticky-actions -mx-3 mt-8 flex items-center justify-between gap-3 px-3 sm:mx-0 sm:px-0"
                         x-data
                         x-on:hatch-scroll-to-missing.window="requestAnimationFrame(() => {
                             const target = [...document.querySelectorAll('[data-missing]')].find(el => el.offsetParent !== null)
@@ -262,7 +203,7 @@
                         <button
                             wire:click="saveDraft"
                             wire:loading.attr="disabled"
-                            class="px-5 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+                            class="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all"
                         >
                             <span wire:loading.remove wire:target="saveDraft">Zwischenspeichern</span>
                             <span wire:loading wire:target="saveDraft">Wird gespeichert...</span>
@@ -272,7 +213,7 @@
                             wire:loading.attr="disabled"
                             class="intake-btn-submit"
                         >
-                            <span wire:loading.remove wire:target="submit">Abschliessen</span>
+                            <span wire:loading.remove wire:target="submit">Abschließen</span>
                             <span wire:loading.inline-flex wire:target="submit" class="items-center justify-center gap-2">
                                 <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                                 Wird abgeschlossen...
@@ -283,7 +224,7 @@
             </main>
 
             <footer class="intake-shell-footer">
-                <p class="text-[11px] text-white/20 tracking-wider uppercase">Powered by Formulare</p>
+                <p class="text-[11px] text-gray-400 tracking-wider uppercase">Powered by Formulare</p>
             </footer>
         </div>
     @endif
@@ -330,5 +271,6 @@
     }
 
     @include('hatch::livewire.public.partials.field-styles')
+    @include('hatch::livewire.public.partials.light-theme')
 </style>
 </div>
