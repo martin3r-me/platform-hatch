@@ -4,7 +4,6 @@ namespace Platform\Hatch;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Platform\Core\PlatformCore;
@@ -29,7 +28,7 @@ class HatchServiceProvider extends ServiceProvider
         if (
             config()->has('hatch.routing') &&
             config()->has('hatch.navigation') &&
-            Schema::hasTable('modules')
+            PlatformCore::modulesTableExists()
         ) {
             PlatformCore::registerModule([
                 'key'        => 'hatch',
