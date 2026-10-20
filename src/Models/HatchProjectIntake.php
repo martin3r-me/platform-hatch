@@ -5,14 +5,12 @@ namespace Platform\Hatch\Models;
 use Illuminate\Database\Eloquent\Model;
 use Platform\ActivityLog\Traits\LogsActivity;
 use Platform\Hatch\Support\IsoWeekResolver;
-use Platform\Organization\Traits\HasOrganizationContexts;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Symfony\Component\Uid\UuidV7;
 class HatchProjectIntake extends Model
 {
     use LogsActivity;
-    use HasOrganizationContexts;
     
     protected $table = 'hatch_project_intakes';
     
