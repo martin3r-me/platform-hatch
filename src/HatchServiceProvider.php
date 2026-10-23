@@ -107,6 +107,7 @@ class HatchServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Hatch\Tools\CreateIntakeTool());
             $registry->register(new \Platform\Hatch\Tools\UpdateIntakeTool());
             $registry->register(new \Platform\Hatch\Tools\DeleteIntakeTool());
+            $registry->register(new \Platform\Hatch\Tools\DuplicateIntakeTool());
 
             // Intakes (Bulk)
             $registry->register(new \Platform\Hatch\Tools\BulkCreateIntakesTool());

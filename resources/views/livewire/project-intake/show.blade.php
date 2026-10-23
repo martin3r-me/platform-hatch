@@ -30,6 +30,10 @@
                     <span>Wieder öffnen</span>
                 </x-nx-button>
             @endif
+            <x-nx-button icon wire:click="duplicateIntake"
+                title="Duplizieren – Kopie mit denselben Fragen, ohne Antworten, Link und Veranstaltungsnummer">
+                @svg('heroicon-o-document-duplicate', 'w-4 h-4')
+            </x-nx-button>
             <x-nx-button
                 icon
                 variant="danger"

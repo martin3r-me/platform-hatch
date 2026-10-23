@@ -119,7 +119,12 @@
                                 <div class="tabular-nums text-[color:var(--nx-muted)]">{{ $projectIntake->created_at->format('d.m.Y') }}</div>
                                 <div class="text-xs text-[color:var(--nx-faint)]">{{ $projectIntake->createdByUser->name ?? 'Unbekannt' }}</div>
                             </x-nx-table-cell>
-                            <x-nx-table-cell align="right">
+                            <x-nx-table-cell align="right" class="whitespace-nowrap">
+                                <x-nx-button icon variant="ghost" type="button" title="Duplizieren – gleiche Fragen, ohne Antworten und Link"
+                                    onclick="event.stopPropagation()"
+                                    wire:click="duplicateProjectIntake('{{ $projectIntake->id }}')">
+                                    @svg('heroicon-o-document-duplicate', 'w-4 h-4')
+                                </x-nx-button>
                                 <x-nx-button icon variant="ghost" type="button" title="Erhebung löschen"
                                     onclick="event.stopPropagation()"
                                     wire:click="deleteProjectIntake('{{ $projectIntake->id }}')"

@@ -133,6 +133,18 @@ class Index extends Component
         ]);
     }
 
+    public function duplicateProjectIntake(string $id)
+    {
+        $intake = HatchProjectIntake::where('team_id', auth()->user()->current_team_id)->find($id);
+        if (!$intake) {
+            return;
+        }
+
+        $copy = $intake->duplicate(auth()->id());
+
+        return redirect()->route('hatch.project-intakes.show', $copy);
+    }
+
     public function deleteProjectIntake(string $id)
     {
         $intake = HatchProjectIntake::find($id);

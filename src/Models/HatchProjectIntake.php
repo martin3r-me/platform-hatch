@@ -101,6 +101,28 @@ class HatchProjectIntake extends Model
         return $this->hasMany(HatchIntakeSession::class, 'project_intake_id');
     }
 
+    /**
+     * Legt eine Kopie dieser Erhebung als Entwurf an.
+     *
+     * Übernommen: Vorlage (also dieselben Fragen), Name mit „(Kopie)“, Beschreibung,
+     * Einstellungen inkl. Platzhalter-Werte. Nicht übernommen: Antworten,
+     * öffentlicher Link/QR-Code, Veranstaltungsnummer, Status, Zeitstempel.
+     */
+    public function duplicate(int $userId, ?int $teamId = null): self
+    {
+        return self::create([
+            'project_template_id' => $this->project_template_id,
+            'name' => trim((string) $this->name) . ' (Kopie)',
+            'description' => $this->description,
+            'intake_settings' => $this->intake_settings,
+            'status' => 'draft',
+            'is_active' => false,
+            'team_id' => $teamId ?? $this->team_id,
+            'created_by_user_id' => $userId,
+            'owned_by_user_id' => $userId,
+        ]);
+    }
+
     public function generatePublicToken(): string
     {
         $this->public_token = bin2hex(random_bytes(16));

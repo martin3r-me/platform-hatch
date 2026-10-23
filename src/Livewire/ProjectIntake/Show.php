@@ -407,6 +407,25 @@ class Show extends Component
         ]);
     }
 
+    public function duplicateIntake()
+    {
+        if ((int) $this->projectIntake->team_id !== (int) auth()->user()->current_team_id) {
+            return;
+        }
+
+        $copy = $this->projectIntake->duplicate(auth()->id());
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Erhebung dupliziert',
+            'message' => 'Die Kopie ist als Entwurf angelegt – Name anpassen und veröffentlichen.',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $copy->id,
+        ]);
+
+        return redirect()->route('hatch.project-intakes.show', $copy);
+    }
+
     public function deleteProjectIntake()
     {
         if ($this->projectIntake->team_id !== auth()->user()->current_team_id) {
