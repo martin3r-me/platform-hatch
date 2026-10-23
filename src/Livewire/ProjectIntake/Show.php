@@ -432,12 +432,16 @@ class Show extends Component
             return;
         }
 
+        $intakeId = $this->projectIntake->id;
         $this->projectIntake->delete();
 
+        // noticable_* ist Pflicht in notifications_notices – auf die gelöschte Erhebung verweisen
         $this->dispatch('notifications:store', [
             'title' => 'Erhebung gelöscht',
-            'message' => 'Die Erhebung und alle zugehörigen Sessions wurden gelöscht.',
+            'message' => 'Die Erhebung und alle zugehörigen Antworten wurden gelöscht.',
             'notice_type' => 'success',
+            'noticable_type' => HatchProjectIntake::class,
+            'noticable_id' => $intakeId,
         ]);
 
         return redirect()->route('hatch.project-intakes.index');

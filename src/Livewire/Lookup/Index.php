@@ -75,9 +75,9 @@ class Index extends Component
                     'description' => $this->lookupDescription,
                 ]);
             }
-            $message = 'Lookup aktualisiert.';
+            $message = 'Auswahlliste aktualisiert.';
         } else {
-            HatchLookup::create([
+            $lookup = HatchLookup::create([
                 'team_id' => $teamId,
                 'created_by_user_id' => auth()->id(),
                 'name' => $this->lookupName,
@@ -85,13 +85,15 @@ class Index extends Component
                 'description' => $this->lookupDescription,
                 'is_system' => false,
             ]);
-            $message = 'Lookup erstellt.';
+            $message = 'Auswahlliste angelegt.';
         }
 
         $this->modalShow = false;
         $this->dispatch('notifications:store', [
             'title' => $message,
             'notice_type' => 'success',
+            'noticable_type' => HatchLookup::class,
+            'noticable_id' => $lookup->id,
         ]);
     }
 
@@ -101,10 +103,13 @@ class Index extends Component
         if (!$lookup || $lookup->team_id !== auth()->user()->current_team_id) return;
         if ($lookup->is_system) return;
 
+        $lookupId = $lookup->id;
         $lookup->delete();
         $this->dispatch('notifications:store', [
-            'title' => 'Lookup gelöscht.',
+            'title' => 'Auswahlliste gelöscht.',
             'notice_type' => 'success',
+            'noticable_type' => HatchLookup::class,
+            'noticable_id' => $lookupId,
         ]);
     }
 
