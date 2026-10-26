@@ -14,6 +14,18 @@
                 @svg('heroicon-o-paper-airplane', 'w-4 h-4')
                 <span>Als Erhebung starten</span>
             </x-nx-button>
+            @if($intakeCount > 0)
+                <x-nx-button icon variant="danger" disabled
+                    title="Kann nicht gelöscht werden: wird von {{ $intakeCount }} {{ $intakeCount === 1 ? 'Erhebung' : 'Erhebungen' }} verwendet. Erst die Erhebungen löschen oder die Vorlage deaktivieren.">
+                    @svg('heroicon-o-trash', 'w-4 h-4')
+                </x-nx-button>
+            @else
+                <x-nx-button icon variant="danger" wire:click="deleteTemplate"
+                    wire:confirm="Vorlage „{{ $template->name }}“ mit allen Fragen löschen? Das lässt sich nicht rückgängig machen."
+                    title="Vorlage löschen">
+                    @svg('heroicon-o-trash', 'w-4 h-4')
+                </x-nx-button>
+            @endif
         </x-ui-page-actionbar>
     </x-slot>
 

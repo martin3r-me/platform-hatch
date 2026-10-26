@@ -66,6 +66,37 @@ class Show extends Component
         $this->template->save();
     }
 
+    public function deleteTemplate()
+    {
+        if ((int) $this->template->team_id !== (int) auth()->user()->current_team_id) {
+            return;
+        }
+
+        if ($this->template->isInUse()) {
+            $this->dispatch('notifications:store', [
+                'title' => 'Vorlage wird noch verwendet',
+                'message' => 'Löschen Sie zuerst die Erhebungen mit dieser Vorlage – oder deaktivieren Sie die Vorlage.',
+                'notice_type' => 'error',
+                'noticable_type' => HatchProjectTemplate::class,
+                'noticable_id' => $this->template->id,
+            ]);
+
+            return;
+        }
+
+        $id = $this->template->id;
+        $this->template->delete();   // Fragen werden per CASCADE mitgelöscht
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Vorlage gelöscht',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectTemplate::class,
+            'noticable_id' => $id,
+        ]);
+
+        return redirect()->route('hatch.templates.index');
+    }
+
     public function toggleActive(): void
     {
         $this->template->is_active = !$this->template->is_active;

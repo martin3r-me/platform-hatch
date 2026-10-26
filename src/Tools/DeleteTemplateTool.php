@@ -22,7 +22,7 @@ class DeleteTemplateTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'DELETE /hatch/templates/{id} - Deaktiviert oder löscht ein Projekt-Template. Parameter: template_id (required), confirm (required=true), hard_delete (optional, default false = nur deaktivieren).';
+        return 'DELETE /hatch/templates/{id} - Deaktiviert oder löscht ein Projekt-Template. Parameter: template_id (required), confirm (required=true), hard_delete (optional, default false = nur deaktivieren). hard_delete wird abgelehnt (IN_USE), solange Erhebungen das Template nutzen – sonst würden diese samt Antworten mitgelöscht.';
     }
 
     public function getSchema(): array
@@ -86,6 +86,11 @@ class DeleteTemplateTool implements ToolContract, ToolMetadataContract
             $hardDelete = (bool)($arguments['hard_delete'] ?? false);
 
             if ($hardDelete) {
+                // CASCADE würde alle Erhebungen samt Antworten mitlöschen
+                $intakeCount = $template->projectIntakes()->count();
+                if ($intakeCount > 0) {
+                    return ToolResult::error('IN_USE', "Template wird von {$intakeCount} Erhebung(en) verwendet. Endgültiges Löschen würde diese samt Antworten mitlöschen – erst die Erhebungen löschen (hatch.intakes.DELETE) oder hard_delete=false zum Deaktivieren nutzen.");
+                }
                 $template->delete();
                 return ToolResult::success([
                     'template_id' => $templateId,

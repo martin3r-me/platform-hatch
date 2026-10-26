@@ -66,6 +66,7 @@
                     <x-nx-table-header-cell align="right">Erhebungen</x-nx-table-header-cell>
                     <x-nx-table-header-cell>Status</x-nx-table-header-cell>
                     <x-nx-table-header-cell sortable sortField="updated_at" :currentSort="$sortField" :sortDirection="$sortDirection">Geändert</x-nx-table-header-cell>
+                    <x-nx-table-header-cell align="right"><span class="sr-only">Aktionen</span></x-nx-table-header-cell>
                 </x-nx-table-header>
                 <x-nx-table-body>
                     @foreach($templates as $template)
@@ -87,6 +88,21 @@
                             </x-nx-table-cell>
                             <x-nx-table-cell class="whitespace-nowrap tabular-nums text-[color:var(--nx-muted)]" title="{{ $template->updated_at?->format('d.m.Y H:i') }}">
                                 {{ $template->updated_at?->diffForHumans() ?? '–' }}
+                            </x-nx-table-cell>
+                            <x-nx-table-cell align="right">
+                                @if($template->project_intakes_count > 0)
+                                    <x-nx-button icon variant="ghost" type="button" disabled onclick="event.stopPropagation()"
+                                        title="Wird von {{ $template->project_intakes_count }} {{ $template->project_intakes_count === 1 ? 'Erhebung' : 'Erhebungen' }} verwendet – erst diese löschen oder die Vorlage deaktivieren">
+                                        @svg('heroicon-o-trash', 'w-4 h-4 opacity-40')
+                                    </x-nx-button>
+                                @else
+                                    <x-nx-button icon variant="ghost" type="button" title="Vorlage löschen"
+                                        onclick="event.stopPropagation()"
+                                        wire:click="deleteTemplate({{ $template->id }})"
+                                        wire:confirm="Vorlage „{{ $template->name }}“ mit allen Fragen löschen? Das lässt sich nicht rückgängig machen.">
+                                        @svg('heroicon-o-trash', 'w-4 h-4 text-[color:var(--nx-danger)]')
+                                    </x-nx-button>
+                                @endif
                             </x-nx-table-cell>
                         </x-nx-table-row>
                     @endforeach

@@ -133,6 +133,15 @@ class HatchProjectTemplate extends Model
         });
     }
 
+    /**
+     * Löschen ist nur erlaubt, solange keine Erhebung die Vorlage nutzt:
+     * der Fremdschlüssel löscht sonst per CASCADE alle Erhebungen samt Antworten mit.
+     */
+    public function isInUse(): bool
+    {
+        return $this->projectIntakes()->exists();
+    }
+
     public function templateBlocks(): HasMany
     {
         return $this->hasMany(HatchTemplateBlock::class, 'project_template_id');

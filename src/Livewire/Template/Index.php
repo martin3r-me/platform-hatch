@@ -106,6 +106,23 @@ class Index extends Component
         session()->flash('message', 'Template erfolgreich erstellt!');
     }
 
+    public function deleteTemplate(int $id): void
+    {
+        $template = HatchProjectTemplate::where('team_id', auth()->user()->current_team_id)->find($id);
+        if (!$template || $template->isInUse()) {
+            return;   // in der Liste ist der Button bei genutzten Vorlagen gesperrt
+        }
+
+        $template->delete();
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Vorlage gelöscht',
+            'notice_type' => 'success',
+            'noticable_type' => HatchProjectTemplate::class,
+            'noticable_id' => $id,
+        ]);
+    }
+
     public function resetForm()
     {
         $this->reset([
