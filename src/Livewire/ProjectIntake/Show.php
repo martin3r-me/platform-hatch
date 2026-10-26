@@ -2,10 +2,12 @@
 
 namespace Platform\Hatch\Livewire\ProjectIntake;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Platform\Core\Livewire\Concerns\HasPageContext;
 use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
@@ -18,6 +20,7 @@ class Show extends Component
 {
     use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
     use WithPagination;
+    use HasPageContext;
 
     public HatchProjectIntake $projectIntake;
 
@@ -81,6 +84,24 @@ class Show extends Component
             : '';
         $this->showClosesAt = $this->closesAtInput !== '';
         $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
+    }
+
+    /**
+     * Kontext-Panel (Core): Reiter „Verknüpfungen“ hängt die Erhebung an
+     * Organisationseinheiten – darüber gruppiert die Hatch-Seitenleiste.
+     */
+    protected function pageContext(): ?Model
+    {
+        return $this->projectIntake;
+    }
+
+    protected function pageContextOptions(): array
+    {
+        return [
+            'subject' => app(IntakePlaceholders::class)->render($this->projectIntake->name, $this->projectIntake),
+            'url' => route('hatch.project-intakes.show', $this->projectIntake),
+            'source' => 'hatch.project-intake.view',
+        ];
     }
 
     public function updatedName()
