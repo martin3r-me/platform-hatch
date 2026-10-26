@@ -10,6 +10,13 @@
             ['label' => $template?->name ?: 'Vorlage'],
         ]">
             <span wire:loading.delay class="text-xs text-[color:var(--nx-faint)]">Speichert…</span>
+            @if($intakeCount > 0)
+                <x-nx-button :href="route('hatch.templates.analysis', $template)" wire:navigate
+                    title="Alle {{ $intakeCount }} {{ $intakeCount === 1 ? 'Erhebung' : 'Erhebungen' }} dieser Vorlage vergleichen – z. B. Standorte und Kalenderwochen">
+                    @svg('heroicon-o-chart-bar', 'w-4 h-4')
+                    <span>Vergleich</span>
+                </x-nx-button>
+            @endif
             <x-nx-button variant="primary" wire:click="createIntakeFromTemplate">
                 @svg('heroicon-o-paper-airplane', 'w-4 h-4')
                 <span>Als Erhebung starten</span>

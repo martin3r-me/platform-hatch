@@ -314,6 +314,7 @@
             $usesPlaceholders = $placeholders->keysIn($projectIntake, $projectIntake->name, $projectIntake->description) !== [];
             $isRecurring = $placeholders->recurrence($projectIntake, $projectIntake->name, $projectIntake->description) === \Platform\Hatch\Support\IntakePlaceholders::RECURRENCE_WEEKLY;
             $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
+            $answerableBlocks = $projectIntake->projectTemplate?->templateBlocks?->whereNotIn('block_type', \Platform\Hatch\Support\AnswerValue::NOT_ANSWERABLE)->count() ?? 0;
             $sessionRate = $sessionTotal > 0 ? round($sessionDone / $sessionTotal * 100) : 0;
         @endphp
 
@@ -389,25 +390,19 @@
         @endif
 
 
-        {{-- Weiterverarbeitung nach dem Schließen --}}
-        @if($projectIntake->status === 'closed')
-            <x-nx-section icon="heroicon-o-arrow-right-circle" title="Weiterverarbeiten">
-                <div class="flex flex-wrap gap-2">
-                    <x-nx-button wire:click="generatePdfReport">@svg('heroicon-o-document-text', 'w-4 h-4')<span>PDF-Bericht</span></x-nx-button>
-                    <x-nx-button wire:click="createProject">@svg('heroicon-o-folder-plus', 'w-4 h-4')<span>Projekt anlegen</span></x-nx-button>
-                    <x-nx-button wire:click="createTasks">@svg('heroicon-o-list-bullet', 'w-4 h-4')<span>Aufgaben anlegen</span></x-nx-button>
-                    <x-nx-button wire:click="exportMarkdown">@svg('heroicon-o-document', 'w-4 h-4')<span>Markdown-Export</span></x-nx-button>
-                    <x-nx-button wire:click="showData">@svg('heroicon-o-eye', 'w-4 h-4')<span>Daten anzeigen</span></x-nx-button>
-                </div>
-            </x-nx-section>
-        @endif
-
         {{-- Eingegangene Antworten --}}
         <x-nx-card flush>
             <div class="flex items-center gap-2 border-b border-[color:var(--nx-line)] px-4 py-3">
                 @svg('heroicon-o-inbox-stack', 'w-4 h-4 text-[color:var(--nx-muted)]')
                 <h2 class="m-0 text-xs font-semibold text-[color:var(--nx-muted)]">Eingegangene Antworten</h2>
                 <span class="text-xs tabular-nums text-[color:var(--nx-faint)]">{{ $sessionTotal }}</span>
+                @if($emptySessionCount > 0)
+                    <button type="button" wire:click="toggleEmptySessions"
+                        class="text-xs text-[color:var(--nx-faint)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--nx-text)]"
+                        title="Teilnahmen, bei denen noch keine Frage beantwortet wurde (nur geöffnet oder unbenutzte persönliche Links). Sie zählen nicht in Kennzahlen und Auswertung.">
+                        {{ $showEmptySessions ? 'ohne Antwort ausblenden' : '+ ' . $emptySessionCount . ' ohne Antwort' }}
+                    </button>
+                @endif
                 <div class="ml-auto">
                     <x-nx-button wire:click="openPersonalizedSessionModal" title="Einen persönlichen Link für einen CRM-Kontakt erzeugen">
                         @svg('heroicon-o-user-plus', 'w-4 h-4')
@@ -433,7 +428,7 @@
                         @foreach($sessions as $session)
                             @php
                                 $contact = $session->contactLinks->pluck('contact')->first(fn ($c) => $c && $c->isVisible());
-                                $answeredBlocks = is_array($session->answers) ? count($session->answers) : 0;
+                                $answeredBlocks = (int) $session->answered_count;
                                 $sessionUrl = route('hatch.public.intake-session', ['sessionToken' => $session->session_token]);
                             @endphp
                             <x-nx-table-row wire:key="session-{{ $session->id }}">
@@ -453,14 +448,14 @@
                                     @endif
                                 </x-nx-table-cell>
                                 <x-nx-table-cell>
-                                    <x-nx-badge :variant="$session->status === 'completed' ? 'success' : 'warning'" dot class="whitespace-nowrap">
-                                        {{ $session->status === 'completed' ? 'Abgeschlossen' : 'Gestartet' }}
+                                    <x-nx-badge :variant="$session->status === 'completed' ? 'success' : ($session->answered_count > 0 ? 'warning' : 'neutral')" dot class="whitespace-nowrap">
+                                        {{ $session->status === 'completed' ? 'Abgeschlossen' : ($session->answered_count > 0 ? 'Gestartet' : 'Ohne Antwort') }}
                                     </x-nx-badge>
                                     @if($session->completed_at)
                                         <div class="mt-0.5 whitespace-nowrap text-xs tabular-nums text-[color:var(--nx-faint)]">am {{ $session->completed_at->format('d.m. H:i') }}</div>
                                     @endif
                                 </x-nx-table-cell>
-                                <x-nx-table-cell class="whitespace-nowrap tabular-nums text-[color:var(--nx-muted)]">{{ $totalBlocks > 0 ? $answeredBlocks . ' / ' . $totalBlocks : $answeredBlocks }}</x-nx-table-cell>
+                                <x-nx-table-cell class="whitespace-nowrap tabular-nums text-[color:var(--nx-muted)]">{{ $answerableBlocks > 0 ? $answeredBlocks . ' / ' . $answerableBlocks : $answeredBlocks }}</x-nx-table-cell>
                                 @if($isRecurring)
                                     <x-nx-table-cell class="whitespace-nowrap tabular-nums text-[color:var(--nx-muted)]">
                                         @if($session->iso_week && $session->iso_year)
@@ -491,7 +486,7 @@
                     </x-nx-table-body>
                 </x-nx-table>
                 @if($sessions->hasPages())
-                    <div class="border-t border-[color:var(--nx-line)] px-4 py-3">{{ $sessions->links() }}</div>
+                    <div class="border-t border-[color:var(--nx-line)] px-4 py-3">{{ $sessions->links('hatch::livewire.partials.pagination') }}</div>
                 @endif
             @else
                 <x-nx-empty icon="heroicon-o-inbox">

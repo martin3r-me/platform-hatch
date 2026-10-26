@@ -114,7 +114,7 @@
     @if($templates->hasPages())
         <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--nx-faint)]">
             <span class="tabular-nums">{{ $templates->firstItem() }}–{{ $templates->lastItem() }} von {{ $templates->total() }} Vorlagen</span>
-            {{ $templates->links() }}
+            {{ $templates->links('hatch::livewire.partials.pagination') }}
         </div>
     @endif
 

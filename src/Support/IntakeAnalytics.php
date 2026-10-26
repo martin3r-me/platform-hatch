@@ -45,7 +45,9 @@ class IntakeAnalytics
                 if (in_array($block->block_type, self::DISPLAY_ONLY, true)) {
                     continue;
                 }
+                // Bedingte Fragen nur bei denen zählen, denen sie angezeigt wurde (Schlüssel = Index in $sessions)
                 $raw = $answersBySession
+                    ->filter(fn (array $a) => BlockVisibility::isVisible($block->visibility_rules, $a))
                     ->map(fn (array $a) => $a['block_' . $block->id] ?? null)
                     ->all();
                 $fields[] = [
@@ -77,6 +79,7 @@ class IntakeAnalytics
     public function weeks(HatchProjectIntake $intake): array
     {
         return $intake->sessions()
+            ->withAnswers()
             ->whereNotNull('iso_year')->whereNotNull('iso_week')
             ->selectRaw('iso_year, iso_week, count(*) as c')
             ->groupBy('iso_year', 'iso_week')
@@ -89,6 +92,7 @@ class IntakeAnalytics
     public function sessions(HatchProjectIntake $intake, array $filters): Collection
     {
         return $intake->sessions()
+            ->withAnswers()
             ->when($filters['completed_only'] ?? false, fn ($q) => $q->where('status', 'completed'))
             ->when(!empty($filters['iso_year']) && !empty($filters['iso_week']), fn ($q) => $q
                 ->where('iso_year', (int) $filters['iso_year'])
@@ -149,7 +153,8 @@ class IntakeAnalytics
         $type = $block->block_type;
         $answered = array_filter($raw, fn ($v) => !$this->isEmpty($type, $v));
         $n = count($answered);
-        $base = ['type' => $type, 'answered' => $n, 'sessions' => count($raw)];
+        // 'sessions' = Teilnahmen, denen die Frage angezeigt wurde
+        $base = ['type' => $type, 'answered' => $n, 'sessions' => count($raw), 'conditional' => !empty($block->visibility_rules['rules'])];
 
         switch ($type) {
             case 'rating':
@@ -284,7 +289,7 @@ class IntakeAnalytics
                     if ($this->isEmpty($type, $value)) {
                         continue;
                     }
-                    $session = $sessions->values()[$idx] ?? null;
+                    $session = $sessions[$idx] ?? null;
                     $entries[] = [
                         'text' => $this->display($block, $value, $lookupLabels),
                         'at' => $session?->completed_at ?? $session?->started_at,
@@ -361,39 +366,16 @@ class IntakeAnalytics
 
     private function isEmpty(?string $type, $value): bool
     {
-        if ($value === null || $value === '') {
-            return true;
-        }
-        if (in_array($type, ['multi_select', 'ranking', 'repeater'], true)) {
-            return $this->decodeList($value) === [];
-        }
-        if (in_array($type, ['matrix', 'address', 'date_range'], true)) {
-            return array_filter($this->decodeMap($value), fn ($v) => $v !== '' && $v !== null) === [];
-        }
-        if ($type === 'lookup' && is_string($value) && str_starts_with($value, '[')) {
-            return $this->decodeList($value) === [];
-        }
-
-        return false;
+        return AnswerValue::isEmpty($type, $value);
     }
 
     private function decodeList($value): array
     {
-        if (is_array($value)) {
-            return array_values($value);
-        }
-        $decoded = json_decode((string) $value, true);
-
-        return is_array($decoded) ? array_values($decoded) : [];
+        return AnswerValue::decodeList($value);
     }
 
     private function decodeMap($value): array
     {
-        if (is_array($value)) {
-            return $value;
-        }
-        $decoded = json_decode((string) $value, true);
-
-        return is_array($decoded) ? $decoded : [];
+        return AnswerValue::decodeMap($value);
     }
 }

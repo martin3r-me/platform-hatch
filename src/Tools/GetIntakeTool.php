@@ -61,7 +61,7 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                     'projectTemplate:id,name,complexity_level',
                     'intakeSteps.templateBlock:id,name,block_type',
                 ])
-                ->withCount('sessions')
+                ->withCount(['sessions' => fn ($q) => $q->withAnswers()])   // ohne nur geöffnete, nie beantwortete
                 ->where('team_id', $teamId)
                 ->find($intakeId);
 

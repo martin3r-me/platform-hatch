@@ -2,6 +2,7 @@
 
 namespace Platform\Hatch\Livewire\Public;
 
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchIntakeSession;
@@ -15,6 +16,10 @@ class IntakeStart extends Component
     public ?string $publicToken = null;
     public string $resumeToken = '';
     public ?string $resumeError = null;
+    public ?string $startError = null;
+
+    /** Neue Teilnahmen je Umfrage und IP pro Minute. Großzügig: Gäste einer Veranstaltung teilen oft ein WLAN. */
+    public const STARTS_PER_MINUTE = 30;
 
     public function mount(string $publicToken)
     {
@@ -66,6 +71,30 @@ class IntakeStart extends Component
             return;
         }
 
+        $this->startError = null;
+
+        // Schon in diesem Browser begonnen und noch nichts beantwortet (Zurück-Taste, Neuladen,
+        // doppelt getippt)? Dann dort weiter statt einer weiteren leeren Teilnahme.
+        // Nur leere – an einem geteilten Tablet bekommt niemand die halbe Umfrage des Vorgängers.
+        $startedKey = 'hatch.started.' . $intake->id;
+        if ($token = session($startedKey)) {
+            $existing = HatchIntakeSession::where('session_token', $token)
+                ->where('project_intake_id', $intake->id)
+                ->where('status', '!=', 'completed')
+                ->where('answered_count', 0)
+                ->first();
+            if ($existing) {
+                return redirect()->route('hatch.public.intake-session', ['sessionToken' => $existing->session_token]);
+            }
+        }
+
+        $limiterKey = 'hatch-start:' . $intake->id . ':' . request()->ip();
+        if (RateLimiter::tooManyAttempts($limiterKey, self::STARTS_PER_MINUTE)) {
+            $this->startError = 'Gerade kommen sehr viele Anfragen aus Ihrem Netzwerk. Bitte versuchen Sie es in einer Minute noch einmal.';
+            return;
+        }
+        RateLimiter::hit($limiterKey, 60);
+
         $session = $intake->sessions()->create([
             'metadata' => [
                 'ip' => request()->ip(),
@@ -73,6 +102,8 @@ class IntakeStart extends Component
                 'referrer' => request()->header('referer'),
             ],
         ]);
+
+        session([$startedKey => $session->session_token]);
 
         return redirect()->route('hatch.public.intake-session', ['sessionToken' => $session->session_token]);
     }

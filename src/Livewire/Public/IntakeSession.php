@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\Public;
 use Livewire\Component;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
+use Platform\Hatch\Support\BlockVisibility;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Support\IntakeStringRenderer;
 use Platform\Hatch\Support\IsoWeekResolver;
@@ -316,52 +317,10 @@ class IntakeSession extends Component
      */
     public function isBlockVisible(array $block, ?array $answers = null): bool
     {
-        $rules = $block['visibility_rules'] ?? null;
-        if (!is_array($rules) || empty($rules['rules'])) {
-            return true;
-        }
-
-        $answers = $answers ?? ($this->session?->answers ?? []);
-        $combinator = strtoupper($rules['combinator'] ?? 'AND');
-
-        $results = [];
-        foreach ($rules['rules'] as $rule) {
-            $sourceId = (int) ($rule['source_block_id'] ?? 0);
-            if ($sourceId <= 0) continue;
-
-            $operator = $rule['operator'] ?? 'equals';
-            $expected = $rule['value'] ?? '';
-            $key = "block_{$sourceId}";
-            $raw = $answers[$key] ?? '';
-
-            // JSON-encoded Antworten (multi_select, matrix, ...) für selected/contains vernünftig prüfen.
-            $decoded = null;
-            if (is_string($raw) && $raw !== '' && ($raw[0] === '[' || $raw[0] === '{')) {
-                $tmp = json_decode($raw, true);
-                if (is_array($tmp)) $decoded = $tmp;
-            }
-
-            $results[] = match ($operator) {
-                'equals' => (string) $raw === (string) $expected,
-                'not_equals' => (string) $raw !== (string) $expected,
-                'contains' => is_string($raw) ? str_contains($raw, (string) $expected) : false,
-                'empty' => $raw === '' || $raw === null || $raw === '[]' || $raw === '{}',
-                'not_empty' => !($raw === '' || $raw === null || $raw === '[]' || $raw === '{}'),
-                'selected' => is_array($decoded)
-                    ? in_array((string) $expected, array_map('strval', $decoded), true)
-                    : (string) $raw === (string) $expected,
-                'not_selected' => is_array($decoded)
-                    ? !in_array((string) $expected, array_map('strval', $decoded), true)
-                    : (string) $raw !== (string) $expected,
-                default => true,
-            };
-        }
-
-        if (empty($results)) return true;
-
-        return $combinator === 'OR'
-            ? in_array(true, $results, true)
-            : !in_array(false, $results, true);
+        return BlockVisibility::isVisible(
+            $block['visibility_rules'] ?? null,
+            $answers ?? ($this->session?->answers ?? [])
+        );
     }
 
     /**

@@ -29,13 +29,13 @@ class Dashboard extends Component
         $completedIntakes = $intakesByStatus['closed'] ?? 0;
         $completionRate = $totalIntakes > 0 ? round(($completedIntakes / $totalIntakes) * 100, 1) : 0;
 
-        $sessions = HatchIntakeSession::whereHas('projectIntake', fn ($q) => $q->where('team_id', $teamId));
+        $sessions = HatchIntakeSession::withAnswers()->whereHas('projectIntake', fn ($q) => $q->where('team_id', $teamId));
         $totalSessions = (clone $sessions)->count();
         $completedSessions = (clone $sessions)->where('status', 'completed')->count();
 
         $recentIntakes = HatchProjectIntake::where('team_id', $teamId)
             ->with(['projectTemplate', 'createdByUser'])
-            ->withCount('sessions')
+            ->withCount(['sessions' => fn ($q) => $q->withAnswers()])
             ->orderByDesc('updated_at')
             ->limit(5)
             ->get();

@@ -60,7 +60,7 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
 
             $query = HatchProjectIntake::query()
                 ->with('projectTemplate:id,name')
-                ->withCount('intakeSteps', 'sessions')
+                ->withCount(['intakeSteps', 'sessions' => fn ($q) => $q->withAnswers()])   // ohne nur geöffnete, nie beantwortete
                 ->forTeam($teamId);
 
             if (isset($arguments['status'])) {

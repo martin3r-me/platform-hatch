@@ -41,6 +41,13 @@
         <x-nx-input-checkbox wire:model.live="analysisCompletedOnly" label="nur vollständig ausgefüllte" />
         <div class="ml-auto flex items-center gap-2">
             <span wire:loading.delay class="text-[color:var(--nx-faint)]">Rechnet…</span>
+            @if($projectIntake->project_template_id)
+                <x-nx-button :href="route('hatch.templates.analysis', $projectIntake->project_template_id)" wire:navigate
+                    title="Mit allen anderen Erhebungen derselben Vorlage vergleichen – z. B. Standorte und Kalenderwochen">
+                    @svg('heroicon-o-chart-bar', 'w-4 h-4')
+                    <span>Mit anderen vergleichen</span>
+                </x-nx-button>
+            @endif
             <x-nx-button :href="$exportUrl" title="Alle Antworten mit den gewählten Filtern als Tabelle für Excel">
                 @svg('heroicon-o-arrow-down-tray', 'w-4 h-4')
                 <span>CSV-Export</span>
@@ -87,7 +94,7 @@
                             <div wire:key="an-field-{{ $bid }}" class="space-y-2">
                                 <div class="flex items-center justify-between gap-2 text-xs">
                                     <span class="font-medium text-[color:var(--nx-text)]">{{ $field['label'] }}</span>
-                                    <span class="tabular-nums text-[color:var(--nx-faint)]">{{ $s['answered'] }} von {{ $s['sessions'] }} beantwortet</span>
+                                    <span class="tabular-nums text-[color:var(--nx-faint)]" title="{{ ($s['conditional'] ?? false) ? 'Bedingte Frage – gezählt werden nur Teilnehmende, denen sie angezeigt wurde' : '' }}">{{ $s['answered'] }} von {{ $s['sessions'] }} beantwortet{{ ($s['conditional'] ?? false) ? ' · bedingt' : '' }}</span>
                                 </div>
 
                                 @switch($s['kind'])

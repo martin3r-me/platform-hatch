@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\Public;
 use Livewire\Component;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchLookup;
+use Platform\Hatch\Support\BlockVisibility;
 use Platform\Hatch\Models\HatchProjectTemplate;
 use Platform\Hatch\Support\IntakeStringRenderer;
 use Platform\Hatch\Support\IsoWeekResolver;
@@ -336,20 +337,7 @@ class IntakeSessionOverview extends Component
                 }
             }
 
-            $results[] = match ($operator) {
-                'equals' => (string) $raw === (string) $expected,
-                'not_equals' => (string) $raw !== (string) $expected,
-                'contains' => is_string($raw) ? str_contains($raw, (string) $expected) : false,
-                'empty' => $raw === '' || $raw === null || $raw === '[]' || $raw === '{}',
-                'not_empty' => !($raw === '' || $raw === null || $raw === '[]' || $raw === '{}'),
-                'selected' => is_array($decoded)
-                    ? in_array((string) $expected, array_map('strval', $decoded), true)
-                    : (string) $raw === (string) $expected,
-                'not_selected' => is_array($decoded)
-                    ? !in_array((string) $expected, array_map('strval', $decoded), true)
-                    : (string) $raw !== (string) $expected,
-                default => true,
-            };
+            $results[] = BlockVisibility::matches($operator, $expected, $raw);
         }
 
         if (empty($results)) return true;

@@ -40,7 +40,11 @@ class Show extends Component
     public string $analysisPeriod = 'all';  // all | 7 | 30
     #[Url(as: 'vollstaendig', except: false)]
     public bool $analysisCompletedOnly = false;
-    public array $expandedTexts = [];       // block ids mit ausgeklappter Freitext-Liste
+    public array $expandedTexts = [];
+
+    // Antworten-Tabelle: nur geöffnete, nie beantwortete Teilnahmen (und noch nicht genutzte
+    // personalisierte Links) sind standardmäßig ausgeblendet
+    public bool $showEmptySessions = false;       // block ids mit ausgeklappter Freitext-Liste
 
     // Bearbeitbare Stammdaten (Name/Beschreibung werden im Public-View angezeigt)
     public string $name = '';
@@ -90,6 +94,12 @@ class Show extends Component
         $this->validateOnly('description', ['description' => 'nullable|string|max:2000']);
         $description = trim($this->description);
         $this->projectIntake->update(['description' => $description === '' ? null : $description]);
+    }
+
+    public function toggleEmptySessions(): void
+    {
+        $this->showEmptySessions = !$this->showEmptySessions;
+        $this->resetPage('antworten');
     }
 
     public function setTab(string $tab): void
@@ -241,61 +251,6 @@ class Show extends Component
             'title' => 'Erhebung erneut veröffentlicht',
             'message' => 'Die Erhebung ist wieder live.',
             'notice_type' => 'success',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function generatePdfReport()
-    {
-        $this->dispatch('notifications:store', [
-            'title' => 'PDF Bericht',
-            'message' => 'PDF Bericht wird generiert...',
-            'notice_type' => 'info',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function createProject()
-    {
-        $this->dispatch('notifications:store', [
-            'title' => 'Projekt erstellen',
-            'message' => 'Projekt wird erstellt...',
-            'notice_type' => 'info',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function createTasks()
-    {
-        $this->dispatch('notifications:store', [
-            'title' => 'Aufgaben erstellen',
-            'message' => 'Aufgaben werden erstellt...',
-            'notice_type' => 'info',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function exportMarkdown()
-    {
-        $this->dispatch('notifications:store', [
-            'title' => 'Markdown Export',
-            'message' => 'Markdown wird exportiert...',
-            'notice_type' => 'info',
-            'noticable_type' => HatchProjectIntake::class,
-            'noticable_id' => $this->projectIntake->id,
-        ]);
-    }
-
-    public function showData()
-    {
-        $this->dispatch('notifications:store', [
-            'title' => 'Daten anzeigen',
-            'message' => 'Daten werden geladen...',
-            'notice_type' => 'info',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
@@ -512,13 +467,16 @@ class Show extends Component
             ->limit(10)
             ->get();
 
-        // Kennzahlen per SQL – nicht alle (verschlüsselten) Antworten laden und entschlüsseln
-        $sessionStats = $this->projectIntake->sessions()->toBase()
+        // Kennzahlen per SQL – nicht alle (verschlüsselten) Antworten laden und entschlüsseln.
+        // Gezählt wird nur, wer mindestens eine Frage beantwortet hat.
+        $sessionStats = $this->projectIntake->sessions()->withAnswers()->toBase()
             ->selectRaw("count(*) as total, sum(case when status = 'completed' then 1 else 0 end) as done, max(started_at) as last_started_at")
             ->first();
+        $emptySessionCount = $this->projectIntake->sessions()->count() - (int) $sessionStats->total;
 
         // Tabelle seitenweise; Kontakte vorab laden statt einer Abfrage pro Zeile
         $sessions = $this->projectIntake->sessions()
+            ->when(!$this->showEmptySessions, fn ($q) => $q->withAnswers())
             ->with('contactLinks.contact')
             ->orderByDesc('updated_at')
             ->paginate(25, pageName: 'antworten');
@@ -529,6 +487,7 @@ class Show extends Component
             'sessions' => $sessions,
             'sessionTotal' => (int) $sessionStats->total,
             'sessionDone' => (int) $sessionStats->done,
+            'emptySessionCount' => $emptySessionCount,
             'lastStartedAt' => $sessionStats->last_started_at ? \Illuminate\Support\Carbon::parse($sessionStats->last_started_at) : null,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),

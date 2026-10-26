@@ -147,7 +147,7 @@
     @if($projectIntakes->hasPages())
         <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-[color:var(--nx-faint)]">
             <span class="tabular-nums">{{ $projectIntakes->firstItem() }}–{{ $projectIntakes->lastItem() }} von {{ $projectIntakes->total() }} Erhebungen</span>
-            {{ $projectIntakes->links() }}
+            {{ $projectIntakes->links('hatch::livewire.partials.pagination') }}
         </div>
     @endif
 

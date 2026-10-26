@@ -189,7 +189,7 @@ class Index extends Component
 
         $query = HatchProjectIntake::query()
             ->with(['projectTemplate', 'createdByUser'])
-            ->withCount('sessions')
+            ->withCount(['sessions' => fn ($q) => $q->withAnswers()])
             ->where('team_id', $teamId);
 
         // Suchfilter

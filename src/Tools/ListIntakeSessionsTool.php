@@ -23,7 +23,7 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'GET /hatch/intake_sessions - Listet Sessions eines Intakes. Parameter: intake_id (required), team_id (optional), status (optional), iso_year/iso_week (optional, für Auswertungen pro Kalenderwoche), filters/search/sort/limit/offset (optional).';
+        return 'GET /hatch/intake_sessions - Listet Sessions eines Intakes. Parameter: intake_id (required), team_id (optional), status (optional), iso_year/iso_week (optional, für Auswertungen pro Kalenderwoche), include_empty (optional, Standard false: nur geöffnete, nie beantwortete Sessions werden ausgelassen), filters/search/sort/limit/offset (optional).';
     }
 
     public function getSchema(): array
@@ -52,6 +52,10 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
                         'type' => 'integer',
                         'description' => 'Optional: Filter nach ISO-Kalenderwoche (1–53). Sinnvoll in Kombination mit iso_year.',
                     ],
+                    'include_empty' => [
+                        'type' => 'boolean',
+                        'description' => 'Optional: Auch Sessions ohne eine einzige Antwort liefern (nur geöffnet bzw. unbenutzte persönliche Links). Standard: false.',
+                    ],
                 ],
             ]
         );
@@ -79,7 +83,8 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
             }
 
             $query = HatchIntakeSession::query()
-                ->where('project_intake_id', $intakeId);
+                ->where('project_intake_id', $intakeId)
+                ->when(!($arguments['include_empty'] ?? false), fn ($q) => $q->withAnswers());
 
             if (isset($arguments['status'])) {
                 $query->where('status', $arguments['status']);
@@ -122,6 +127,7 @@ class ListIntakeSessionsTool implements ToolContract, ToolMetadataContract
                     'respondent_name' => $s->respondent_name,
                     'respondent_email' => $s->respondent_email,
                     'current_step' => (int)$s->current_step,
+                    'answered_count' => (int)$s->answered_count,
                     'started_at' => $s->started_at?->toISOString(),
                     'completed_at' => $s->completed_at?->toISOString(),
                     'created_at' => $s->created_at?->toISOString(),

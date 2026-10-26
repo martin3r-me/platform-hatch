@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', Platform\Hatch\Livewire\Dashboard::class)->name('hatch.dashboard');
 Route::get('/templates', Platform\Hatch\Livewire\Template\Index::class)->name('hatch.templates.index');
 Route::get('/templates/{template}', Platform\Hatch\Livewire\Template\Show::class)->name('hatch.templates.show');
+Route::get('/templates/{template}/vergleich', Platform\Hatch\Livewire\Template\Analysis::class)->name('hatch.templates.analysis');
 
 Route::get('/project-intakes', Platform\Hatch\Livewire\ProjectIntake\Index::class)->name('hatch.project-intakes.index');
 Route::get('/project-intakes/{projectIntake}', Platform\Hatch\Livewire\ProjectIntake\Show::class)->name('hatch.project-intakes.show');
