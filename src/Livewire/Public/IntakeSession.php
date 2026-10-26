@@ -130,15 +130,21 @@ class IntakeSession extends Component
 
     private function loadLookupOptions(): void
     {
-        foreach ($this->blocks as $block) {
-            if ($block['type'] === 'lookup') {
-                $lookupId = $block['logic_config']['lookup_id'] ?? null;
-                if ($lookupId) {
-                    $lookup = HatchLookup::find($lookupId);
-                    if ($lookup) {
-                        $this->lookupOptions[$block['id']] = $lookup->getOptionsWithMeta();
-                    }
-                }
+        $lookupBlocks = array_filter($this->blocks, fn ($block) => $block['type'] === 'lookup' && !empty($block['logic_config']['lookup_id']));
+        if (!$lookupBlocks) {
+            return;
+        }
+
+        // Alle Auswahllisten samt Werten in zwei Abfragen statt zwei pro Block
+        $lookups = HatchLookup::with('activeValues')
+            ->whereIn('id', array_unique(array_map(fn ($block) => $block['logic_config']['lookup_id'], $lookupBlocks)))
+            ->get()
+            ->keyBy('id');
+
+        foreach ($lookupBlocks as $block) {
+            $lookup = $lookups->get($block['logic_config']['lookup_id']);
+            if ($lookup) {
+                $this->lookupOptions[$block['id']] = $lookup->getOptionsWithMeta();
             }
         }
     }

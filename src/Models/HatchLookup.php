@@ -61,8 +61,10 @@ class HatchLookup extends Model
 
     public function getOptionsWithMeta(): array
     {
-        return $this->activeValues()
-            ->get()
+        // vorab geladen (with('activeValues')) → keine weitere Abfrage
+        $values = $this->relationLoaded('activeValues') ? $this->activeValues : $this->activeValues()->get();
+
+        return $values
             ->map(fn($v) => [
                 'value' => $v->value,
                 'label' => $v->label,

@@ -5,6 +5,7 @@ namespace Platform\Hatch\Livewire\ProjectIntake;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
@@ -16,6 +17,7 @@ use Platform\Hatch\Support\QrCodeRenderer;
 class Show extends Component
 {
     use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
+    use WithPagination;
 
     public HatchProjectIntake $projectIntake;
 
@@ -507,16 +509,27 @@ class Show extends Component
 
         $activities = $this->projectIntake->activities()
             ->orderBy('created_at', 'desc')
+            ->limit(10)
             ->get();
 
+        // Kennzahlen per SQL – nicht alle (verschlüsselten) Antworten laden und entschlüsseln
+        $sessionStats = $this->projectIntake->sessions()->toBase()
+            ->selectRaw("count(*) as total, sum(case when status = 'completed' then 1 else 0 end) as done, max(started_at) as last_started_at")
+            ->first();
+
+        // Tabelle seitenweise; Kontakte vorab laden statt einer Abfrage pro Zeile
         $sessions = $this->projectIntake->sessions()
+            ->with('contactLinks.contact')
             ->orderByDesc('updated_at')
-            ->get();
+            ->paginate(25, pageName: 'antworten');
 
         return view('hatch::livewire.project-intake.show', [
             'projectIntake' => $this->projectIntake,
             'activities' => $activities,
             'sessions' => $sessions,
+            'sessionTotal' => (int) $sessionStats->total,
+            'sessionDone' => (int) $sessionStats->done,
+            'lastStartedAt' => $sessionStats->last_started_at ? \Illuminate\Support\Carbon::parse($sessionStats->last_started_at) : null,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
             'analysis' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->build($this->projectIntake, $this->analysisFilters()) : null,

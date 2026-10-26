@@ -58,7 +58,7 @@
                     'closed' => 'warning',
                     default => 'neutral',
                 };
-                $sessionCount = $projectIntake->sessions()->count();
+                $sessionCount = $sessionTotal;
                 $publicUrl = $projectIntake->getPublicUrl();
                 $gruppe = 'flex flex-col gap-3 border-t border-[color:var(--nx-line)] p-4';
                 $ueberschrift = 'text-xs font-medium tracking-wide text-[color:var(--nx-faint)]';
@@ -314,10 +314,7 @@
             $usesPlaceholders = $placeholders->keysIn($projectIntake, $projectIntake->name, $projectIntake->description) !== [];
             $isRecurring = $placeholders->recurrence($projectIntake, $projectIntake->name, $projectIntake->description) === \Platform\Hatch\Support\IntakePlaceholders::RECURRENCE_WEEKLY;
             $totalBlocks = $projectIntake->projectTemplate?->templateBlocks?->count() ?? 0;
-            $sessionTotal = $sessions->count();
-            $sessionDone = $sessions->where('status', 'completed')->count();
             $sessionRate = $sessionTotal > 0 ? round($sessionDone / $sessionTotal * 100) : 0;
-            $lastSession = $sessions->sortByDesc('started_at')->first();
         @endphp
 
         {{-- Zustand der Erhebung: ein Satz, keine zweite Aktionsleiste —
@@ -371,8 +368,8 @@
             <x-nx-stat label="Abschlussquote" :value="$sessionRate . ' %'" hint="der Antworten"
                 icon="heroicon-o-chart-pie" accent="var(--nx-accent)" />
             <x-nx-stat label="Letzte Antwort"
-                :value="$lastSession?->started_at?->format('d.m.') ?? '–'"
-                :hint="$lastSession?->started_at?->diffForHumans() ?? 'noch keine'"
+                :value="$lastStartedAt?->format('d.m.') ?? '–'"
+                :hint="$lastStartedAt?->diffForHumans() ?? 'noch keine'"
                 icon="heroicon-o-clock" accent="var(--nx-muted)" />
         </x-nx-stat-grid>
 
@@ -435,7 +432,7 @@
                     <x-nx-table-body>
                         @foreach($sessions as $session)
                             @php
-                                $contact = $session->contacts()->first();
+                                $contact = $session->contactLinks->pluck('contact')->first(fn ($c) => $c && $c->isVisible());
                                 $answeredBlocks = is_array($session->answers) ? count($session->answers) : 0;
                                 $sessionUrl = route('hatch.public.intake-session', ['sessionToken' => $session->session_token]);
                             @endphp
@@ -493,6 +490,9 @@
                         @endforeach
                     </x-nx-table-body>
                 </x-nx-table>
+                @if($sessions->hasPages())
+                    <div class="border-t border-[color:var(--nx-line)] px-4 py-3">{{ $sessions->links() }}</div>
+                @endif
             @else
                 <x-nx-empty icon="heroicon-o-inbox">
                     Noch keine Antworten eingegangen

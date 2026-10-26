@@ -40,20 +40,15 @@ class Sidebar extends Component
             ])->layout('platform::layouts.app');
         }
 
-        // 1. Erhebungen laden
-        $myIntakes = HatchProjectIntake::query()
-            ->where('team_id', $teamId)
-            ->where(function ($query) use ($user) {
-                $query->where('owned_by_user_id', $user->id)
-                      ->orWhere('created_by_user_id', $user->id);
-            })
-            ->orderBy('name')
-            ->get();
-
+        // 1. Erhebungen laden – einmal alle des Teams, „meine“ daraus filtern
         $allIntakes = HatchProjectIntake::query()
             ->where('team_id', $teamId)
             ->orderBy('name')
             ->get();
+
+        $myIntakes = $allIntakes
+            ->filter(fn ($intake) => (int) $intake->owned_by_user_id === (int) $user->id || (int) $intake->created_by_user_id === (int) $user->id)
+            ->values();
 
         $intakesToShow = $this->showAllIntakes ? $allIntakes : $myIntakes;
         $hasMoreIntakes = $allIntakes->count() > $myIntakes->count();
