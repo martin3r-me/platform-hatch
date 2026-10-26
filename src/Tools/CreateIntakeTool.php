@@ -50,6 +50,10 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                 ],
+                'closes_at' => [
+                    'type' => ['string', 'null'],
+                    'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                ],
                 'intake_settings' => [
                     'type' => 'object',
                     'description' => 'Optional: Owner-Konfiguration. Beispiel: {"week_cutoff": {"rollover_weekday": "saturday", "rollover_time": "12:00"}} – Antworten ab Samstag 12 Uhr werden der kommenden ISO-KW zugeordnet. Ohne Setting gilt ISO-Standard (Montag 00:00).',
@@ -95,8 +99,18 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'intake_settings muss ein Objekt sein.');
             }
 
+            try {
+                $closesAt = HatchProjectIntake::parseClosesAt($arguments['closes_at'] ?? null);
+            } catch (\InvalidArgumentException $e) {
+                return ToolResult::error('VALIDATION_ERROR', $e->getMessage());
+            }
+            if ($closesAt && $closesAt->isPast()) {
+                return ToolResult::error('VALIDATION_ERROR', 'closes_at liegt in der Vergangenheit.');
+            }
+
             $intake = HatchProjectIntake::create([
                 'project_template_id' => $template->id,
+                'closes_at' => $closesAt,
                 'name' => $name,
                 'description' => $arguments['description'] ?? null,
                 'event_reference' => ($arguments['event_reference'] ?? '') !== '' ? $arguments['event_reference'] : null,

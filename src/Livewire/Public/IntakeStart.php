@@ -27,6 +27,9 @@ class IntakeStart extends Component
             return;
         }
 
+        // Automatisches Schließdatum erreicht? Dann sofort als geschlossen behandeln
+        $intake->closeIfDue();
+
         $renderer = app(IntakeStringRenderer::class);
 
         if ($intake->status === 'draft') {
@@ -49,6 +52,7 @@ class IntakeStart extends Component
     public function startNew()
     {
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
+        $intake?->closeIfDue();
 
         if (!$intake || $intake->status !== 'published') {
             if (!$intake) {
@@ -97,6 +101,7 @@ class IntakeStart extends Component
         }
 
         $intake = HatchProjectIntake::where('public_token', $this->publicToken)->first();
+        $intake?->closeIfDue();
         if (!$intake || $session->project_intake_id !== $intake->id) {
             $this->resumeError = 'Dieser Code gehört nicht zu dieser Umfrage.';
             return;

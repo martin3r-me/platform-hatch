@@ -12,6 +12,9 @@ return [
     
     'guard' => 'web',
 
+    // Zeitzone für Eingabe/Anzeige von Datum+Uhrzeit (gespeichert wird in der App-Zeitzone, i. d. R. UTC)
+    'display_timezone' => env('HATCH_DISPLAY_TIMEZONE', 'Europe/Berlin'),
+
     // Datenschutz für öffentliche Umfragen – muss zu den Datenschutzhinweisen passen
     'privacy' => [
         // IP-Adresse, Browser-Kennung, Herkunftsseite einer Teilnahme werden danach gelöscht

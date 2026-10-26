@@ -30,6 +30,10 @@
                     <span>Wieder öffnen</span>
                 </x-nx-button>
             @endif
+            <x-nx-button icon wire:click="openSaveAsTemplate"
+                title="Als Vorlage speichern – Fragen dieser Erhebung als neue, eigenständige Vorlage">
+                @svg('heroicon-o-document-plus', 'w-4 h-4')
+            </x-nx-button>
             <x-nx-button icon wire:click="duplicateIntake"
                 title="Duplizieren – Kopie mit denselben Fragen, ohne Antworten, Link und Veranstaltungsnummer">
                 @svg('heroicon-o-document-duplicate', 'w-4 h-4')
@@ -68,6 +72,37 @@
                     <span class="{{ $ueberschrift }}">Status</span>
                     <x-nx-badge :variant="$statusVariant" dot>{{ $statuses[$projectIntake->status] ?? $projectIntake->status }}</x-nx-badge>
                 </div>
+
+                {{-- Automatisch schließen (optional, standardmäßig aus) --}}
+                @if($projectIntake->status !== 'closed')
+                    @if(!$showClosesAt)
+                        <button type="button" wire:click="$set('showClosesAt', true)"
+                            class="inline-flex items-center gap-1.5 self-start text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-text)]">
+                            @svg('heroicon-o-clock', 'w-3.5 h-3.5')
+                            Automatisch schließen …
+                        </button>
+                    @else
+                        <div>
+                            <div class="mb-1 flex items-center justify-between gap-2">
+                                <label for="closesAtInput" class="text-xs font-medium text-[color:var(--nx-text)]">Automatisch schließen am</label>
+                                <button type="button" wire:click="removeClosesAt" class="text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-danger)]">entfernen</button>
+                            </div>
+                            <input id="closesAtInput" type="datetime-local" wire:model.live.debounce.700ms="closesAtInput"
+                                class="block w-full rounded-[6px] border border-[color:var(--nx-line-strong)] bg-[color:var(--nx-surface)] px-3 py-1.5 text-sm text-[color:var(--nx-text)] focus:border-[color:var(--nx-accent)] focus:outline-none focus:ring-1 focus:ring-[color:var(--nx-accent)]">
+                            @error('closesAtInput')
+                                <p class="mt-1 text-xs text-[color:var(--nx-danger)]">{{ $message }}</p>
+                            @else
+                                <p class="mt-1 text-xs text-[color:var(--nx-faint)]">
+                                    @if($projectIntake->closes_at)
+                                        Schließt {{ $projectIntake->closes_at->diffForHumans() }} – danach nimmt die Umfrage keine Antworten mehr an.
+                                    @else
+                                        Datum und Uhrzeit wählen. Leer lassen = kein Ablauf.
+                                    @endif
+                                </p>
+                            @enderror
+                        </div>
+                    @endif
+                @endif
             </div>
 
             {{-- Was Respondenten sehen --}}
@@ -294,6 +329,9 @@
         @elseif($projectIntake->status === 'published')
             <x-nx-callout variant="success" icon="heroicon-o-signal" title="Erhebung ist live">
                 Der öffentliche Link nimmt Antworten entgegen.
+                @if($projectIntake->closes_at)
+                    Sie schließt automatisch am {{ $projectIntake->closes_at->copy()->setTimezone(config('hatch.display_timezone', 'Europe/Berlin'))->translatedFormat('D, d.m.Y \u\m H:i') }} Uhr.
+                @endif
             </x-nx-callout>
         @elseif($projectIntake->status === 'closed')
             <x-nx-callout variant="warning" icon="heroicon-o-lock-closed" title="Erhebung geschlossen">
@@ -571,4 +609,29 @@
             @endif
         </div>
     </x-ui-modal>
+    {{-- Dialog: Als Vorlage speichern --}}
+    @if($showSaveAsTemplate)
+        <div style="position:fixed;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:12vh 16px 16px;background:rgba(15,15,25,.3)"
+             wire:click.self="$set('showSaveAsTemplate', false)" x-data x-on:keydown.escape.window="$wire.set('showSaveAsTemplate', false)">
+            <div class="w-full max-w-md rounded-[12px] border border-[color:var(--nx-line)] bg-[color:var(--nx-surface)] shadow-2xl">
+                <div class="border-b border-[color:var(--nx-line)] px-5 py-3">
+                    <h3 class="text-sm font-semibold text-[color:var(--nx-text)]">Als Vorlage speichern</h3>
+                    <p class="mt-0.5 text-xs text-[color:var(--nx-faint)]">
+                        Alle Fragen dieser Erhebung werden in eine neue Vorlage kopiert. Änderungen daran wirken sich nicht auf diese Erhebung aus.
+                        Antworten werden nicht übernommen.
+                    </p>
+                </div>
+                <form wire:submit="saveAsTemplate" class="space-y-4 p-5">
+                    <x-nx-input-text name="newTemplateName" label="Name der Vorlage" required wire:model="newTemplateName" :errorKey="'newTemplateName'" autofocus />
+                    <div class="flex justify-end gap-2">
+                        <x-nx-button type="button" wire:click="$set('showSaveAsTemplate', false)">Abbrechen</x-nx-button>
+                        <x-nx-button type="submit" variant="primary">
+                            @svg('heroicon-o-document-plus', 'w-4 h-4')
+                            <span>Vorlage erstellen</span>
+                        </x-nx-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 </x-ui-page>

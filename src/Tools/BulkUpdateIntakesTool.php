@@ -55,6 +55,10 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                                 'type' => 'string',
                                 'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                             ],
+                            'closes_at' => [
+                                'type' => ['string', 'null'],
+                                'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                            ],
                             'status' => [
                                 'type' => 'string',
                                 'enum' => ['draft', 'published', 'closed'],
@@ -117,6 +121,20 @@ class BulkUpdateIntakesTool implements ToolContract, ToolMetadataContract
                         if (array_key_exists($field, $item)) {
                             $intake->{$field} = $item[$field] === '' ? null : $item[$field];
                         }
+                    }
+
+                    if (array_key_exists('closes_at', $item)) {
+                        try {
+                            $closesAt = HatchProjectIntake::parseClosesAt($item['closes_at']);
+                        } catch (\InvalidArgumentException $e) {
+                            $errors[] = ['index' => $index, 'intake_id' => $intakeId, 'error' => $e->getMessage()];
+                            continue;
+                        }
+                        if ($closesAt && $closesAt->isPast()) {
+                            $errors[] = ['index' => $index, 'intake_id' => $intakeId, 'error' => 'closes_at liegt in der Vergangenheit.'];
+                            continue;
+                        }
+                        $intake->closes_at = $closesAt;
                     }
 
                     // intake_settings (Partial-Merge, analog UpdateIntakeTool)

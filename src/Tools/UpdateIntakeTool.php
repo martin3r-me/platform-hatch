@@ -49,6 +49,10 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                 ],
+                'closes_at' => [
+                    'type' => ['string', 'null'],
+                    'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                ],
                 'status' => [
                     'type' => 'string',
                     'enum' => ['draft', 'published', 'closed'],
@@ -114,6 +118,18 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 if (array_key_exists($field, $arguments)) {
                     $intake->{$field} = $arguments[$field] === '' ? null : $arguments[$field];
                 }
+            }
+
+            if (array_key_exists('closes_at', $arguments)) {
+                try {
+                    $closesAt = HatchProjectIntake::parseClosesAt($arguments['closes_at']);
+                } catch (\InvalidArgumentException $e) {
+                    return ToolResult::error('VALIDATION_ERROR', $e->getMessage());
+                }
+                if ($closesAt && $closesAt->isPast()) {
+                    return ToolResult::error('VALIDATION_ERROR', 'closes_at liegt in der Vergangenheit.');
+                }
+                $intake->closes_at = $closesAt;
             }
 
             // intake_settings (JSON) – Partial-Merge, damit ein einzelnes

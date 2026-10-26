@@ -54,6 +54,7 @@ class IntakeSessionOverview extends Component
         }
 
         $intake = $this->session->projectIntake;
+        $intake?->closeIfDue();
 
         // Wenn das Template inzwischen wieder auf 'block_flow' steht, zurück
         // auf die klassische Route — Sicherheitsnetz, falls jemand die
@@ -283,6 +284,8 @@ class IntakeSessionOverview extends Component
     private function isIntakeAccessible(): bool
     {
         $intake = $this->session?->projectIntake;
+        $intake?->closeIfDue();
+
         return $intake && $intake->status === 'published';
     }
 

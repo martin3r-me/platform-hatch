@@ -51,6 +51,7 @@ class IntakeSession extends Component
         }
 
         $intake = $this->session->projectIntake;
+        $intake?->closeIfDue();
 
         // Wenn das Template auf 'overview' konfiguriert ist, leiten wir auf die
         // Overview-Route um. Der bestehende Block-Flow bleibt unverändert.
@@ -298,6 +299,7 @@ class IntakeSession extends Component
     private function isIntakeAccessible(): bool
     {
         $intake = $this->session?->projectIntake;
+        $intake?->closeIfDue();
 
         return $intake && $intake->status === 'published';
     }

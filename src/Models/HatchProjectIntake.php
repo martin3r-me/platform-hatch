@@ -34,6 +34,7 @@ class HatchProjectIntake extends Model
         'intake_settings',
         'started_at',
         'completed_at',
+        'closes_at',
         'created_by_user_id',
         'owned_by_user_id',
         'team_id',
@@ -47,6 +48,7 @@ class HatchProjectIntake extends Model
         'intake_settings' => 'array',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'closes_at' => 'datetime',
         'is_active' => 'boolean',
     ];
     
@@ -166,6 +168,11 @@ class HatchProjectIntake extends Model
         $this->status = self::STATUS_PUBLISHED;
         $this->is_active = true;
 
+        // Ein bereits abgelaufenes Schließdatum würde die Erhebung sofort wieder schließen
+        if ($this->closes_at && $this->closes_at->isPast()) {
+            $this->closes_at = null;
+        }
+
         if (empty($this->started_at)) {
             $this->started_at = now();
         }
@@ -203,6 +210,51 @@ class HatchProjectIntake extends Model
         $this->save();
 
         return $this;
+    }
+
+    /**
+     * Schließdatum aus Eingabe (ISO 8601 mit Zone oder "YYYY-MM-DD HH:MM" in der
+     * Anzeige-Zeitzone) in die App-Zeitzone umrechnen. null/"" = kein Schließdatum.
+     *
+     * @throws \InvalidArgumentException bei ungültigem Format
+     */
+    public static function parseClosesAt($value): ?\Carbon\Carbon
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+        $value = trim((string) $value);
+        $tz = config('hatch.display_timezone', 'Europe/Berlin');
+
+        try {
+            $date = preg_match('/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/', $value)
+                ? \Carbon\Carbon::parse($value, $tz)        // ohne Zone → deutsche Zeit
+                : \Carbon\Carbon::parse($value);            // mit Zone (ISO 8601)
+        } catch (\Throwable $e) {
+            throw new \InvalidArgumentException('closes_at: ungültiges Datum. Erwartet ISO 8601 oder "YYYY-MM-DD HH:MM".');
+        }
+
+        return $date->setTimezone(config('app.timezone'));
+    }
+
+    /**
+     * Schließt die Erhebung, wenn ihr automatisches Schließdatum erreicht ist.
+     * Wird von den öffentlichen Seiten und vom Scheduler aufgerufen.
+     */
+    public function closeIfDue(): bool
+    {
+        if ($this->status !== self::STATUS_PUBLISHED || !$this->closes_at || $this->closes_at->isFuture()) {
+            return false;
+        }
+
+        $this->status = self::STATUS_CLOSED;
+        $this->is_active = false;
+        if (empty($this->completed_at)) {
+            $this->completed_at = $this->closes_at;
+        }
+        $this->save();
+
+        return true;
     }
 
     public function isPublished(): bool

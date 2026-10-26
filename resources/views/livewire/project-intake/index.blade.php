@@ -113,6 +113,11 @@
                                 <x-nx-badge :variant="$statusVariants[$projectIntake->status] ?? 'neutral'" dot class="whitespace-nowrap">
                                     {{ $statuses[$projectIntake->status] ?? $projectIntake->status }}
                                 </x-nx-badge>
+                                @if($projectIntake->closes_at && $projectIntake->status !== 'closed')
+                                    <div class="mt-0.5 whitespace-nowrap text-xs tabular-nums text-[color:var(--nx-faint)]" title="Schließt automatisch">
+                                        bis {{ $projectIntake->closes_at->copy()->setTimezone(config('hatch.display_timezone', 'Europe/Berlin'))->format('d.m. H:i') }}
+                                    </div>
+                                @endif
                             </x-nx-table-cell>
                             <x-nx-table-cell align="right" class="tabular-nums text-[color:var(--nx-muted)]">{{ $projectIntake->sessions_count }}</x-nx-table-cell>
                             <x-nx-table-cell class="whitespace-nowrap">

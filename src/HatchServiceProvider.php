@@ -21,11 +21,18 @@ class HatchServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Platform\Hatch\Console\Commands\PruneSessionMetadataCommand::class,
+                \Platform\Hatch\Console\Commands\CloseDueIntakesCommand::class,
             ]);
         }
 
         // Technische Teilnahme-Daten (IP etc.) nach Frist löschen – siehe config hatch.privacy
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
+            // Erhebungen mit erreichtem Schließdatum schließen
+            $schedule->command('hatch:close-due-intakes')
+                ->everyMinute()
+                ->withoutOverlapping()
+                ->onOneServer();
+
             $schedule->command('hatch:prune-session-metadata')
                 ->dailyAt('03:15')
                 ->withoutOverlapping()

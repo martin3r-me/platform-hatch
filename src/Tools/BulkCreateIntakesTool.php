@@ -56,6 +56,10 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                                 'type' => 'string',
                                 'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                             ],
+                            'closes_at' => [
+                                'type' => ['string', 'null'],
+                                'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                            ],
                             'intake_settings' => [
                                 'type' => 'object',
                                 'description' => 'Optional: Owner-Konfiguration (z.B. week_cutoff). Schema siehe hatch.intakes.POST.',
@@ -132,8 +136,20 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                 }
 
                 try {
+                    $closesAt = HatchProjectIntake::parseClosesAt($item['closes_at'] ?? null);
+                } catch (\InvalidArgumentException $e) {
+                    $errors[] = ['index' => $index, 'error' => $e->getMessage()];
+                    continue;
+                }
+                if ($closesAt && $closesAt->isPast()) {
+                    $errors[] = ['index' => $index, 'error' => 'closes_at liegt in der Vergangenheit.'];
+                    continue;
+                }
+
+                try {
                     $intake = HatchProjectIntake::create([
                         'project_template_id' => $template->id,
+                        'closes_at' => $closesAt,
                         'name' => $name,
                         'description' => $item['description'] ?? null,
                         'event_reference' => ($item['event_reference'] ?? '') !== '' ? $item['event_reference'] : null,

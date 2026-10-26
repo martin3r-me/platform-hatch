@@ -44,6 +44,14 @@ class Show extends Component
     public string $description = '';
     public string $eventReference = '';
 
+    // Automatisches Schließen: Eingabe als "Y-m-d\TH:i" in der Anzeige-Zeitzone; leer = kein Schließdatum
+    public string $closesAtInput = '';
+    public bool $showClosesAt = false;
+
+    // „Als Vorlage speichern“
+    public bool $showSaveAsTemplate = false;
+    public string $newTemplateName = '';
+
     // Werte eigener Platzhalter für diese Erhebung (intake_settings.placeholder_values)
     public array $placeholderValues = [];
 
@@ -65,6 +73,10 @@ class Show extends Component
         $this->name = (string) $projectIntake->name;
         $this->description = (string) $projectIntake->description;
         $this->eventReference = (string) $projectIntake->event_reference;
+        $this->closesAtInput = $projectIntake->closes_at
+            ? $projectIntake->closes_at->copy()->setTimezone(config('hatch.display_timezone', 'Europe/Berlin'))->format('Y-m-d\TH:i')
+            : '';
+        $this->showClosesAt = $this->closesAtInput !== '';
         $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
         $this->loadTemplateBlocks();
         $this->determineCurrentBlock();
@@ -104,6 +116,50 @@ class Show extends Component
             'iso_week' => $this->analysisWeek !== '' ? $week : null,
             'since' => in_array($this->analysisPeriod, ['7', '30'], true) ? now()->subDays((int) $this->analysisPeriod)->startOfDay()->toDateTimeString() : null,
         ];
+    }
+
+    public function updatedClosesAtInput()
+    {
+        $this->resetErrorBag('closesAtInput');
+        $value = trim($this->closesAtInput);
+
+        if ($value === '') {
+            $this->projectIntake->update(['closes_at' => null]);
+
+            return;
+        }
+
+        try {
+            $local = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $value, config('hatch.display_timezone', 'Europe/Berlin'));
+        } catch (\Throwable $e) {
+            $this->addError('closesAtInput', 'Bitte Datum und Uhrzeit vollständig angeben.');
+
+            return;
+        }
+
+        if ($local->isPast()) {
+            $this->addError('closesAtInput', 'Der Zeitpunkt liegt in der Vergangenheit.');
+
+            return;
+        }
+
+        $this->projectIntake->update(['closes_at' => $local->copy()->setTimezone(config('app.timezone'))]);
+    }
+
+    private function syncClosesAtInput(): void
+    {
+        $this->closesAtInput = $this->projectIntake->closes_at
+            ? $this->projectIntake->closes_at->copy()->setTimezone(config('hatch.display_timezone', 'Europe/Berlin'))->format('Y-m-d\TH:i')
+            : '';
+        $this->showClosesAt = $this->closesAtInput !== '';
+    }
+
+    public function removeClosesAt(): void
+    {
+        $this->closesAtInput = '';
+        $this->showClosesAt = false;
+        $this->resetErrorBag('closesAtInput');
+        $this->projectIntake->update(['closes_at' => null]);
     }
 
     public function updatedEventReference()
@@ -193,6 +249,7 @@ class Show extends Component
         $this->determineCurrentBlock();
 
         $this->projectIntake->publish();
+        $this->syncClosesAtInput();
 
         $this->dispatch('notifications:store', [
             'title' => 'Erhebung veröffentlicht',
@@ -252,6 +309,7 @@ class Show extends Component
     public function reopenIntake()
     {
         $this->projectIntake->publish();
+        $this->syncClosesAtInput();
 
         $this->dispatch('notifications:store', [
             'title' => 'Erhebung erneut veröffentlicht',
@@ -405,6 +463,52 @@ class Show extends Component
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
+    }
+
+    public function openSaveAsTemplate(): void
+    {
+        // Platzhalter wie {{iso_week}} gehören zur Erhebung, nicht in einen Vorlagen-Namen
+        $name = trim(preg_replace('/\s*\{\{\w+\}\}\s*/', ' ', (string) $this->projectIntake->name));
+        // übrig gebliebene Reste wie „– KW /“ am Ende entfernen
+        do {
+            $before = $name;
+            $name = trim(preg_replace(['/[\s–\-\/:.,]+$/u', '/\b(KW|Woche|Jahr)$/iu'], '', $name));
+        } while ($name !== $before && $name !== '');
+        $this->newTemplateName = $name ?: (string) $this->projectIntake->projectTemplate?->name;
+        $this->resetErrorBag('newTemplateName');
+        $this->showSaveAsTemplate = true;
+    }
+
+    public function saveAsTemplate()
+    {
+        if ((int) $this->projectIntake->team_id !== (int) auth()->user()->current_team_id) {
+            return;
+        }
+        $this->validate(['newTemplateName' => 'required|string|max:255'], [], ['newTemplateName' => 'Name']);
+
+        $source = $this->projectIntake->projectTemplate;
+        if (!$source) {
+            $this->addError('newTemplateName', 'Diese Erhebung hat keine Vorlage mit Fragen.');
+
+            return;
+        }
+
+        $intakeName = app(IntakePlaceholders::class)->render($this->projectIntake->name, $this->projectIntake);
+        $template = $source->duplicateAs(
+            trim($this->newTemplateName),
+            auth()->id(),
+            'Erstellt aus der Erhebung „' . $intakeName . '“ am ' . now()->setTimezone(config('hatch.display_timezone', 'Europe/Berlin'))->format('d.m.Y') . '.'
+        );
+
+        $this->dispatch('notifications:store', [
+            'title' => 'Vorlage erstellt',
+            'message' => 'Die Fragen sind als eigene Vorlage gespeichert und lassen sich dort unabhängig bearbeiten.',
+            'notice_type' => 'success',
+            'noticable_type' => \Platform\Hatch\Models\HatchProjectTemplate::class,
+            'noticable_id' => $template->id,
+        ]);
+
+        return redirect()->route('hatch.templates.show', $template);
     }
 
     public function duplicateIntake()
