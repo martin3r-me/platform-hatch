@@ -224,7 +224,12 @@
             </main>
 
             <footer class="intake-shell-footer">
-                <p class="text-[11px] text-gray-400 tracking-wider uppercase">Powered by Formulare</p>
+                <p class="text-[11px] text-gray-400 tracking-wider uppercase">
+                @if($privacyUrl = \Platform\Hatch\Support\PublicBranding::privacyUrl())
+                    <a href="{{ $privacyUrl }}" target="_blank" rel="noopener" class="hover:text-gray-600">Datenschutz</a> ·
+                @endif
+                Powered by Formulare
+            </p>
             </footer>
         </div>
     @endif

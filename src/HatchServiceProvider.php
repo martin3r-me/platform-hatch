@@ -17,6 +17,20 @@ class HatchServiceProvider extends ServiceProvider
     {
         // Pro Request eine Instanz: cached die Team-Platzhalter, die Sidebar rendert viele Intakes
         $this->app->scoped(\Platform\Hatch\Support\IntakePlaceholders::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Platform\Hatch\Console\Commands\PruneSessionMetadataCommand::class,
+            ]);
+        }
+
+        // Technische Teilnahme-Daten (IP etc.) nach Frist löschen – siehe config hatch.privacy
+        $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function ($schedule) {
+            $schedule->command('hatch:prune-session-metadata')
+                ->dailyAt('03:15')
+                ->withoutOverlapping()
+                ->onOneServer();
+        });
     }
 
     public function boot(): void

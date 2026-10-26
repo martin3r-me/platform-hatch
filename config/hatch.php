@@ -11,6 +11,14 @@ return [
     ],
     
     'guard' => 'web',
+
+    // Datenschutz für öffentliche Umfragen – muss zu den Datenschutzhinweisen passen
+    'privacy' => [
+        // IP-Adresse, Browser-Kennung, Herkunftsseite einer Teilnahme werden danach gelöscht
+        'metadata_retention_days' => (int) env('HATCH_METADATA_RETENTION_DAYS', 30),
+        // Link zu den Datenschutzhinweisen; leer = Route "datenschutz" der App, falls vorhanden
+        'url' => env('HATCH_PRIVACY_URL'),
+    ],
     
     'navigation' => [
         'main' => [

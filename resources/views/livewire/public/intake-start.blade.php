@@ -68,7 +68,13 @@
                     </button>
                     <p class="mt-4 flex items-start gap-2 text-xs text-gray-500">
                         <svg class="w-4 h-4 flex-shrink-0 mt-px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        <span>Ihre Antworten werden vertraulich behandelt. Nach dem Start erhalten Sie einen Code, mit dem Sie später an derselben Stelle weitermachen können.</span>
+                        <span>
+                            Ihre Antworten werden vertraulich behandelt und nur zur Verbesserung unseres Angebots ausgewertet.
+                            Bitte tragen Sie in Freitextfelder keine Namen oder Kontaktdaten ein.
+                            @if($privacyUrl = \Platform\Hatch\Support\PublicBranding::privacyUrl())
+                                <a href="{{ $privacyUrl }}" target="_blank" rel="noopener" class="underline underline-offset-2 hover:text-gray-700">Datenschutzhinweise</a>
+                            @endif
+                        </span>
                     </p>
                 </div>
 
