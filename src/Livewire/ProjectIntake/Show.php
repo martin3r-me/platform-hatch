@@ -9,7 +9,6 @@ use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
-use Platform\Hatch\Models\HatchProjectIntakeStep;
 use Platform\Hatch\Support\IntakeAnalytics;
 use Platform\Hatch\Support\IntakePlaceholders;
 use Platform\Hatch\Support\QrCodeRenderer;
@@ -64,10 +63,6 @@ class Show extends Component
     public array $contactOptions = [];
     public ?string $createdSessionUrl = null;
 
-    // Aktueller Kontext (UI)
-    public $currentBlockIndex = 0;
-    public $templateBlocks = [];
-    public $currentBlock = null;
 
     public function mount(HatchProjectIntake $projectIntake)
     {
@@ -80,8 +75,6 @@ class Show extends Component
             : '';
         $this->showClosesAt = $this->closesAtInput !== '';
         $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
-        $this->loadTemplateBlocks();
-        $this->determineCurrentBlock();
     }
 
     public function updatedName()
@@ -197,59 +190,8 @@ class Show extends Component
         $this->dispatch('hatch-placeholder-catalog', catalog: app(IntakePlaceholders::class)->catalog($this->projectIntake));
     }
 
-    public function loadTemplateBlocks()
-    {
-        if ($this->projectIntake->projectTemplate) {
-            $this->templateBlocks = $this->projectIntake->projectTemplate
-                ->templateBlocks()
-                ->orderBy('sort_order')
-                ->get()
-                ->values();
-        }
-    }
-
-    private function nextOpenStep(): ?HatchProjectIntakeStep
-    {
-        return $this->projectIntake->intakeSteps()
-            ->where('is_completed', false)
-            ->orderBy('id')
-            ->first();
-    }
-
-    public function determineCurrentBlock()
-    {
-        if (empty($this->templateBlocks)) {
-            return;
-        }
-
-        $this->projectIntake->loadMissing(['intakeSteps','projectTemplate.templateBlocks']);
-
-        $nextStep = $this->nextOpenStep();
-
-        if ($nextStep) {
-            $block = $this->projectIntake->projectTemplate->templateBlocks
-                ->firstWhere('id', $nextStep->template_block_id);
-
-            $this->currentBlock = $block;
-
-            $sorted = $this->projectIntake->projectTemplate->templateBlocks->sortBy('sort_order')->values();
-            $this->currentBlockIndex = $sorted->search(fn($b) => $b->id === $block->id);
-            return;
-        }
-
-        $sorted = $this->projectIntake->projectTemplate->templateBlocks->sortBy('sort_order')->values();
-        if ($sorted->isNotEmpty()) {
-            $this->currentBlock = $sorted->last();
-            $this->currentBlockIndex = max(0, $sorted->count() - 1);
-        }
-    }
-
     public function publishIntake()
     {
-        $this->loadTemplateBlocks();
-        $this->createStepsForAllBlocks();
-        $this->determineCurrentBlock();
-
         $this->projectIntake->publish();
         $this->syncClosesAtInput();
 
@@ -260,26 +202,6 @@ class Show extends Component
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $this->projectIntake->id,
         ]);
-    }
-
-    private function createStepsForAllBlocks()
-    {
-        $templateBlocks = $this->projectIntake->projectTemplate->templateBlocks->sortBy('sort_order');
-
-        foreach ($templateBlocks as $block) {
-            $existingStep = $this->projectIntake->intakeSteps()
-                ->where('template_block_id', $block->id)
-                ->first();
-
-            if (!$existingStep) {
-                $this->projectIntake->intakeSteps()->create([
-                    'template_block_id'   => $block->id,
-                    'is_completed'        => false,
-                    'team_id'             => auth()->user()->current_team_id,
-                    'created_by_user_id'  => auth()->id(),
-                ]);
-            }
-        }
     }
 
     public function closeIntake()
@@ -581,10 +503,7 @@ class Show extends Component
 
     public function render()
     {
-        $this->projectIntake->load([
-            'projectTemplate',
-            'intakeSteps.templateBlock'
-        ]);
+        $this->projectIntake->load(['projectTemplate.templateBlocks']);
 
         $activities = $this->projectIntake->activities()
             ->orderBy('created_at', 'desc')
@@ -598,9 +517,6 @@ class Show extends Component
             'projectIntake' => $this->projectIntake,
             'activities' => $activities,
             'sessions' => $sessions,
-            'currentBlock' => $this->currentBlock,
-            'currentBlockIndex' => $this->currentBlockIndex,
-            'templateBlocks' => $this->templateBlocks,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
             'analysis' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->build($this->projectIntake, $this->analysisFilters()) : null,

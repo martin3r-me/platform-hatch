@@ -391,44 +391,6 @@
             </x-nx-section>
         @endif
 
-        {{-- Schritte: nur zeigen, wenn es welche gibt — der Umfrage-Flow
-             arbeitet über Sessions, Schritte sind die Intake-weite Variante. --}}
-        @if($projectIntake->status !== 'draft' && $projectIntake->intakeSteps->isNotEmpty())
-            <x-nx-section icon="heroicon-o-list-bullet" title="Erhebungs-Schritte" :hint="(string) $projectIntake->intakeSteps->count()">
-                <x-nx-card flush>
-                    <div class="divide-y divide-[color:var(--nx-line)]">
-                        @foreach($projectIntake->intakeSteps as $step)
-                            <div class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    @if($step->is_completed)
-                                        @svg('heroicon-o-check-circle', 'w-4 h-4 shrink-0', ['style' => 'color: var(--nx-success)'])
-                                    @else
-                                        @svg('heroicon-o-clock', 'w-4 h-4 shrink-0 text-[color:var(--nx-faint)]')
-                                    @endif
-                                    <div class="min-w-0 flex-1">
-                                        <div class="truncate text-sm text-[color:var(--nx-text)]">{{ $step->templateBlock->name ?? 'Schritt' }}</div>
-                                        @if($step->templateBlock?->description)
-                                            <div class="truncate text-xs text-[color:var(--nx-faint)]">{{ $step->templateBlock->description }}</div>
-                                        @endif
-                                    </div>
-                                    <x-nx-badge :variant="$step->is_completed ? 'success' : 'neutral'">{{ $step->is_completed ? 'Erledigt' : 'Offen' }}</x-nx-badge>
-                                </div>
-                                @if($step->is_completed && $step->answers)
-                                    <div class="mt-2 space-y-1 pl-7">
-                                        @foreach($step->answers as $key => $value)
-                                            <div class="flex gap-3 text-xs">
-                                                <span class="w-28 shrink-0 capitalize text-[color:var(--nx-muted)]">{{ str_replace('_', ' ', $key) }}</span>
-                                                <span class="text-[color:var(--nx-text)]">{{ is_array($value) ? implode(', ', $value) : $value }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </x-nx-card>
-            </x-nx-section>
-        @endif
 
         {{-- Weiterverarbeitung nach dem Schließen --}}
         @if($projectIntake->status === 'closed')
