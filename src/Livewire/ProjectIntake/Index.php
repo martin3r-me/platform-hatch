@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use Platform\Hatch\Models\HatchProjectIntake;
 use Platform\Hatch\Models\HatchProjectTemplate;
+use Platform\Hatch\Support\IntakeEntityLinks;
 use Platform\Hatch\Support\IntakePlaceholders;
 
 class Index extends Component
@@ -32,6 +33,10 @@ class Index extends Component
     public $description = '';
     public $project_template_id = '';
     public $status = 'draft';
+
+    // Optional: Organisationseinheit (z. B. Standort), mit der die neue Erhebung verknüpft wird
+    public ?int $entityId = null;
+    public string $entitySearch = '';
 
     public function mount()
     {
@@ -90,6 +95,20 @@ class Index extends Component
         // Setze das erste Template als Preset, falls vorhanden
         $this->project_template_id = $this->templates->isNotEmpty() ? $this->templates->first()->id : '';
         $this->status = 'draft';
+        $this->entityId = null;
+        $this->entitySearch = '';
+        $this->resetErrorBag();
+    }
+
+    public function selectEntity(int $id): void
+    {
+        $this->entityId = $id;
+        $this->entitySearch = '';
+    }
+
+    public function clearEntity(): void
+    {
+        $this->entityId = null;
     }
 
     public function createProjectIntake()
@@ -114,6 +133,13 @@ class Index extends Component
             ],
         ]);
 
+        $links = app(IntakeEntityLinks::class);
+        if ($this->entityId && !$links->canLink(auth()->user(), $this->entityId)) {
+            $this->addError('entityId', 'Mit dieser Organisationseinheit darfst du nicht verknüpfen.');
+
+            return;
+        }
+
         $projectIntake = HatchProjectIntake::create([
             'name' => $this->name,
             'description' => $this->description,
@@ -124,11 +150,15 @@ class Index extends Component
             'created_by_user_id' => auth()->id(),
         ]);
 
+        if ($this->entityId) {
+            $links->link($projectIntake, $this->entityId, auth()->user());
+        }
+
         $this->closeCreateModal();
 
         $this->dispatch('notifications:store', [
-            'title' => 'Projektierung erstellt',
-            'message' => 'Die Projektierung wurde erfolgreich angelegt.',
+            'title' => 'Erhebung angelegt',
+            'message' => 'Die Erhebung ist als Entwurf angelegt.',
             'notice_type' => 'success',
             'noticable_type' => HatchProjectIntake::class,
             'noticable_id' => $projectIntake->id,
@@ -219,6 +249,10 @@ class Index extends Component
             'statuses' => $this->statuses,
             'stats' => $stats,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog(null),
+            // nur bei offenem Dialog: Auswahl der Organisationseinheit
+            'entityCandidates' => $this->modalShow && !$this->entityId ? app(IntakeEntityLinks::class)->candidates(auth()->user(), $this->entitySearch, 6) : [],
+            'entityName' => $this->entityId ? app(IntakeEntityLinks::class)->name($this->entityId) : null,
+            'canLinkEntities' => $this->modalShow && ($this->entityId || app(IntakeEntityLinks::class)->writableEntityIds(auth()->user()) !== []),
         ])->layout('platform::layouts.app');
     }
 }

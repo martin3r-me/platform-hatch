@@ -193,6 +193,46 @@
                     wire:model.live="description"
                     placeholder="z.B. Wie hat Ihnen das Catering gefallen?"
                 />
+
+                @if($canLinkEntities)
+                    <div class="space-y-1.5">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <span class="text-sm font-medium text-[color:var(--nx-text)]">Organisationseinheit</span>
+                            <span class="text-xs text-[color:var(--nx-faint)]">Optional, z. B. der Standort</span>
+                        </div>
+                        @if($entityId)
+                            <div class="flex items-center justify-between gap-2 rounded-md border border-[color:var(--nx-line-strong)] px-3 py-2 text-sm">
+                                <span class="inline-flex min-w-0 items-center gap-2 text-[color:var(--nx-text)]">
+                                    @svg('heroicon-o-building-office', 'w-4 h-4 shrink-0 text-[color:var(--nx-muted)]')
+                                    <span class="truncate">{{ $entityName }}</span>
+                                </span>
+                                <button type="button" wire:click="clearEntity" class="text-[color:var(--nx-faint)] hover:text-[color:var(--nx-text)]" title="Auswahl entfernen">
+                                    @svg('heroicon-o-x-mark', 'w-4 h-4')
+                                </button>
+                            </div>
+                        @else
+                            <input type="search" wire:model.live.debounce.250ms="entitySearch" placeholder="Einheit suchen …"
+                                class="h-9 w-full rounded-md border border-[color:var(--nx-line-strong)] bg-[color:var(--nx-surface)] px-3 text-sm text-[color:var(--nx-text)]" />
+                            @if($entityCandidates)
+                                <div class="divide-y divide-[color:var(--nx-line)] rounded-md border border-[color:var(--nx-line)]">
+                                    @foreach($entityCandidates as $e)
+                                        <button type="button" wire:key="ent-{{ $e['id'] }}" wire:click="selectEntity({{ $e['id'] }})"
+                                            class="flex w-full items-baseline justify-between gap-3 px-3 py-1.5 text-left text-sm hover:bg-[color:var(--nx-hover)]">
+                                            <span class="truncate text-[color:var(--nx-text)]">{{ $e['name'] }}</span>
+                                            @if($e['path'])
+                                                <span class="shrink-0 text-xs text-[color:var(--nx-faint)]">{{ $e['path'] }}</span>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @elseif(trim($entitySearch) !== '')
+                                <p class="m-0 text-xs text-[color:var(--nx-faint)]">Keine passende Einheit gefunden.</p>
+                            @endif
+                        @endif
+                        <p class="m-0 text-xs text-[color:var(--nx-faint)]">Ordnet die Erhebung in der Seitenleiste unter dieser Einheit ein. Später änderbar im Panel „Verknüpfungen“.</p>
+                        @error('entityId')<p class="m-0 text-xs text-[color:var(--nx-danger)]">{{ $message }}</p>@enderror
+                    </div>
+                @endif
             </form>
         </div>
         <x-slot name="footer">

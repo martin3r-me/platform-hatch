@@ -107,12 +107,13 @@ class HatchProjectIntake extends Model
      * Legt eine Kopie dieser Erhebung als Entwurf an.
      *
      * Übernommen: Vorlage (also dieselben Fragen), Name mit „(Kopie)“, Beschreibung,
-     * Einstellungen inkl. Platzhalter-Werte. Nicht übernommen: Antworten,
+     * Einstellungen inkl. Platzhalter-Werte, verknüpfte Organisationseinheiten
+     * (soweit der User sie beschreiben darf). Nicht übernommen: Antworten,
      * öffentlicher Link/QR-Code, Veranstaltungsnummer, Status, Zeitstempel.
      */
     public function duplicate(int $userId, ?int $teamId = null): self
     {
-        return self::create([
+        $copy = self::create([
             'project_template_id' => $this->project_template_id,
             'name' => trim((string) $this->name) . ' (Kopie)',
             'description' => $this->description,
@@ -123,6 +124,12 @@ class HatchProjectIntake extends Model
             'created_by_user_id' => $userId,
             'owned_by_user_id' => $userId,
         ]);
+
+        if ($user = \Platform\Core\Models\User::find($userId)) {
+            app(\Platform\Hatch\Support\IntakeEntityLinks::class)->copy($this, $copy, $user);
+        }
+
+        return $copy;
     }
 
     public function generatePublicToken(): string

@@ -22,7 +22,7 @@ class DuplicateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes/{id}/duplicate - Legt eine Kopie einer Erhebung als Entwurf an. Übernimmt Vorlage (dieselben Fragen), Name mit „(Kopie)“ bzw. optional neuen Namen, Beschreibung und intake_settings (z. B. Platzhalter-Werte). Nicht übernommen: Antworten, öffentlicher Link/QR-Code, Veranstaltungsnummer. Parameter: intake_id (required), name (optional).';
+        return 'POST /hatch/intakes/{id}/duplicate - Legt eine Kopie einer Erhebung als Entwurf an. Übernimmt Vorlage (dieselben Fragen), Name mit „(Kopie)“ bzw. optional neuen Namen, Beschreibung, intake_settings (z. B. Platzhalter-Werte) und die verknüpften Organisationseinheiten (soweit beschreibbar). Nicht übernommen: Antworten, öffentlicher Link/QR-Code, Veranstaltungsnummer. Parameter: intake_id (required), name (optional).';
     }
 
     public function getSchema(): array
@@ -90,6 +90,7 @@ class DuplicateIntakeTool implements ToolContract, ToolMetadataContract
                 'status' => $copy->status,
                 'project_template_id' => $copy->project_template_id,
                 'event_reference' => $copy->event_reference,
+                'entity_ids' => app(\Platform\Hatch\Support\IntakeEntityLinks::class)->entityIdsOf($copy),
                 'message' => 'Erhebung dupliziert (Entwurf). Zum Veröffentlichen hatch.intakes.PUT mit status="published" nutzen.',
             ]);
         } catch (\Throwable $e) {

@@ -23,7 +23,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake im Status "draft". ERFORDERLICH: project_template_id, name. Optional: description, intake_settings. name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . ' (z. B. für wiederkehrende Erhebungen). Nutze hatch.intakes.PUT mit status="published" um zu veröffentlichen.';
+        return 'POST /hatch/intakes - Erstellt einen neuen Project Intake im Status "draft". ERFORDERLICH: project_template_id, name. Optional: description, intake_settings, entity_id (Organisationseinheit verknüpfen). name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . ' (z. B. für wiederkehrende Erhebungen). Nutze hatch.intakes.PUT mit status="published" um zu veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -53,6 +53,10 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'closes_at' => [
                     'type' => ['string', 'null'],
                     'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                ],
+                'entity_id' => [
+                    'type' => 'integer',
+                    'description' => 'Optional: Organisationseinheit (z. B. Standort), mit der die Erhebung verknüpft wird – darüber gruppiert die Hatch-Seitenleiste. Nur Einheiten, auf die der User Schreibrecht hat.',
                 ],
                 'intake_settings' => [
                     'type' => 'object',
@@ -108,6 +112,12 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'closes_at liegt in der Vergangenheit.');
             }
 
+            $links = app(\Platform\Hatch\Support\IntakeEntityLinks::class);
+            $entityId = (int) ($arguments['entity_id'] ?? 0);
+            if ($entityId > 0 && !$links->canLink($context->user, $entityId)) {
+                return ToolResult::error('VALIDATION_ERROR', 'Organisationseinheit nicht gefunden oder keine Schreibrechte darauf.');
+            }
+
             $intake = HatchProjectIntake::create([
                 'project_template_id' => $template->id,
                 'closes_at' => $closesAt,
@@ -122,8 +132,13 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'team_id' => $teamId,
             ]);
 
+            if ($entityId > 0) {
+                $links->link($intake, $entityId, $context->user);
+            }
+
             return ToolResult::success([
                 'id' => $intake->id,
+                'entity_ids' => $entityId > 0 ? $links->entityIdsOf($intake) : [],
                 'uuid' => $intake->uuid,
                 'name' => $intake->name,
                 'status' => $intake->status,

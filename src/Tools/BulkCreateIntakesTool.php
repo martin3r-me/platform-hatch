@@ -23,7 +23,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
 
     public function getDescription(): string
     {
-        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Optional pro Item: description, intake_settings. name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '. Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
+        return 'POST /hatch/intakes/bulk - Erstellt mehrere Project Intakes im Status "draft". ERFORDERLICH: items (Array mit je project_template_id, name). Optional pro Item: description, intake_settings, entity_id (Organisationseinheit verknüpfen, z. B. je Standort). name/description unterstützen Platzhalter ' . app(\Platform\Hatch\Support\IntakePlaceholders::class)->describeForTools() . '. Maximal 50 Items pro Aufruf. Nutze hatch.intakes.BULK_PUT mit status="published" zum Veröffentlichen.';
     }
 
     public function getSchema(): array
@@ -59,6 +59,10 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                             'closes_at' => [
                                 'type' => ['string', 'null'],
                                 'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
+                            ],
+                            'entity_id' => [
+                                'type' => 'integer',
+                                'description' => 'Optional: Organisationseinheit (z. B. Standort), mit der die Erhebung verknüpft wird – darüber gruppiert die Hatch-Seitenleiste. Nur Einheiten, auf die der User Schreibrecht hat.',
                             ],
                             'intake_settings' => [
                                 'type' => 'object',
@@ -109,6 +113,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
 
             $created = [];
             $errors = [];
+            $links = app(\Platform\Hatch\Support\IntakeEntityLinks::class);
 
             foreach ($items as $index => $item) {
                 $templateId = (int)($item['project_template_id'] ?? 0);
@@ -146,6 +151,12 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                     continue;
                 }
 
+                $entityId = (int) ($item['entity_id'] ?? 0);
+                if ($entityId > 0 && !$links->canLink($context->user, $entityId)) {
+                    $errors[] = ['index' => $index, 'error' => 'Organisationseinheit nicht gefunden oder keine Schreibrechte darauf.'];
+                    continue;
+                }
+
                 try {
                     $intake = HatchProjectIntake::create([
                         'project_template_id' => $template->id,
@@ -161,9 +172,14 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'team_id' => $teamId,
                     ]);
 
+                    if ($entityId > 0) {
+                        $links->link($intake, $entityId, $context->user);
+                    }
+
                     $created[] = [
                         'index' => $index,
                         'id' => $intake->id,
+                        'entity_id' => $entityId > 0 ? $entityId : null,
                         'uuid' => $intake->uuid,
                         'name' => $intake->name,
                         'status' => $intake->status,
