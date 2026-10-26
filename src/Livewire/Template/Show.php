@@ -26,6 +26,8 @@ use Symfony\Component\Uid\UuidV7;
  */
 class Show extends Component
 {
+    use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
+
     public HatchProjectTemplate $template;
 
     protected $rules = [
@@ -87,7 +89,8 @@ class Show extends Component
         $id = $this->template->id;
         $this->template->delete();   // Fragen werden per CASCADE mitgelöscht
 
-        $this->dispatch('notifications:store', [
+        // Meldung erst auf der Zielseite – siehe FlashesNotices
+        $this->flashNotice([
             'title' => 'Vorlage gelöscht',
             'notice_type' => 'success',
             'noticable_type' => HatchProjectTemplate::class,

@@ -11,6 +11,8 @@ use Platform\Hatch\Support\IntakePlaceholders;
 
 class Index extends Component
 {
+    use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
+
     use WithPagination;
 
     public $search = '';

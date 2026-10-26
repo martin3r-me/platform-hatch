@@ -9,6 +9,8 @@ use Platform\Hatch\Models\HatchComplexityLevel;
 
 class Index extends Component
 {
+    use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
+
     use WithPagination;
 
     // Search / Filter

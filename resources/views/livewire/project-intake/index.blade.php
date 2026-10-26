@@ -202,4 +202,5 @@
             </div>
         </x-slot>
     </x-ui-modal>
+    @include('hatch::livewire.partials.flashed-notice')
 </x-ui-page>

@@ -16,6 +16,8 @@ use Platform\Hatch\Support\QrCodeRenderer;
 
 class Show extends Component
 {
+    use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
+
     public HatchProjectIntake $projectIntake;
 
     public $statuses = [
@@ -539,8 +541,9 @@ class Show extends Component
         $intakeId = $this->projectIntake->id;
         $this->projectIntake->delete();
 
-        // noticable_* ist Pflicht in notifications_notices – auf die gelöschte Erhebung verweisen
-        $this->dispatch('notifications:store', [
+        // noticable_* ist Pflicht in notifications_notices – auf die gelöschte Erhebung verweisen.
+        // Meldung erst auf der Zielseite – siehe FlashesNotices
+        $this->flashNotice([
             'title' => 'Erhebung gelöscht',
             'message' => 'Die Erhebung und alle zugehörigen Antworten wurden gelöscht.',
             'notice_type' => 'success',
