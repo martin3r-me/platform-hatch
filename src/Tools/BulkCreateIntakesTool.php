@@ -56,6 +56,10 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                                 'type' => 'string',
                                 'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                             ],
+                            'event_id' => [
+                                'type' => ['integer', 'null'],
+                                'description' => 'Optional: ID einer Veranstaltung aus dem Modul events (nur wenn installiert). Setzt event_reference automatisch auf deren VA-Nummer. 0/null löst die Verknüpfung.',
+                            ],
                             'closes_at' => [
                                 'type' => ['string', 'null'],
                                 'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
@@ -151,6 +155,12 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                     continue;
                 }
 
+                [$eventAttrs, $eventError] = app(\Platform\Hatch\Support\EventBridge::class)->attributesFor($teamId, $item['event_id'] ?? null);
+                if ($eventError) {
+                    $errors[] = ['index' => $index, 'error' => $eventError];
+                    continue;
+                }
+
                 $entityId = (int) ($item['entity_id'] ?? 0);
                 if ($entityId > 0 && !$links->canLink($context->user, $entityId)) {
                     $errors[] = ['index' => $index, 'error' => 'Organisationseinheit nicht gefunden oder keine Schreibrechte darauf.'];
@@ -164,6 +174,7 @@ class BulkCreateIntakesTool implements ToolContract, ToolMetadataContract
                         'name' => $name,
                         'description' => $item['description'] ?? null,
                         'event_reference' => ($item['event_reference'] ?? '') !== '' ? $item['event_reference'] : null,
+                        ...$eventAttrs,
                         'status' => 'draft',
                         'is_active' => false,
                         'intake_settings' => $intakeSettings,

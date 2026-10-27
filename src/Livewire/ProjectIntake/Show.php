@@ -12,6 +12,7 @@ use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
 use Platform\Hatch\Models\HatchProjectIntake;
+use Platform\Hatch\Support\EventBridge;
 use Platform\Hatch\Support\IntakeAnalytics;
 use Platform\Hatch\Support\IntakePlaceholders;
 use Platform\Hatch\Support\QrCodeRenderer;
@@ -194,7 +195,35 @@ class Show extends Component
     {
         $this->validateOnly('eventReference', ['eventReference' => 'nullable|string|max:100']);
         $value = trim($this->eventReference);
-        $this->projectIntake->update(['event_reference' => $value === '' ? null : $value]);
+        $updates = ['event_reference' => $value === '' ? null : $value];
+
+        // Nummer von Hand geändert → passt nicht mehr zum verknüpften Event
+        if ($this->projectIntake->event_id) {
+            $linked = app(EventBridge::class)->find((int) $this->projectIntake->team_id, $this->projectIntake->event_id);
+            if (!$linked || $linked['number'] !== $value) {
+                $updates['event_id'] = null;
+            }
+        }
+
+        $this->projectIntake->update($updates);
+    }
+
+    /** Event aus dem Modul events verknüpfen; die VA-Nummer kommt vom Event. */
+    public function linkEvent(int $eventId): void
+    {
+        $event = app(EventBridge::class)->find((int) $this->projectIntake->team_id, $eventId);
+        if (!$event) {
+            return;
+        }
+
+        $this->projectIntake->update(['event_id' => $event['id'], 'event_reference' => $event['number']]);
+        $this->eventReference = $event['number'];
+    }
+
+    /** Verknüpfung lösen – die VA-Nummer bleibt als Text stehen. */
+    public function unlinkEvent(): void
+    {
+        $this->projectIntake->update(['event_id' => null]);
     }
 
     public function updatedPlaceholderValues($value, $key)
@@ -502,6 +531,9 @@ class Show extends Component
             ->orderByDesc('updated_at')
             ->paginate(25, pageName: 'antworten');
 
+        $events = app(EventBridge::class);
+        $linkedEvent = $events->find((int) $this->projectIntake->team_id, $this->projectIntake->event_id);
+
         return view('hatch::livewire.project-intake.show', [
             'projectIntake' => $this->projectIntake,
             'activities' => $activities,
@@ -511,6 +543,11 @@ class Show extends Component
             'emptySessionCount' => $emptySessionCount,
             'lastStartedAt' => $sessionStats->last_started_at ? \Illuminate\Support\Carbon::parse($sessionStats->last_started_at) : null,
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
+            'eventsAvailable' => $events->available(),
+            'linkedEvent' => $linkedEvent,
+            'eventSuggestions' => $events->available() && !$linkedEvent
+                ? $events->search((int) $this->projectIntake->team_id, $this->eventReference, 5)
+                : [],
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
             'analysis' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->build($this->projectIntake, $this->analysisFilters()) : null,
             'analysisWeeks' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->weeks($this->projectIntake) : [],

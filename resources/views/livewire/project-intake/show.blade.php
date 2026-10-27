@@ -137,15 +137,54 @@
                         nicht öffentlich
                     </span>
                 </div>
-                <x-nx-input-text
-                    name="eventReference"
-                    label="Veranstaltungsnummer"
-                    hint="optional"
-                    size="sm"
-                    wire:model.live.debounce.500ms="eventReference"
-                    placeholder="z.B. VA-2026-0412"
-                    :errorKey="'eventReference'"
-                />
+                @if($linkedEvent)
+                    {{-- Mit Event aus dem Modul events verknüpft: Nummer kommt vom Event --}}
+                    <div class="flex flex-col gap-1.5">
+                        <span class="text-sm font-medium text-[color:var(--nx-text)]">Veranstaltung</span>
+                        <div class="flex items-start gap-2 rounded-md border border-[color:var(--nx-line-strong)] px-3 py-2">
+                            @svg('heroicon-o-calendar-days', 'w-4 h-4 mt-0.5 shrink-0 text-[color:var(--nx-muted)]')
+                            <div class="min-w-0 flex-1">
+                                <div class="truncate text-sm text-[color:var(--nx-text)]" title="{{ $linkedEvent['name'] }}">{{ $linkedEvent['name'] }}</div>
+                                <div class="truncate text-xs text-[color:var(--nx-faint)]" title="{{ $linkedEvent['number'] }}{{ $linkedEvent['dates'] ? ' · ' . $linkedEvent['dates'] : '' }}{{ $linkedEvent['customer'] ? ' · ' . $linkedEvent['customer'] : '' }}">
+                                    <span class="font-mono">{{ $linkedEvent['number'] }}</span>{{ $linkedEvent['dates'] ? ' · ' . $linkedEvent['dates'] : '' }}{{ $linkedEvent['customer'] ? ' · ' . $linkedEvent['customer'] : '' }}
+                                </div>
+                            </div>
+                            @if($linkedEvent['url'])
+                                <a href="{{ $linkedEvent['url'] }}" wire:navigate class="shrink-0 text-[color:var(--nx-faint)] hover:text-[color:var(--nx-text)]" title="Veranstaltung öffnen">
+                                    @svg('heroicon-o-arrow-top-right-on-square', 'w-4 h-4')
+                                </a>
+                            @endif
+                            <button type="button" wire:click="unlinkEvent" class="shrink-0 text-[color:var(--nx-faint)] hover:text-[color:var(--nx-text)]"
+                                title="Verknüpfung lösen – die Veranstaltungsnummer bleibt stehen">
+                                @svg('heroicon-o-x-mark', 'w-4 h-4')
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    <x-nx-input-text
+                        name="eventReference"
+                        label="Veranstaltungsnummer"
+                        hint="optional"
+                        size="sm"
+                        wire:model.live.debounce.500ms="eventReference"
+                        :placeholder="$eventsAvailable ? 'VA-Nummer oder Name der Veranstaltung' : 'z.B. VA-2026-0412'"
+                        :errorKey="'eventReference'"
+                    />
+                    @if($eventSuggestions)
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs text-[color:var(--nx-faint)]">Mit Veranstaltung verknüpfen:</span>
+                            <div class="divide-y divide-[color:var(--nx-line)] rounded-md border border-[color:var(--nx-line)]">
+                                @foreach($eventSuggestions as $ev)
+                                    <button type="button" wire:key="ev-{{ $ev['id'] }}" wire:click="linkEvent({{ $ev['id'] }})"
+                                        class="flex w-full flex-col px-3 py-1.5 text-left hover:bg-[color:var(--nx-hover)]">
+                                        <span class="truncate text-sm text-[color:var(--nx-text)]">{{ $ev['name'] }}</span>
+                                        <span class="truncate text-xs text-[color:var(--nx-faint)]"><span class="font-mono">{{ $ev['number'] }}</span>{{ $ev['dates'] ? ' · ' . $ev['dates'] : '' }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endif
             </div>
 
             {{-- Werte eigener Platzhalter für diese Erhebung --}}

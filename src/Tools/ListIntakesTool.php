@@ -93,6 +93,7 @@ class ListIntakesTool implements ToolContract, ToolMetadataContract
                     'name' => $i->name,
                     'description' => $i->description,
                     'event_reference' => $i->event_reference,
+                    'event_id' => $i->event_id,
                     'closes_at' => $i->closes_at?->toIso8601String(),
                     'status' => $i->status,
                     'intake_settings' => $i->intake_settings,

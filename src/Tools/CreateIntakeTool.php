@@ -50,6 +50,10 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                 ],
+                'event_id' => [
+                    'type' => ['integer', 'null'],
+                    'description' => 'Optional: ID einer Veranstaltung aus dem Modul events (nur wenn installiert). Setzt event_reference automatisch auf deren VA-Nummer. 0/null löst die Verknüpfung.',
+                ],
                 'closes_at' => [
                     'type' => ['string', 'null'],
                     'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
@@ -112,6 +116,11 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 return ToolResult::error('VALIDATION_ERROR', 'closes_at liegt in der Vergangenheit.');
             }
 
+            [$eventAttrs, $eventError] = app(\Platform\Hatch\Support\EventBridge::class)->attributesFor($teamId, $arguments['event_id'] ?? null);
+            if ($eventError) {
+                return ToolResult::error('VALIDATION_ERROR', $eventError);
+            }
+
             $links = app(\Platform\Hatch\Support\IntakeEntityLinks::class);
             $entityId = (int) ($arguments['entity_id'] ?? 0);
             if ($entityId > 0 && !$links->canLink($context->user, $entityId)) {
@@ -124,6 +133,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 'name' => $name,
                 'description' => $arguments['description'] ?? null,
                 'event_reference' => ($arguments['event_reference'] ?? '') !== '' ? $arguments['event_reference'] : null,
+                ...$eventAttrs,
                 'status' => 'draft',
                 'is_active' => false,
                 'intake_settings' => $intakeSettings,

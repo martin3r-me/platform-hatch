@@ -21,6 +21,7 @@ class HatchProjectIntake extends Model
         'name',
         'description',
         'event_reference',
+        'event_id',
         'status',
         'ai_conversation_id',
         'thread_id',

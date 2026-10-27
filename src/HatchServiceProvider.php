@@ -17,6 +17,7 @@ class HatchServiceProvider extends ServiceProvider
     {
         // Pro Request eine Instanz: cached die Team-Platzhalter, die Sidebar rendert viele Intakes
         $this->app->scoped(\Platform\Hatch\Support\IntakePlaceholders::class);
+        $this->app->scoped(\Platform\Hatch\Support\EventBridge::class);   // Events-Modul optional, einmal pro Request prüfen
 
         if ($this->app->runningInConsole()) {
             $this->commands([

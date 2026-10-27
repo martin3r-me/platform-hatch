@@ -79,6 +79,7 @@ class GetIntakeTool implements ToolContract, ToolMetadataContract
                 'name_rendered' => $renderer->render($intake->name, $intake),
                 'description' => $intake->description,
                 'event_reference' => $intake->event_reference,
+                'event' => app(\Platform\Hatch\Support\EventBridge::class)->find((int) $intake->team_id, $intake->event_id),
                 'closes_at' => $intake->closes_at?->toIso8601String(),
                 'description_rendered' => $renderer->render($intake->description, $intake),
                 'status' => $intake->status,

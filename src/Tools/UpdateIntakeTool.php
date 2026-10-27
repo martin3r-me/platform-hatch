@@ -49,6 +49,10 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                     'type' => 'string',
                     'description' => 'Optional: Interne Veranstaltungsnummer (nur fürs Team, nie öffentlich sichtbar). Leerer String entfernt sie.',
                 ],
+                'event_id' => [
+                    'type' => ['integer', 'null'],
+                    'description' => 'Optional: ID einer Veranstaltung aus dem Modul events (nur wenn installiert). Setzt event_reference automatisch auf deren VA-Nummer. 0/null löst die Verknüpfung.',
+                ],
                 'closes_at' => [
                     'type' => ['string', 'null'],
                     'description' => "Optional: Automatisches Schließdatum, ISO 8601 (z. B. 2026-10-31T18:00:00+01:00) oder 'YYYY-MM-DD HH:MM' in deutscher Zeit. Leerer String/null entfernt es.",
@@ -118,6 +122,17 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 if (array_key_exists($field, $arguments)) {
                     $intake->{$field} = $arguments[$field] === '' ? null : $arguments[$field];
                 }
+            }
+
+            if (array_key_exists('event_id', $arguments)) {
+                [$eventAttrs, $eventError] = app(\Platform\Hatch\Support\EventBridge::class)->attributesFor($teamId, $arguments['event_id']);
+                if ($eventError) {
+                    return ToolResult::error('VALIDATION_ERROR', $eventError);
+                }
+                $intake->fill($eventAttrs);
+            } elseif (array_key_exists('event_reference', $arguments) && $intake->event_id && $intake->isDirty('event_reference')) {
+                // VA-Nummer von Hand geändert → passt nicht mehr zum verknüpften Event
+                $intake->event_id = null;
             }
 
             if (array_key_exists('closes_at', $arguments)) {
