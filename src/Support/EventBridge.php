@@ -17,16 +17,37 @@ class EventBridge
     private const EVENT_CLASS = '\\Platform\\Events\\Models\\Event';
 
     private ?bool $available = null;
+    private ?bool $crm = null;
 
     public function available(): bool
     {
         return $this->available ??= class_exists(self::EVENT_CLASS) && Schema::hasTable('events_events');
     }
 
+    /** Kunde steht meist als CRM-Firma am Event (crm_company_id), das Textfeld customer ist oft leer. */
+    private function crmAvailable(): bool
+    {
+        return $this->crm ??= Schema::hasTable('crm_companies');
+    }
+
+    /** @return array<int, string> crm_company_id => Name */
+    private function companyNames(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+        if ($ids === [] || !$this->crmAvailable()) {
+            return [];
+        }
+
+        return \Illuminate\Support\Facades\DB::table('crm_companies')->whereIn('id', $ids)->get(['id', 'name', 'legal_name'])
+            ->mapWithKeys(fn ($c) => [(int) $c->id => (string) ($c->name ?: $c->legal_name)])
+            ->filter()
+            ->all();
+    }
+
     /**
      * Auswahl für die Suche – nie die ganze Liste:
      *   - ohne Suchbegriff: laufende und anstehende Veranstaltungen (14 Tage zurück bis 45 voraus)
-     *   - mit Suchbegriff: jedes Wort muss in VA-Nummer (mit/ohne „#“), Name, Kunde oder Ort vorkommen
+     *   - mit Suchbegriff: jedes Wort muss in VA-Nummer (mit/ohne „#“), Name, Kunde (Text oder CRM-Firma) oder Ort vorkommen
      * Sortiert: Nummern-Treffer zuerst, dann Nähe zu heute; Stornos ans Ende.
      *
      * @return array{items: array<int, array>, total: int, suggested: bool}
@@ -56,7 +77,10 @@ class EventBridge
                     ->orWhereRaw("REPLACE(event_number, '#', '') like ?", ['%' . $plain . '%'])
                     ->orWhere('name', 'like', '%' . $word . '%')
                     ->orWhere('customer', 'like', '%' . $word . '%')
-                    ->orWhere('location', 'like', '%' . $word . '%'));
+                    ->orWhere('location', 'like', '%' . $word . '%')
+                    ->when($this->crmAvailable(), fn ($q) => $q->orWhereIn('crm_company_id', fn ($sub) => $sub
+                        ->select('id')->from('crm_companies')
+                        ->where(fn ($c) => $c->where('name', 'like', '%' . $word . '%')->orWhere('legal_name', 'like', '%' . $word . '%')))));
             }
         }
 
@@ -72,19 +96,22 @@ class EventBridge
             $candidates = $candidates->concat((clone $query)->whereRaw("LOWER(REPLACE(event_number, '#', '')) like ?", [$needle . '%'])->limit(10)->get());
         }
 
-        $items = $candidates->unique('id')
-            ->sortBy(function ($event) use ($needle, $words, $today) {
+        $candidates = $candidates->unique('id');
+        $companies = $this->companyNames($candidates->pluck('crm_company_id')->all());
+
+        $items = $candidates
+            ->sortBy(function ($event) use ($needle, $words, $today, $companies) {
                 $number = mb_strtolower(str_replace('#', '', (string) $event->event_number));
                 $numberRank = $needle === '' ? 3 : ($number === $needle ? 0 : (str_starts_with($number, $needle) ? 1 : (str_contains($number, $needle) ? 2 : 3)));
                 // Treffer in Name/Kunde/Nummer vor Treffern, die nur über den Ort passen
-                $primary = mb_strtolower($number . ' ' . $event->name . ' ' . $event->customer);
+                $primary = mb_strtolower($number . ' ' . $event->name . ' ' . $event->customer . ' ' . ($companies[(int) $event->crm_company_id] ?? ''));
                 $fieldRank = collect($words)->every(fn ($w) => str_contains($primary, str_replace('#', '', $w))) ? 0 : 1;
                 $days = $event->start_date ? abs($today->diffInDays($event->start_date, false)) : 99999;
 
                 return sprintf('%d-%d-%d-%06d', $numberRank, $fieldRank, $event->status === 'Storno' ? 1 : 0, min($days, 999999));
             })
             ->take($limit)
-            ->map(fn ($event) => $this->summary($event))
+            ->map(fn ($event) => $this->summary($event, $companies))
             ->values()
             ->all();
 
@@ -105,7 +132,7 @@ class EventBridge
                 ->orWhereRaw("REPLACE(event_number, '#', '') = ?", [str_replace('#', '', $number)]))
             ->first();
 
-        return $event ? $this->summary($event) : null;
+        return $event ? $this->summary($event, $this->companyNames([$event->crm_company_id])) : null;
     }
 
     /** Ein Event des Teams oder null (nicht installiert, gelöscht, fremdes Team). */
@@ -118,7 +145,7 @@ class EventBridge
         $class = self::EVENT_CLASS;
         $event = $class::query()->where('team_id', $teamId)->find($eventId);
 
-        return $event ? $this->summary($event) : null;
+        return $event ? $this->summary($event, $this->companyNames([$event->crm_company_id])) : null;
     }
 
     /**
@@ -142,7 +169,7 @@ class EventBridge
     }
 
     /** @return array{id:int, number:string, name:string, customer:?string, dates:?string, status:?string, url:?string} */
-    private function summary($event): array
+    private function summary($event, array $companies = []): array
     {
         $start = $event->start_date;
         $end = $event->end_date;
@@ -154,7 +181,7 @@ class EventBridge
             'id' => (int) $event->id,
             'number' => (string) $event->event_number,
             'name' => (string) $event->name,
-            'customer' => $event->customer ?: null,
+            'customer' => $event->customer ?: ($companies[(int) $event->crm_company_id] ?? null),
             'dates' => $dates,
             'status' => $event->status ?: null,
             'url' => Route::has('events.show') ? route('events.show', ['slug' => $event->slug]) : null,
