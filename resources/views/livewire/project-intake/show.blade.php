@@ -160,6 +160,67 @@
                             </button>
                         </div>
                     </div>
+                @elseif($eventsAvailable)
+                    {{-- Events-Modul installiert: Veranstaltung suchen statt Nummer abtippen --}}
+                    @php $evRow = 'flex w-full flex-col px-3 py-1.5 text-left hover:bg-[color:var(--nx-hover)]'; @endphp
+                    <div class="flex flex-col gap-1.5" x-data="{ offen: false }" x-on:click.outside="offen = false">
+                        <div class="flex items-baseline justify-between gap-2">
+                            <span class="text-sm font-medium text-[color:var(--nx-text)]">Veranstaltung</span>
+                            <span class="text-xs text-[color:var(--nx-faint)]">optional</span>
+                        </div>
+                        <input type="search" wire:model.live.debounce.300ms="eventSearch" x-on:focus="offen = true" x-on:keydown.escape="offen = false"
+                            placeholder="Name, Kunde oder VA-Nummer …" autocomplete="off"
+                            class="h-8 w-full rounded-md border border-[color:var(--nx-line-strong)] bg-[color:var(--nx-surface)] px-2.5 text-sm text-[color:var(--nx-text)]" />
+
+                        <div x-show="offen || $wire.eventSearch.length > 0" x-cloak class="flex flex-col gap-1">
+                            <span class="text-xs text-[color:var(--nx-faint)]">
+                                @if($eventLookup['suggested'])
+                                    {{ $eventLookup['total'] > 0 ? 'Laufend und demnächst' : 'Keine laufenden oder anstehenden Veranstaltungen – einfach suchen.' }}
+                                @else
+                                    {{ $eventLookup['total'] === 0 ? 'Keine Veranstaltung gefunden.' : $eventLookup['total'] . ' Treffer' }}
+                                @endif
+                            </span>
+                            @if($eventLookup['items'])
+                                <div class="divide-y divide-[color:var(--nx-line)] rounded-md border border-[color:var(--nx-line)]">
+                                    @foreach($eventLookup['items'] as $ev)
+                                        <button type="button" wire:key="ev-{{ $ev['id'] }}" wire:click="linkEvent({{ $ev['id'] }})" class="{{ $evRow }}">
+                                            <span class="truncate text-sm text-[color:var(--nx-text)] {{ $ev['status'] === 'Storno' ? 'line-through opacity-60' : '' }}">{{ $ev['name'] }}</span>
+                                            <span class="truncate text-xs text-[color:var(--nx-faint)]"><span class="font-mono">{{ $ev['number'] }}</span>{{ $ev['dates'] ? ' · ' . $ev['dates'] : '' }}{{ $ev['customer'] ? ' · ' . $ev['customer'] : '' }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                                @if($eventLookup['total'] > count($eventLookup['items']))
+                                    <span class="text-xs text-[color:var(--nx-faint)]">… und {{ $eventLookup['total'] - count($eventLookup['items']) }} weitere – Suche genauer fassen, z. B. Kunde und Anlass.</span>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+
+                    @if($eventNumberMatch)
+                        <button type="button" wire:click="linkEvent({{ $eventNumberMatch['id'] }})"
+                            class="flex items-start gap-2 rounded-md bg-[color:var(--nx-hover)] px-3 py-2 text-left text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-text)]">
+                            @svg('heroicon-o-link', 'w-4 h-4 shrink-0')
+                            <span>Die Nummer <span class="font-mono">{{ $projectIntake->event_reference }}</span> gehört zu „{{ $eventNumberMatch['name'] }}“ – verknüpfen</span>
+                        </button>
+                    @endif
+
+                    {{-- Nummer ohne Veranstaltung (z. B. noch nicht im Events-Modul angelegt) --}}
+                    <div x-data="{ frei: @js($eventReference !== '') }">
+                        <button type="button" x-show="!frei" x-on:click="frei = true" class="text-xs text-[color:var(--nx-faint)] underline decoration-dotted underline-offset-2 hover:text-[color:var(--nx-text)]">
+                            VA-Nummer ohne Verknüpfung eintragen
+                        </button>
+                        <div x-show="frei" x-cloak>
+                            <x-nx-input-text
+                                name="eventReference"
+                                label="VA-Nummer (frei)"
+                                hint="ohne Verknüpfung"
+                                size="sm"
+                                wire:model.live.debounce.500ms="eventReference"
+                                placeholder="z.B. VA-2026-0412"
+                                :errorKey="'eventReference'"
+                            />
+                        </div>
+                    </div>
                 @else
                     <x-nx-input-text
                         name="eventReference"
@@ -167,23 +228,9 @@
                         hint="optional"
                         size="sm"
                         wire:model.live.debounce.500ms="eventReference"
-                        :placeholder="$eventsAvailable ? 'VA-Nummer oder Name der Veranstaltung' : 'z.B. VA-2026-0412'"
+                        placeholder="z.B. VA-2026-0412"
                         :errorKey="'eventReference'"
                     />
-                    @if($eventSuggestions)
-                        <div class="flex flex-col gap-1">
-                            <span class="text-xs text-[color:var(--nx-faint)]">Mit Veranstaltung verknüpfen:</span>
-                            <div class="divide-y divide-[color:var(--nx-line)] rounded-md border border-[color:var(--nx-line)]">
-                                @foreach($eventSuggestions as $ev)
-                                    <button type="button" wire:key="ev-{{ $ev['id'] }}" wire:click="linkEvent({{ $ev['id'] }})"
-                                        class="flex w-full flex-col px-3 py-1.5 text-left hover:bg-[color:var(--nx-hover)]">
-                                        <span class="truncate text-sm text-[color:var(--nx-text)]">{{ $ev['name'] }}</span>
-                                        <span class="truncate text-xs text-[color:var(--nx-faint)]"><span class="font-mono">{{ $ev['number'] }}</span>{{ $ev['dates'] ? ' · ' . $ev['dates'] : '' }}</span>
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 @endif
             </div>
 

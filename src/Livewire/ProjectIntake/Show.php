@@ -54,6 +54,7 @@ class Show extends Component
     public string $name = '';
     public string $description = '';
     public string $eventReference = '';
+    public string $eventSearch = '';        // Suche nach Veranstaltung (nur mit Events-Modul)
 
     // Automatisches Schließen: Eingabe als "Y-m-d\TH:i" in der Anzeige-Zeitzone; leer = kein Schließdatum
     public string $closesAtInput = '';
@@ -218,6 +219,7 @@ class Show extends Component
 
         $this->projectIntake->update(['event_id' => $event['id'], 'event_reference' => $event['number']]);
         $this->eventReference = $event['number'];
+        $this->eventSearch = '';
     }
 
     /** Verknüpfung lösen – die VA-Nummer bleibt als Text stehen. */
@@ -545,9 +547,13 @@ class Show extends Component
             'placeholderCatalog' => app(IntakePlaceholders::class)->catalog($this->projectIntake),
             'eventsAvailable' => $events->available(),
             'linkedEvent' => $linkedEvent,
-            'eventSuggestions' => $events->available() && !$linkedEvent
-                ? $events->search((int) $this->projectIntake->team_id, $this->eventReference, 5)
-                : [],
+            'eventLookup' => $events->available() && !$linkedEvent
+                ? $events->lookup((int) $this->projectIntake->team_id, $this->eventSearch)
+                : null,
+            // frei eingetragene Nummer passt genau zu einer Veranstaltung → Verknüpfen anbieten
+            'eventNumberMatch' => $events->available() && !$linkedEvent
+                ? $events->matchNumber((int) $this->projectIntake->team_id, $this->projectIntake->event_reference)
+                : null,
             'customPlaceholders' => app(IntakePlaceholders::class)->customs($this->projectIntake->team_id),
             'analysis' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->build($this->projectIntake, $this->analysisFilters()) : null,
             'analysisWeeks' => $this->tab === 'analysis' ? app(IntakeAnalytics::class)->weeks($this->projectIntake) : [],

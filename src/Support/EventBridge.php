@@ -24,32 +24,88 @@ class EventBridge
     }
 
     /**
-     * Events des Teams zur Auswahl, gesucht in VA-Nummer (mit/ohne „#“), Name und Kunde.
+     * Auswahl für die Suche – nie die ganze Liste:
+     *   - ohne Suchbegriff: laufende und anstehende Veranstaltungen (14 Tage zurück bis 45 voraus)
+     *   - mit Suchbegriff: jedes Wort muss in VA-Nummer (mit/ohne „#“), Name, Kunde oder Ort vorkommen
+     * Sortiert: Nummern-Treffer zuerst, dann Nähe zu heute; Stornos ans Ende.
      *
-     * @return array<int, array> siehe summary()
+     * @return array{items: array<int, array>, total: int, suggested: bool}
      */
-    public function search(int $teamId, string $term, int $limit = 6): array
+    public function lookup(int $teamId, string $term, int $limit = 6): array
     {
-        $term = trim($term);
-        if (!$this->available() || mb_strlen($term) < 2) {
-            return [];
+        $empty = ['items' => [], 'total' => 0, 'suggested' => false];
+        if (!$this->available()) {
+            return $empty;
         }
 
         $class = self::EVENT_CLASS;
-        $plain = str_replace('#', '', $term);
+        $term = trim($term);
+        $today = now()->startOfDay();
+        $query = $class::query()->where('team_id', $teamId);
 
-        return $class::query()
-            ->where('team_id', $teamId)
-            ->where(fn ($q) => $q
-                ->where('event_number', 'like', '%' . $term . '%')
-                ->orWhereRaw("REPLACE(event_number, '#', '') like ?", ['%' . $plain . '%'])
-                ->orWhere('name', 'like', '%' . $term . '%')
-                ->orWhere('customer', 'like', '%' . $term . '%'))
-            ->orderByDesc('start_date')
-            ->limit($limit)
-            ->get()
+        if ($term === '') {
+            $query->where(fn ($q) => $q
+                ->whereBetween('start_date', [$today->copy()->subDays(14), $today->copy()->addDays(45)])
+                ->orWhere(fn ($q) => $q->where('start_date', '<', $today)->where('end_date', '>=', $today)))
+                ->where(fn ($q) => $q->whereNull('status')->orWhere('status', '!=', 'Storno'));
+        } else {
+            foreach (preg_split('/\s+/u', $term) as $word) {
+                $plain = str_replace('#', '', $word);
+                $query->where(fn ($q) => $q
+                    ->where('event_number', 'like', '%' . $word . '%')
+                    ->orWhereRaw("REPLACE(event_number, '#', '') like ?", ['%' . $plain . '%'])
+                    ->orWhere('name', 'like', '%' . $word . '%')
+                    ->orWhere('customer', 'like', '%' . $word . '%')
+                    ->orWhere('location', 'like', '%' . $word . '%'));
+            }
+        }
+
+        $total = (clone $query)->count();
+        $needle = mb_strtolower(str_replace('#', '', $term));
+        $words = $term === '' ? [] : preg_split('/\s+/u', mb_strtolower($term));
+
+        // Kandidaten um heute herum: die nächsten anstehenden + die jüngsten vergangenen
+        // (+ exakte Nummern-Treffer, egal wann), dann in PHP fein sortieren
+        $candidates = (clone $query)->where('start_date', '>=', $today)->orderBy('start_date')->limit(30)->get()
+            ->concat((clone $query)->where(fn ($q) => $q->where('start_date', '<', $today)->orWhereNull('start_date'))->orderByDesc('start_date')->limit(30)->get());
+        if ($needle !== '') {
+            $candidates = $candidates->concat((clone $query)->whereRaw("LOWER(REPLACE(event_number, '#', '')) like ?", [$needle . '%'])->limit(10)->get());
+        }
+
+        $items = $candidates->unique('id')
+            ->sortBy(function ($event) use ($needle, $words, $today) {
+                $number = mb_strtolower(str_replace('#', '', (string) $event->event_number));
+                $numberRank = $needle === '' ? 3 : ($number === $needle ? 0 : (str_starts_with($number, $needle) ? 1 : (str_contains($number, $needle) ? 2 : 3)));
+                // Treffer in Name/Kunde/Nummer vor Treffern, die nur über den Ort passen
+                $primary = mb_strtolower($number . ' ' . $event->name . ' ' . $event->customer);
+                $fieldRank = collect($words)->every(fn ($w) => str_contains($primary, str_replace('#', '', $w))) ? 0 : 1;
+                $days = $event->start_date ? abs($today->diffInDays($event->start_date, false)) : 99999;
+
+                return sprintf('%d-%d-%d-%06d', $numberRank, $fieldRank, $event->status === 'Storno' ? 1 : 0, min($days, 999999));
+            })
+            ->take($limit)
             ->map(fn ($event) => $this->summary($event))
+            ->values()
             ->all();
+
+        return ['items' => $items, 'total' => $total, 'suggested' => $term === ''];
+    }
+
+    /** Event, dessen VA-Nummer exakt (mit/ohne „#“) zur frei eingetragenen Nummer passt. */
+    public function matchNumber(int $teamId, ?string $number): ?array
+    {
+        $number = trim((string) $number);
+        if (!$this->available() || $number === '') {
+            return null;
+        }
+
+        $class = self::EVENT_CLASS;
+        $event = $class::query()->where('team_id', $teamId)
+            ->where(fn ($q) => $q->where('event_number', $number)
+                ->orWhereRaw("REPLACE(event_number, '#', '') = ?", [str_replace('#', '', $number)]))
+            ->first();
+
+        return $event ? $this->summary($event) : null;
     }
 
     /** Ein Event des Teams oder null (nicht installiert, gelöscht, fremdes Team). */
