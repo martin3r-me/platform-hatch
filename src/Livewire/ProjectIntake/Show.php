@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Platform\Core\Livewire\Concerns\HasPageContext;
 use Platform\Core\Contracts\CrmContactOptionsProviderInterface;
 use Platform\Core\Contracts\CrmContactResolverInterface;
 use Platform\Hatch\Models\HatchIntakeSession;
@@ -21,7 +20,7 @@ class Show extends Component
 {
     use \Platform\Hatch\Livewire\Concerns\FlashesNotices;
     use WithPagination;
-    use HasPageContext;
+    use \Platform\Hatch\Livewire\Concerns\ProvidesPageContext;   // Kontext-Panel, falls der Core es kennt
 
     public HatchProjectIntake $projectIntake;
 
