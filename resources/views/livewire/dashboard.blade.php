@@ -40,8 +40,8 @@
         <x-nx-stat label="Vorlagen" :value="$activeTemplates . ' / ' . $totalTemplates"
             hint="aktiv" icon="heroicon-o-document-text" accent="var(--nx-accent)"
             :href="route('hatch.templates.index')" wire:navigate />
-        <x-nx-stat label="Erhebungen" :value="(string) $totalIntakes"
-            :hint="$published . ' live · ' . $drafts . ' Entwurf'"
+        <x-nx-stat label="Erhebungen live" :value="(string) $published"
+            :hint="'von ' . $totalIntakes . ' im System · ' . $drafts . ' Entwurf'"
             icon="heroicon-o-rocket-launch" accent="var(--nx-accent)"
             :href="route('hatch.project-intakes.index')" wire:navigate />
         <x-nx-stat label="Antworten" :value="(string) $totalSessions"
