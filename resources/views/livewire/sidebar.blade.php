@@ -1,5 +1,4 @@
 {{-- Sidebar für das Formulare-Modul --}}
-@php $placeholders = app(\Platform\Hatch\Support\IntakePlaceholders::class); @endphp
 <div
     x-data="{
         init() {
@@ -79,16 +78,33 @@
             @if($unlinkedIntakes->isNotEmpty())
                 <x-ui-sidebar-list label="Unverknüpft">
                     @foreach($unlinkedIntakes as $intake)
-                        <a wire:key="unlinked-intake-{{ $intake->id }}"
-                           href="{{ route('hatch.project-intakes.show', ['projectIntake' => $intake]) }}"
-                           wire:navigate
-                           title="{{ $placeholders->render($intake->name, $intake) }}"
-                           class="flex items-center gap-1.5 py-0.5 pl-3 pr-2 text-[var(--ui-secondary)] hover:text-[var(--ui-primary)] transition truncate">
-                            <span class="w-1 h-1 rounded-full flex-shrink-0 bg-[var(--ui-muted)] opacity-40"></span>
-                            <span class="truncate text-[11px]">{{ $placeholders->render($intake->name, $intake) }}</span>
-                        </a>
+                        <div wire:key="unlinked-intake-{{ $intake->id }}">
+                            @include('hatch::livewire.partials.sidebar-intake-link', ['intake' => $intake])
+                        </div>
                     @endforeach
                 </x-ui-sidebar-list>
+            @endif
+
+            {{-- Geschlossene Erhebungen: eigener, standardmäßig eingeklappter Bereich --}}
+            @if($closedIntakes->isNotEmpty())
+                <div x-data="{ open: localStorage.getItem('formulare.closedOpen') === 'true' }" class="mt-2">
+                    <button type="button"
+                            @click="open = !open; localStorage.setItem('formulare.closedOpen', open)"
+                            class="flex w-full items-center gap-1 px-3 py-1 text-left text-xs text-[var(--ui-muted)] hover:text-[var(--ui-secondary)] transition-colors">
+                        <span class="w-3 h-3 flex-shrink-0 flex items-center justify-center transition-transform" :class="open ? 'rotate-90' : ''">
+                            @svg('heroicon-o-chevron-right', 'w-2.5 h-2.5')
+                        </span>
+                        <span>Abgeschlossen</span>
+                        <span class="ml-auto text-[10px] tabular-nums opacity-60">{{ $closedIntakes->count() }}</span>
+                    </button>
+                    <div x-show="open" x-cloak class="flex flex-col">
+                        @foreach($closedIntakes as $intake)
+                            <div wire:key="closed-intake-{{ $intake->id }}">
+                                @include('hatch::livewire.partials.sidebar-intake-link', ['intake' => $intake, 'closed' => true])
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @endif
 
             {{-- Button zum Ein-/Ausblenden aller Erhebungen --}}
@@ -112,7 +128,7 @@
             @endif
 
             {{-- Keine Erhebungen --}}
-            @if($entityTypeGroups->isEmpty() && $unlinkedIntakes->isEmpty())
+            @if($entityTypeGroups->isEmpty() && $unlinkedIntakes->isEmpty() && $closedIntakes->isEmpty())
                 <div class="px-3 py-1 text-xs text-[var(--ui-muted)]">
                     @if($showAllIntakes)
                         Keine Erhebungen

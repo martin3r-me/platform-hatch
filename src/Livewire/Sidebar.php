@@ -36,6 +36,7 @@ class Sidebar extends Component
             return view('hatch::livewire.sidebar', [
                 'entityTypeGroups' => collect(),
                 'unlinkedIntakes' => collect(),
+                'closedIntakes' => collect(),
                 'hasMoreIntakes' => false,
             ])->layout('platform::layouts.app');
         }
@@ -52,6 +53,14 @@ class Sidebar extends Component
 
         $intakesToShow = $this->showAllIntakes ? $allIntakes : $myIntakes;
         $hasMoreIntakes = $allIntakes->count() > $myIntakes->count();
+
+        // Geschlossene (auch fällig, aber noch nicht vom Scheduler geschlossen) separat, neueste zuerst
+        $isClosed = fn (HatchProjectIntake $intake) => $intake->status === HatchProjectIntake::STATUS_CLOSED
+            || ($intake->status === HatchProjectIntake::STATUS_PUBLISHED && $intake->closes_at && $intake->closes_at->isPast());
+        $closedIntakes = $intakesToShow->filter($isClosed)
+            ->sortByDesc(fn ($intake) => $intake->completed_at ?? $intake->closes_at ?? $intake->updated_at)
+            ->values();
+        $intakesToShow = $intakesToShow->reject($isClosed)->values();
 
         // 2. Entity-Verknüpfungen laden via DimensionLink
         $intakeIds = $intakesToShow->pluck('id')->toArray();
@@ -220,6 +229,7 @@ class Sidebar extends Component
         return view('hatch::livewire.sidebar', [
             'entityTypeGroups' => $entityTypeGroups,
             'unlinkedIntakes' => $unlinkedIntakes,
+            'closedIntakes' => $closedIntakes,
             'hasMoreIntakes' => $hasMoreIntakes,
         ])->layout('platform::layouts.app');
     }
