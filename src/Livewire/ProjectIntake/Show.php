@@ -66,6 +66,9 @@ class Show extends Component
     // Werte eigener Platzhalter für diese Erhebung (intake_settings.placeholder_values)
     public array $placeholderValues = [];
 
+    // Design des A5-Aufstellers (intake_settings.print_design)
+    public string $printDesign = '';
+
     // Personalisierte Session
     public bool $showPersonalizedSessionModal = false;
     public string $contactSearch = '';
@@ -85,6 +88,20 @@ class Show extends Component
             : '';
         $this->showClosesAt = $this->closesAtInput !== '';
         $this->placeholderValues = $projectIntake->intake_settings['placeholder_values'] ?? [];
+        $this->printDesign = \Platform\Hatch\Support\PrintCardDesigns::for($projectIntake);
+    }
+
+    public function updatedPrintDesign(): void
+    {
+        if (!\Platform\Hatch\Support\PrintCardDesigns::isValid($this->printDesign)) {
+            $this->printDesign = \Platform\Hatch\Support\PrintCardDesigns::for($this->projectIntake);
+
+            return;
+        }
+
+        $settings = $this->projectIntake->intake_settings ?? [];
+        $settings['print_design'] = $this->printDesign;
+        $this->projectIntake->update(['intake_settings' => $settings]);
     }
 
     /**

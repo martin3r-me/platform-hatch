@@ -64,7 +64,7 @@ class CreateIntakeTool implements ToolContract, ToolMetadataContract
                 ],
                 'intake_settings' => [
                     'type' => 'object',
-                    'description' => 'Optional: Owner-Konfiguration. Beispiel: {"week_cutoff": {"rollover_weekday": "saturday", "rollover_time": "12:00"}} – Antworten ab Samstag 12 Uhr werden der kommenden ISO-KW zugeordnet. Ohne Setting gilt ISO-Standard (Montag 00:00).',
+                    'description' => 'Optional: Owner-Konfiguration. Beispiel: {"week_cutoff": {"rollover_weekday": "saturday", "rollover_time": "12:00"}} – Antworten ab Samstag 12 Uhr werden der kommenden ISO-KW zugeordnet. Ohne Setting gilt ISO-Standard (Montag 00:00). Design des A5-Aufstellers: {"print_design": "beige-flaeche" | "beige-rahmen" | "weiss"} (Standard: beige-flaeche).',
                     'additionalProperties' => true,
                 ],
             ],

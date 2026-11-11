@@ -64,7 +64,7 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                 ],
                 'intake_settings' => [
                     'type' => 'object',
-                    'description' => 'Optional: Owner-Konfiguration des Intakes. Aktuell unterstützt: week_cutoff (steuert die KW-Zuordnung der Sessions).',
+                    'description' => 'Optional: Owner-Konfiguration des Intakes. Aktuell unterstützt: week_cutoff (steuert die KW-Zuordnung der Sessions), print_design (Design des A5-Aufstellers).',
                     'properties' => [
                         'week_cutoff' => [
                             'type' => 'object',
@@ -81,6 +81,11 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                                     'description' => 'Uhrzeit im Format HH:MM (24h). Default 00:00.',
                                 ],
                             ],
+                        ],
+                        'print_design' => [
+                            'type' => 'string',
+                            'enum' => array_keys(\Platform\Hatch\Support\PrintCardDesigns::DESIGNS),
+                            'description' => 'Design des A5-Aufstellers. Standard: ' . \Platform\Hatch\Support\PrintCardDesigns::DEFAULT . '.',
                         ],
                     ],
                     'additionalProperties' => true,
@@ -155,6 +160,9 @@ class UpdateIntakeTool implements ToolContract, ToolMetadataContract
                     $intake->intake_settings = null;
                 } elseif (is_array($patch)) {
                     $existing = is_array($intake->intake_settings) ? $intake->intake_settings : [];
+                    if (array_key_exists('print_design', $patch) && !\Platform\Hatch\Support\PrintCardDesigns::isValid($patch['print_design'])) {
+                        return ToolResult::error('VALIDATION_ERROR', 'print_design ungültig. Erlaubt: ' . implode(', ', array_keys(\Platform\Hatch\Support\PrintCardDesigns::DESIGNS)) . '.');
+                    }
                     $intake->intake_settings = array_replace_recursive($existing, $patch);
                 } else {
                     return ToolResult::error('VALIDATION_ERROR', 'intake_settings muss ein Objekt sein.');

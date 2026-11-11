@@ -283,10 +283,18 @@
                             @svg('heroicon-o-qr-code', 'w-4 h-4')
                             <span x-text="qrOpen ? 'QR-Code ausblenden' : 'QR-Code anzeigen'">QR-Code anzeigen</span>
                         </x-nx-button>
-                        <x-nx-button :href="route('hatch.project-intakes.print', $projectIntake)" target="_blank" rel="noopener" class="w-full" title="Tischaufsteller mit Titel, Beschreibung, QR-Code und Logo">
-                            @svg('heroicon-o-printer', 'w-4 h-4')
-                            <span>A5-Aufsteller drucken</span>
-                        </x-nx-button>
+                        <div class="flex items-center gap-2">
+                            <x-nx-button :href="route('hatch.project-intakes.print', $projectIntake)" target="_blank" rel="noopener" class="min-w-0 flex-1" title="Tischaufsteller mit Titel, Beschreibung, QR-Code und Logo">
+                                @svg('heroicon-o-printer', 'w-4 h-4')
+                                <span>A5-Aufsteller drucken</span>
+                            </x-nx-button>
+                            <select wire:model.live="printDesign" aria-label="Design des Aufstellers" title="Design des Aufstellers"
+                                class="h-9 shrink-0 rounded-[6px] border border-[color:var(--nx-line-strong)] bg-[color:var(--nx-surface)] px-2 text-xs text-[color:var(--nx-text)]">
+                                @foreach(\Platform\Hatch\Support\PrintCardDesigns::DESIGNS as $key => $label)
+                                    <option value="{{ $key }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
                         <div x-show="qrOpen" x-cloak class="flex flex-col gap-2">
                             <div class="rounded-[8px] border border-[color:var(--nx-line)] bg-white p-3">
